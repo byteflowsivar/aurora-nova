@@ -10,20 +10,26 @@ Esta funcionalidad permite al Super Administrador (y a otros roles con los permi
 
 ### 1. Permisos (Permissions)
 
-- **Definición:** Son acciones atómicas y específicas dentro de la aplicación.
-- **Implementación Recomendada:** Deben ser definidos como constantes inmutables en el código fuente del backend (ej: un `enum` o un objeto congelado). No se almacenan en la base de datos porque están directamente ligados a la lógica del código.
-- **Ejemplos:**
-  - `VIEW_USERS`
-  - `CREATE_USERS`
-  - `EDIT_USERS`
-  - `DELETE_USERS`
-  - `MANAGE_ROLES`
-  - `VIEW_DASHBOARD_ANALYTICS`
+- **Definición:** Son acciones atómicas y específicas dentro de la aplicación (ej: `user:create`, `role:edit`).
+
+- **Implementación (Enfoque Híbrido):**
+  - **Fuente de Verdad (Lógica):** La *lógica* de un permiso (lo que el usuario puede hacer) se define y se implementa en el código fuente del backend. El código es la autoridad final sobre el comportamiento de un permiso.
+  - **Fuente de Verdad (Catálogo):** Para facilitar la gestión, la documentación y la construcción de interfaces de usuario dinámicas (ej: un panel para asignar permisos a un rol), existirá una tabla `permission` en la base de datos. Esta tabla (`id`, `module`, `description`) actúa como un catálogo de todos los permisos disponibles en el sistema.
+  - El `id` del permiso (ej: `'user:create'`) es el identificador único que conecta el registro en la base de datos con la lógica en el código.
+
+- **Flujo de Creación de un Nuevo Permiso:**
+  1.  El desarrollador implementa la nueva funcionalidad y la lógica de autorización en el código, usando un nuevo identificador de permiso (ej: `'billing:view_invoices'`).
+  2.  Posteriormente, inserta una nueva fila en la tabla `permission` para registrar este nuevo permiso, describirlo y asignarlo a un módulo. Esto lo hace "visible" para el resto de la aplicación, como la interfaz de gestión de roles.
+
+- **Ejemplos de Registros en la tabla `permission`:**
+  - `id: 'user:create'`, `module: 'Users'`, `description: 'Permite crear nuevos usuarios'`
+  - `id: 'role:delete'`, `module: 'Roles'`, `description: 'Permite eliminar roles existentes'`
+  - `id: 'dashboard:view_analytics'`, `module: 'Dashboard'`, `description: 'Permite ver las analíticas principales'`
 
 ### 2. Roles
 
 - **Definición:** Un rol es una etiqueta asignable a un usuario que agrupa un conjunto de permisos.
-- **Implementación:** Los roles se almacenan en la base de datos, típicamente en una tabla `roles` (`id`, `name`). Se necesita una tabla intermedia (`role_permissions`) para manejar la relación muchos-a-muchos entre roles y permisos (aunque los permisos vivan en el código, se usa su string como referencia).
+- **Implementación:** Los roles se almacenan en la base de datos, típicamente en una tabla `roles` (`id`, `name`). Se necesita una tabla intermedia (`role_permissions`) para manejar la relación muchos-a-muchos entre roles y permisos.
 
 ## Flujo de Gestión de Roles
 
