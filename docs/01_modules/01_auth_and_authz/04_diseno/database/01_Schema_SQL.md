@@ -8,7 +8,8 @@ Almacena la información principal de los usuarios. El ID es generado por la apl
 ```sql
 CREATE TABLE "user" (
     "id" UUID PRIMARY KEY,
-    "name" VARCHAR(255) NOT NULL,
+    "first_name" VARCHAR(255) NOT NULL,
+    "last_name" VARCHAR(255) NOT NULL,
     "email" VARCHAR(255) NOT NULL UNIQUE,
     "email_verified" BOOLEAN NOT NULL DEFAULT FALSE,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
