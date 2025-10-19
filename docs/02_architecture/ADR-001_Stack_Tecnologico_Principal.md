@@ -20,17 +20,23 @@ Se ha decidido adoptar el siguiente stack tecnológico principal:
     *   **Justificación:** Tras una evaluación, se ha optado por Lucia Auth. Es una librería de autenticación open-source que proporciona una base segura y flexible para la gestión de sesiones y usuarios. A diferencia de soluciones de servicio (Auth-as-a-Service), Lucia Auth permite mantener el control total sobre los datos y la lógica de autenticación dentro de la aplicación, mitigando riesgos asociados a dependencias de terceros y costos. Se encarga de las complejidades de bajo nivel de la seguridad de sesiones, permitiendo al equipo enfocarse en la implementación del sistema RBAC específico del negocio.
 *   **Framework de Estilos UI:** **Tailwind CSS**
     *   **Justificación:** Un framework CSS "utility-first" que acelera el desarrollo de interfaces de usuario personalizadas y responsivas. Promueve la consistencia visual y reduce la necesidad de escribir CSS personalizado extenso.
+*   **Librería de Componentes UI:** **shadcn/ui (con tema "Blue")**
+    *   **Justificación:** Construida sobre Tailwind CSS, shadcn/ui no es una librería de componentes tradicional, sino una colección de componentes reutilizables que se copian al código fuente. Esto ofrece máximo control y personalización. Proporciona componentes accesibles y bien diseñados que aceleran el desarrollo, y se alinean con la elección de Tailwind CSS. Se utilizarán sus componentes, bloques y gráficos para mantener una línea visual coherente.
+*   **Principios de Diseño de Código:** **Principios SOLID**
+    *   **Justificación:** Se adoptarán los cinco principios de diseño SOLID (Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion) como guía para escribir el código de la aplicación. Esto asegurará un software más comprensible, flexible, mantenible y escalable a largo plazo.
 
 ## 5. Consecuencias
 
 ### Positivas
-*   **Desarrollo Eficiente:** Next.js y Tailwind CSS acelerarán el desarrollo del frontend y la integración con el backend.
+*   **Desarrollo Eficiente:** Next.js, Tailwind CSS y shadcn/ui acelerarán el desarrollo del frontend y la integración con el backend.
 *   **Seguridad Robusta:** Lucia Auth proporciona una base de autenticación segura, reduciendo la superficie de ataque y la complejidad de implementar seguridad desde cero.
 *   **Control Total:** Al usar Lucia Auth (librería) en lugar de un servicio, mantenemos el control total sobre los datos de usuario y la lógica de autenticación.
-*   **Escalabilidad:** PostgreSQL y Next.js son tecnologías probadas y escalables.
+*   **Escalabilidad y Mantenimiento:** PostgreSQL y Next.js son tecnologías probadas y escalables. La aplicación de los principios SOLID resultará en un código más limpio, modular y fácil de mantener.
 *   **Comunidad y Ecosistema:** Todas las tecnologías seleccionadas cuentan con grandes comunidades y ecosistemas activos, facilitando el soporte y la disponibilidad de recursos.
+*   **Consistencia y Calidad de UI:** shadcn/ui asegura una interfaz de usuario coherente, moderna y accesible desde el inicio.
 
 ### Negativas
-*   **Curva de Aprendizaje:** Puede haber una curva de aprendizaje inicial para el equipo si no están familiarizados con alguna de estas tecnologías (especialmente Next.js y Lucia Auth).
+*   **Curva de Aprendizaje:** Puede haber una curva de aprendizaje inicial para el equipo si no están familiarizados con alguna de estas tecnologías (especialmente Next.js, Lucia Auth y los conceptos de shadcn/ui).
 *   **Configuración Inicial:** Lucia Auth requiere una configuración inicial más manual en comparación con soluciones "plug-and-play" o servicios de autenticación.
 *   **Gestión de Infraestructura:** La gestión de la base de datos PostgreSQL y el despliegue de Next.js requerirán conocimientos de infraestructura.
+*   **Disciplina de Desarrollo:** Mantener la adherencia a los principios SOLID requiere disciplina y revisiones de código constantes por parte del equipo.
