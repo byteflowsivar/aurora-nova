@@ -14,8 +14,8 @@ Se ha decidido adoptar el siguiente stack tecnológico principal:
 
 *   **Framework Frontend/Backend (API):** **Next.js (React)**
     *   **Justificación:** Permite el desarrollo full-stack con React, ofreciendo renderizado del lado del servidor (SSR), generación de sitios estáticos (SSG) y rutas de API. Esto simplifica la gestión del proyecto y optimiza el rendimiento y la SEO.
-*   **Base de Datos:** **PostgreSQL**
-    *   **Justificación:** Base de datos relacional de código abierto, conocida por su fiabilidad, robustez, extensibilidad y soporte para características avanzadas como JSONB, lo que la hace adecuada para datos estructurados y semi-estructurados.
+*   **Base de Datos:** **PostgreSQL (Versión 18+)**
+    *   **Justificación:** Base de datos relacional de código abierto, conocida por su fiabilidad y robustez. Se requiere la **versión 18 o superior** para utilizar la función nativa `uuidv7()`, que es fundamental para nuestra estrategia de generación de claves primarias (ver ADR-002).
 *   **Librería de Autenticación:** **Lucia Auth**
     *   **Justificación:** Tras una evaluación, se ha optado por Lucia Auth. Es una librería de autenticación open-source que proporciona una base segura y flexible para la gestión de sesiones y usuarios. A diferencia de soluciones de servicio (Auth-as-a-Service), Lucia Auth permite mantener el control total sobre los datos y la lógica de autenticación dentro de la aplicación, mitigando riesgos asociados a dependencias de terceros y costos. Se encarga de las complejidades de bajo nivel de la seguridad de sesiones, permitiendo al equipo enfocarse en la implementación del sistema RBAC específico del negocio.
 *   **Framework de Estilos UI:** **Tailwind CSS**
@@ -40,3 +40,4 @@ Se ha decidido adoptar el siguiente stack tecnológico principal:
 *   **Configuración Inicial:** Lucia Auth requiere una configuración inicial más manual en comparación con soluciones "plug-and-play" o servicios de autenticación.
 *   **Gestión de Infraestructura:** La gestión de la base de datos PostgreSQL y el despliegue de Next.js requerirán conocimientos de infraestructura.
 *   **Disciplina de Desarrollo:** Mantener la adherencia a los principios SOLID requiere disciplina y revisiones de código constantes por parte del equipo.
+*   **Riesgo de Versión de DB:** Al requerir PostgreSQL 18+, se asume un riesgo potencial asociado a la adopción de una versión muy reciente de la base de datos, que podría tener menos soporte comunitario inmediato o no estar disponible en todos los proveedores de nube al inicio.

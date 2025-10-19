@@ -1,43 +1,6 @@
-# Esquema SQL Completo (PostgreSQL)
+# Esquema SQL Completo (PostgreSQL 18+)
 
-Este documento contiene los scripts `CREATE TABLE` para todas las tablas del sistema, estandarizadas con `UUID` como claves primarias.
-
-## Prerrequisitos: Función para UUID v7
-
-Para generar UUIDs ordenables por tiempo (v7), se debe crear la siguiente función en la base de datos. Requiere la extensión `pgcrypto`.
-
-```sql
--- Instalar la extensión si no está disponible
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
--- Función para generar un UUID v7 (time-ordered)
-CREATE OR REPLACE FUNCTION uuid_generate_v7()
-RETURNS UUID AS $$
-DECLARE
-    unix_ts_ms BIGINT;
-    uuid_bytes BYTEA;
-BEGIN
-    unix_ts_ms = (EXTRACT(EPOCH FROM clock_timestamp()) * 1000)::BIGINT;
-    uuid_bytes = gen_random_bytes(10);
-
-    -- 6 bytes de timestamp
-    uuid_bytes = SET_BYTE(uuid_bytes, 0, (unix_ts_ms >> 40) & 255);
-    uuid_bytes = SET_BYTE(uuid_bytes, 1, (unix_ts_ms >> 32) & 255);
-    uuid_bytes = SET_BYTE(uuid_bytes, 2, (unix_ts_ms >> 24) & 255);
-    uuid_bytes = SET_BYTE(uuid_bytes, 3, (unix_ts_ms >> 16) & 255);
-    uuid_bytes = SET_BYTE(uuid_bytes, 4, (unix_ts_ms >> 8) & 255);
-    uuid_bytes = SET_BYTE(uuid_bytes, 5, unix_ts_ms & 255);
-
-    -- 7mo byte: versión (0111)
-    uuid_bytes = SET_BYTE(uuid_bytes, 6, (GET_BYTE(uuid_bytes, 0) & 15) | 112);
-
-    -- 9no byte: variante (10)
-    uuid_bytes = SET_BYTE(uuid_bytes, 8, (GET_BYTE(uuid_bytes, 2) & 63) | 128);
-
-    RETURN ENCODE(uuid_bytes, 'hex')::UUID;
-END;
-$$ LANGUAGE plpgsql;
-```
+Este documento contiene los scripts `CREATE TABLE` para todas las tablas del sistema, estandarizadas con `UUID` como claves primarias y utilizando funciones nativas de PostgreSQL 18+.
 
 ## Tabla `user`
 Almacena la información principal de los usuarios. El ID es generado por la aplicación (Lucia Auth).
@@ -74,7 +37,7 @@ CREATE TABLE "key" (
 
 ```sql
 CREATE TABLE "role" (
-    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
+    "id" UUID PRIMARY KEY DEFAULT uuidv7(),
     "name" VARCHAR(50) NOT NULL UNIQUE,
     "description" TEXT
 );
