@@ -1,0 +1,29 @@
+# Docker Compose para el Entorno de Desarrollo de Aurora Nova
+version: '3.8'
+
+services:
+  db:
+    # Imagen oficial de PostgreSQL 18 con Alpine Linux, ligera y eficiente.
+    image: postgres:18-alpine3.22
+    container_name: aurora-nova-db
+    restart: unless-stopped
+
+    # Variables de entorno para la configuración de la base de datos.
+    # ADVERTENCIA: Usar un sistema de gestión de secretos para producción.
+    environment:
+      POSTGRES_USER: aurora_user
+      POSTGRES_PASSWORD: changeme_in_production
+      POSTGRES_DB: aurora_nova_db
+
+    # Mapeo de puertos: El puerto 5432 del contenedor se expone en el puerto 5432 del host.
+    # Si tienes otro PostgreSQL corriendo localmente, puedes cambiar el puerto del host (ej. "5433:5432").
+    ports:
+      - "5432:5432"
+
+    # Volumen para persistir los datos de la base de datos entre reinicios del contenedor.
+    volumes:
+      - aurora-nova-db-data:/var/lib/postgresql/data
+
+# Definición del volumen nombrado para la persistencia de datos.
+volumes:
+  aurora-nova-db-data:
