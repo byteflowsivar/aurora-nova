@@ -1,5 +1,4 @@
 # Docker Compose para el Entorno de Desarrollo de Aurora Nova
-version: '3.8'
 
 services:
   db:
@@ -14,6 +13,8 @@ services:
       POSTGRES_USER: aurora_user
       POSTGRES_PASSWORD: changeme_in_production
       POSTGRES_DB: aurora_nova_db
+      TZ: America/El_Salvador
+      LANG: es_SV.UTF-8
 
     # Mapeo de puertos: El puerto 5432 del contenedor se expone en el puerto 5432 del host.
     # Si tienes otro PostgreSQL corriendo localmente, puedes cambiar el puerto del host (ej. "5433:5432").
