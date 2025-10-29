@@ -33,8 +33,8 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 
 | ID | Nombre | Descripción | Estado | Dependencias | Estimación |
 |---|---|---|---|---|---|
-| **T001** | Configuración PostgreSQL 18+ | Instalar y configurar PostgreSQL 18+ en desarrollo con soporte nativo para uuidv7() | Pendiente | - | 4h |
-| **T002** | Configuración del entorno Next.js | Inicializar proyecto Next.js con TypeScript, configurar variables de entorno y estructura base | Pendiente | - | 6h |
+| **T001** | Configuración PostgreSQL 18+ | Instalar y configurar PostgreSQL 18+ en desarrollo con soporte nativo para uuidv7() | **✅ COMPLETADO** | - | ~~4h~~ |
+| **T002** | Configuración del entorno Next.js | Inicializar proyecto Next.js con TypeScript, configurar variables de entorno y estructura base | **🟡 PARCIAL** | - | 2h |
 | **T003** | Creación del esquema de base de datos | Ejecutar scripts SQL para crear todas las tablas del módulo auth (user, session, key, role, permission, user_role, role_permission) | Pendiente | T001 | 3h |
 | **T004** | Configuración de migraciones | Configurar sistema de migraciones de BD (Drizzle ORM o similar) y crear migración inicial | Pendiente | T002, T003 | 4h |
 | **T005** | Seeders de datos iniciales | Crear scripts para poblar permisos base y rol de Super Administrador | Pendiente | T003 | 3h |
@@ -71,7 +71,7 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 
 | ID | Nombre | Descripción | Estado | Dependencias | Estimación |
 |---|---|---|---|---|---|
-| **T018** | Configuración de shadcn/ui | Instalar y configurar shadcn/ui con tema "Blue" y componentes base necesarios | Pendiente | T002 | 4h |
+| **T018** | Configuración de shadcn/ui | Instalar y configurar shadcn/ui con tema "Blue" y componentes base necesarios | **🟡 PARCIAL** | T002 | 2h |
 | **T019** | Páginas de autenticación | Crear páginas de login, registro y recuperación de contraseña con validaciones | Pendiente | T009, T018 | 10h |
 | **T020** | Dashboard principal | Desarrollar dashboard principal con navegación y información de usuario autenticado | Pendiente | T017, T019 | 8h |
 | **T021** | Interfaz de gestión de usuarios | Crear páginas para listar, crear, editar y gestionar usuarios del sistema | Pendiente | T020 | 12h |
@@ -107,14 +107,14 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 
 | Fase | Tareas | Estimación Total | Dependencia Crítica |
 |---|---|---|---|
-| **Fase 1** | T001 - T005 | 20h | Configuración base |
+| **Fase 1** | T001 - T005 | ~~20h~~ **12h** | Configuración base |
 | **Fase 2** | T006 - T011 | 33h | Lucia Auth funcional |
 | **Fase 3** | T012 - T017 | 35h | RBAC completo |
-| **Fase 4** | T018 - T023 | 52h | UI funcional |
+| **Fase 4** | T018 - T023 | ~~52h~~ **50h** | UI funcional |
 | **Fase 5** | T024 - T028 | 44h | Sistema validado |
 | **Fase 6** | T029 - T032 | 19h | Listo para producción |
 
-**TOTAL ESTIMADO:** 203 horas (~5-6 semanas para 1 desarrollador)
+**TOTAL ESTIMADO:** ~~203h~~ **193 horas (~4.8 semanas para 1 desarrollador)**
 
 ---
 
@@ -134,6 +134,35 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 - Cobertura de tests mínima del 80%
 - Todas las funcionalidades deben cumplir con requerimientos de seguridad (RNF-001)
 - Rendimiento debe cumplir métricas establecidas (p95 < 500ms)
+
+---
+
+## Estado Actual del Proyecto (2025-10-29)
+
+### ✅ Completado
+- **T001 - PostgreSQL 18+**: Configurado via Docker Compose con imagen `postgres:18-alpine3.22`
+- Base de datos disponible en puerto 5432 con persistencia de datos
+
+### 🟡 Parcialmente Completado
+- **T002 - Next.js**: Aplicación instalada con TypeScript y configuración base
+  - ✅ Next.js 15.5.6 + React 19.1.0 + TypeScript
+  - ✅ Tailwind CSS 4 configurado
+  - ⚠️ Faltan: Variables de entorno para BD y configuración de Lucia Auth
+
+- **T018 - shadcn/ui**: Configuración básica presente
+  - ✅ `components.json` configurado con estilo "new-york"
+  - ✅ Lucide icons y dependencias base instaladas
+  - ⚠️ Falta: Cambiar tema a "Blue" según ADR-001
+
+### ⏳ Próximas Tareas Prioritarias
+1. **T002 (completar)**: Configurar variables de entorno para conexión a PostgreSQL
+2. **T003**: Ejecutar scripts SQL para crear esquema de base de datos
+3. **T018 (completar)**: Ajustar tema de shadcn/ui a "Blue"
+
+### 📊 Progreso General
+- **Horas ahorradas**: 10h (T001 completado + reducciones en T002/T018)
+- **Estimación revisada**: 193h → **~4.8 semanas**
+- **Fase 1 progreso**: 2/5 tareas (40% completado)
 
 ---
 
