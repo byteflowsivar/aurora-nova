@@ -27,4 +27,4 @@ Para la generación de estos IDs, se utilizará la especificación **UUID v7**. 
 ### Negativas
 *   **Mayor Tamaño de Almacenamiento:** Un UUID (16 bytes) ocupa más espacio que un `BIGINT` (8 bytes), lo que resulta en una base de datos ligeramente más grande. Este es un costo aceptable para los beneficios obtenidos.
 *   **Menor Legibilidad Humana:** Los UUIDs son más difíciles de leer y comunicar para los desarrolladores durante la depuración en comparación con los enteros simples.
-*   **Dependencia de una Función:** La generación de UUID v7 en PostgreSQL requiere una función personalizada o una extensión, ya que no es una funcionalidad nativa en la versión actual.
+*   **Dependencia de Versión de PostgreSQL:** La generación de UUID v7 requiere PostgreSQL 18+ donde `uuidv7()` es una función nativa. Esto está alineado con el ADR-001 que establece PostgreSQL 18+ como requisito del stack tecnológico.
