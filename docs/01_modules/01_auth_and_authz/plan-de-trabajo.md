@@ -34,7 +34,7 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 | ID | Nombre | Descripción | Estado | Dependencias | Estimación |
 |---|---|---|---|---|---|
 | **T001** | Configuración PostgreSQL 18+ | Instalar y configurar PostgreSQL 18+ en desarrollo con soporte nativo para uuidv7() | **✅ COMPLETADO** | - | ~~4h~~ |
-| **T002** | Configuración del entorno Next.js | Inicializar proyecto Next.js con TypeScript, configurar variables de entorno y estructura base | **🟡 PARCIAL** | - | 2h |
+| **T002** | Configuración del entorno Next.js | Inicializar proyecto Next.js con TypeScript, configurar variables de entorno y estructura base | **✅ COMPLETADO** | - | ~~2h~~ |
 | **T003** | Creación del esquema de base de datos | Ejecutar scripts SQL para crear todas las tablas del módulo auth (user, session, key, role, permission, user_role, role_permission) | Pendiente | T001 | 3h |
 | **T004** | Configuración de migraciones | Configurar sistema de migraciones de BD (Drizzle ORM o similar) y crear migración inicial | Pendiente | T002, T003 | 4h |
 | **T005** | Seeders de datos iniciales | Crear scripts para poblar permisos base y rol de Super Administrador | Pendiente | T003 | 3h |
@@ -141,13 +141,13 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 
 ### ✅ Completado
 - **T001 - PostgreSQL 18+**: Configurado via Docker Compose con imagen `postgres:18-alpine3.22`
-- Base de datos disponible en puerto 5432 con persistencia de datos
-
-### 🟡 Parcialmente Completado
-- **T002 - Next.js**: Aplicación instalada con TypeScript y configuración base
+- **T002 - Next.js**: Entorno completo configurado
   - ✅ Next.js 15.5.6 + React 19.1.0 + TypeScript
   - ✅ Tailwind CSS 4 configurado
-  - ⚠️ Faltan: Variables de entorno para BD y configuración de Lucia Auth
+  - ✅ Variables de entorno (.env.example y .env.local)
+  - ✅ Estructura de directorios para auth
+  - ✅ Tipos TypeScript completos
+  - ✅ Configuración centralizada
 
 - **T018 - shadcn/ui**: Configuración básica presente
   - ✅ `components.json` configurado con estilo "new-york"
@@ -155,14 +155,14 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
   - ⚠️ Falta: Cambiar tema a "Blue" según ADR-001
 
 ### ⏳ Próximas Tareas Prioritarias
-1. **T002 (completar)**: Configurar variables de entorno para conexión a PostgreSQL
-2. **T003**: Ejecutar scripts SQL para crear esquema de base de datos
-3. **T018 (completar)**: Ajustar tema de shadcn/ui a "Blue"
+1. **T003**: Ejecutar scripts SQL para crear esquema de base de datos
+2. **T018 (completar)**: Ajustar tema de shadcn/ui a "Blue"
+3. **T004**: Configurar ORM y sistema de migraciones
 
 ### 📊 Progreso General
-- **Horas ahorradas**: 10h (T001 completado + reducciones en T002/T018)
-- **Estimación revisada**: 193h → **~4.8 semanas**
-- **Fase 1 progreso**: 2/5 tareas (40% completado)
+- **Horas ahorradas**: 12h (T001 + T002 completados + reducciones en T018)
+- **Estimación revisada**: 193h → **191h (~4.8 semanas)**
+- **Fase 1 progreso**: 3/5 tareas (60% completado)
 
 ---
 
