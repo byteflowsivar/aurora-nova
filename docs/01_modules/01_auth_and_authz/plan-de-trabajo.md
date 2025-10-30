@@ -35,9 +35,9 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 |---|---|---|---|---|---|
 | **T001** | Configuración PostgreSQL 18+ | Instalar y configurar PostgreSQL 18+ en desarrollo con soporte nativo para uuidv7() | **✅ COMPLETADO** | - | ~~4h~~ |
 | **T002** | Configuración del entorno Next.js | Inicializar proyecto Next.js con TypeScript, configurar variables de entorno y estructura base | **✅ COMPLETADO** | - | ~~2h~~ |
-| **T003** | Creación del esquema de base de datos | Ejecutar scripts SQL para crear todas las tablas del módulo auth (user, session, key, role, permission, user_role, role_permission) | Pendiente | T001 | 3h |
+| **T003** | Creación del esquema de base de datos | Ejecutar scripts SQL para crear todas las tablas del módulo auth (user, session, key, role, permission, user_role, role_permission) | **✅ COMPLETADO** | T001 | ~~3h~~ |
 | **T004** | Configuración de migraciones | Configurar sistema de migraciones de BD (Drizzle ORM o similar) y crear migración inicial | Pendiente | T002, T003 | 4h |
-| **T005** | Seeders de datos iniciales | Crear scripts para poblar permisos base y rol de Super Administrador | Pendiente | T003 | 3h |
+| **T005** | Seeders de datos iniciales | Crear scripts para poblar permisos base y rol de Super Administrador | **✅ COMPLETADO** | T003 | ~~3h~~ |
 
 ---
 
@@ -107,14 +107,14 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 
 | Fase | Tareas | Estimación Total | Dependencia Crítica |
 |---|---|---|---|
-| **Fase 1** | T001 - T005 | ~~20h~~ **12h** | Configuración base |
+| **Fase 1** | T001 - T005 | ~~20h~~ **✅ 0h** | Configuración base **COMPLETADA** |
 | **Fase 2** | T006 - T011 | 33h | Lucia Auth funcional |
 | **Fase 3** | T012 - T017 | 35h | RBAC completo |
 | **Fase 4** | T018 - T023 | ~~52h~~ **50h** | UI funcional |
 | **Fase 5** | T024 - T028 | 44h | Sistema validado |
 | **Fase 6** | T029 - T032 | 19h | Listo para producción |
 
-**TOTAL ESTIMADO:** ~~203h~~ **193 horas (~4.8 semanas para 1 desarrollador)**
+**TOTAL ESTIMADO:** ~~203h~~ **175 horas (~4.4 semanas para 1 desarrollador)**
 
 ---
 
@@ -148,6 +148,15 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
   - ✅ Estructura de directorios para auth
   - ✅ Tipos TypeScript completos
   - ✅ Configuración centralizada
+- **T003 - Esquema de BD**: Base de datos completamente configurada
+  - ✅ 7 tablas creadas con constraints y validaciones
+  - ✅ Índices optimizados para rendimiento
+  - ✅ Función uuidv7() verificada y funcionando
+  - ✅ Triggers automáticos para updated_at
+- **T005 - Seeders**: Datos iniciales poblados
+  - ✅ 16 permisos base en 3 módulos
+  - ✅ 3 roles predefinidos con permisos asignados
+  - ✅ Super Administrador con todos los permisos
 
 - **T018 - shadcn/ui**: Configuración básica presente
   - ✅ `components.json` configurado con estilo "new-york"
@@ -155,14 +164,14 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
   - ⚠️ Falta: Cambiar tema a "Blue" según ADR-001
 
 ### ⏳ Próximas Tareas Prioritarias
-1. **T003**: Ejecutar scripts SQL para crear esquema de base de datos
-2. **T018 (completar)**: Ajustar tema de shadcn/ui a "Blue"
-3. **T004**: Configurar ORM y sistema de migraciones
+1. **T018 (completar)**: Ajustar tema de shadcn/ui a "Blue"
+2. **T004**: Configurar ORM y sistema de migraciones
+3. **T006**: Instalar y configurar Lucia Auth
 
 ### 📊 Progreso General
-- **Horas ahorradas**: 12h (T001 + T002 completados + reducciones en T018)
-- **Estimación revisada**: 193h → **191h (~4.8 semanas)**
-- **Fase 1 progreso**: 3/5 tareas (60% completado)
+- **Horas ahorradas**: 18h (T001, T002, T003, T005 completados + reducciones en T018)
+- **Estimación revisada**: 193h → **175h (~4.4 semanas)**
+- **Fase 1 progreso**: 5/5 tareas (100% completado) ✅**
 
 ---
 
