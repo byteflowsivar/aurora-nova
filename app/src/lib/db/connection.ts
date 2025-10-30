@@ -34,12 +34,12 @@ function getPool(): Pool {
 }
 
 // Instancia de Drizzle con el pool (lazy)
-export const db: ReturnType<typeof drizzle> = new Proxy({} as any, {
+export const db: ReturnType<typeof drizzle> = new Proxy({} as ReturnType<typeof drizzle>, {
   get(target, prop) {
     if (!_db) {
       _db = drizzle(getPool());
     }
-    return (_db as any)[prop];
+    return (_db as unknown as Record<string, unknown>)[prop as string];
   }
 });
 

@@ -8,7 +8,6 @@ import { db } from './connection';
 import {
   userTable,
   sessionTable,
-  keyTable,
   roleTable,
   permissionTable,
   userRoleTable,
@@ -81,7 +80,7 @@ export async function getUserWithFullData(userId: string): Promise<UserWithFullD
   const user = result[0].user;
 
   // Agrupar roles y permisos
-  const rolesMap = new Map<string, any>();
+  const rolesMap = new Map<string, UserWithFullData['userRoles'][0]>();
 
   for (const row of result) {
     if (row.role && row.user_role) {

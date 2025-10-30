@@ -12,7 +12,6 @@ import {
   timestamp,
   text,
   primaryKey,
-  unique,
   index,
   check,
 } from 'drizzle-orm/pg-core';

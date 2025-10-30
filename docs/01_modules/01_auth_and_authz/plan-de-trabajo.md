@@ -71,7 +71,7 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 
 | ID | Nombre | Descripción | Estado | Dependencias | Estimación |
 |---|---|---|---|---|---|
-| **T018** | Configuración de shadcn/ui | Instalar y configurar shadcn/ui con tema "Blue" y componentes base necesarios | **🟡 PARCIAL** | T002 | 2h |
+| **T018** | Configuración de shadcn/ui | Instalar y configurar shadcn/ui con tema "Blue" y componentes base necesarios | **✅ COMPLETADO** | T002 | ~~2h~~ |
 | **T019** | Páginas de autenticación | Crear páginas de login, registro y recuperación de contraseña con validaciones | Pendiente | T009, T018 | 10h |
 | **T020** | Dashboard principal | Desarrollar dashboard principal con navegación y información de usuario autenticado | Pendiente | T017, T019 | 8h |
 | **T021** | Interfaz de gestión de usuarios | Crear páginas para listar, crear, editar y gestionar usuarios del sistema | Pendiente | T020 | 12h |
@@ -164,21 +164,23 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
   - ✅ 3 roles predefinidos con permisos asignados
   - ✅ Super Administrador con todos los permisos
 
-- **T018 - shadcn/ui**: Configuración básica presente
+- **T018 - shadcn/ui**: Configuración completada
   - ✅ `components.json` configurado con estilo "new-york"
   - ✅ Lucide icons y dependencias base instaladas
-  - ⚠️ Falta: Cambiar tema a "Blue" según ADR-001
+  - ✅ Tema "Blue" configurado según ADR-001
+  - ✅ CSS variables actualizadas con colores blue en light/dark mode
 
 ### ⏳ Próximas Tareas Prioritarias
-1. **T018 (completar)**: Ajustar tema de shadcn/ui a "Blue"
-2. **T006**: Instalar y configurar Lucia Auth
-3. **T007**: Modelos de datos y tipos TypeScript para Lucia
+1. **T006**: Instalar y configurar Lucia Auth
+2. **T007**: Modelos de datos y tipos TypeScript para Lucia
+3. **T008**: Implementación de registro de usuarios
 
 ### 📊 Progreso General
-- **Horas ahorradas**: 22h (T001, T002, T003, T004, T005 completados + reducciones en T018)
-- **Estimación revisada**: 193h → **171h (~4.3 semanas)**
+- **Horas ahorradas**: 24h (T001-T005 + T018 completados, T004 adicional de Fase 2)
+- **Estimación revisada**: 203h → **169h (~4.2 semanas)**
 - **Fase 1 progreso**: 5/5 tareas (100% completado) ✅
-- **Bonus**: T004 también completado de Fase 2**
+- **Fase 4 progreso**: 1/6 tareas (T018 completado) ✅
+- **Bonus**: T004 también completado de Fase 2
 
 ---
 

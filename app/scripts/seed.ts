@@ -144,14 +144,18 @@ async function seedDatabase() {
     }
 
     // 7. Verificar datos insertados
-    const [permCount] = await db.execute(sql`SELECT COUNT(*) as count FROM permission`);
-    const [roleCount] = await db.execute(sql`SELECT COUNT(*) as count FROM role`);
-    const [superAdminPermCount] = await db.execute(sql`
+    const permCountResult = await db.execute(sql`SELECT COUNT(*) as count FROM permission`);
+    const roleCountResult = await db.execute(sql`SELECT COUNT(*) as count FROM role`);
+    const superAdminPermCountResult = await db.execute(sql`
       SELECT COUNT(*) as count
       FROM role_permission rp
       JOIN role r ON rp.role_id = r.id
       WHERE r.name = 'Super Administrador'
     `);
+
+    const permCount = permCountResult.rows[0] as { count: string };
+    const roleCount = roleCountResult.rows[0] as { count: string };
+    const superAdminPermCount = superAdminPermCountResult.rows[0] as { count: string };
 
     console.log('📊 Datos iniciales creados:');
     console.log(`   - Permisos: ${permCount.count}`);
