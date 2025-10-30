@@ -6,7 +6,9 @@
 DROP TABLE IF EXISTS "role_permission" CASCADE;
 DROP TABLE IF EXISTS "user_role" CASCADE;
 DROP TABLE IF EXISTS "session" CASCADE;
-DROP TABLE IF EXISTS "key" CASCADE;
+DROP TABLE IF EXISTS "account" CASCADE;
+DROP TABLE IF EXISTS "verificationToken" CASCADE;
+DROP TABLE IF EXISTS "user_credentials" CASCADE;
 DROP TABLE IF EXISTS "permission" CASCADE;
 DROP TABLE IF EXISTS "role" CASCADE;
 DROP TABLE IF EXISTS "user" CASCADE;
@@ -20,13 +22,15 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Tabla de usuarios
+-- Tabla de usuarios (Compatible con Auth.js)
 CREATE TABLE "user" (
-    "id" UUID PRIMARY KEY,
-    "first_name" VARCHAR(255) NOT NULL CHECK (LENGTH(TRIM("first_name")) > 0),
-    "last_name" VARCHAR(255) NOT NULL CHECK (LENGTH(TRIM("last_name")) > 0),
+    "id" UUID PRIMARY KEY DEFAULT uuidv7(),
+    "name" VARCHAR(255), -- Auth.js field
+    "first_name" VARCHAR(255),
+    "last_name" VARCHAR(255),
     "email" VARCHAR(255) NOT NULL UNIQUE CHECK ("email" ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
-    "email_verified" BOOLEAN NOT NULL DEFAULT FALSE,
+    "emailVerified" TIMESTAMPTZ, -- Auth.js format
+    "image" VARCHAR(500), -- Auth.js field for profile images
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -35,19 +39,48 @@ CREATE TABLE "user" (
 CREATE TRIGGER update_user_updated_at BEFORE UPDATE
     ON "user" FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Tabla de sesiones (Lucia Auth)
+-- Tabla de sesiones (Auth.js)
 CREATE TABLE "session" (
-    "id" UUID PRIMARY KEY,
-    "user_id" UUID NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
-    "expires_at" TIMESTAMPTZ NOT NULL
+    "sessionToken" VARCHAR(255) PRIMARY KEY, -- Auth.js format
+    "userId" UUID NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+    "expires" TIMESTAMPTZ NOT NULL
 );
 
--- Tabla de claves de autenticación (Lucia Auth)
-CREATE TABLE "key" (
-    "id" VARCHAR(255) PRIMARY KEY, -- ej: "email:user@example.com"
-    "user_id" UUID NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
-    "hashed_password" VARCHAR(255) -- Nullable para proveedores OAuth
+-- Tabla de cuentas de proveedores Auth.js (OAuth, credentials)
+CREATE TABLE "account" (
+    "userId" UUID NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+    "type" VARCHAR(255) NOT NULL, -- "credentials", "oauth", etc.
+    "provider" VARCHAR(255) NOT NULL, -- "credentials", "google", etc.
+    "providerAccountId" VARCHAR(255) NOT NULL,
+    "refresh_token" TEXT,
+    "access_token" TEXT,
+    "expires_at" INTEGER,
+    "token_type" VARCHAR(255),
+    "scope" TEXT,
+    "id_token" TEXT,
+    "session_state" TEXT,
+    PRIMARY KEY ("provider", "providerAccountId")
 );
+
+-- Tabla de tokens de verificación Auth.js
+CREATE TABLE "verificationToken" (
+    "identifier" VARCHAR(255) NOT NULL, -- email u otro identificador
+    "token" VARCHAR(255) NOT NULL,
+    "expires" TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY ("identifier", "token")
+);
+
+-- Tabla de credenciales de usuarios (passwords)
+CREATE TABLE "user_credentials" (
+    "user_id" UUID PRIMARY KEY REFERENCES "user"("id") ON DELETE CASCADE,
+    "hashed_password" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Trigger para actualizar updated_at en user_credentials
+CREATE TRIGGER update_user_credentials_updated_at BEFORE UPDATE
+    ON "user_credentials" FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Tabla de roles
 CREATE TABLE "role" (
@@ -89,9 +122,10 @@ CREATE TABLE "role_permission" (
 
 -- Índices para mejorar rendimiento
 CREATE INDEX idx_user_email ON "user"("email");
-CREATE INDEX idx_session_user_id ON "session"("user_id");
-CREATE INDEX idx_session_expires_at ON "session"("expires_at");
-CREATE INDEX idx_key_user_id ON "key"("user_id");
+CREATE INDEX idx_session_user_id ON "session"("userId");
+CREATE INDEX idx_session_expires ON "session"("expires");
+CREATE INDEX idx_account_user_id ON "account"("userId");
+CREATE INDEX idx_user_credentials_user_id ON "user_credentials"("user_id");
 CREATE INDEX idx_user_role_user_id ON "user_role"("user_id");
 CREATE INDEX idx_user_role_role_id ON "user_role"("role_id");
 CREATE INDEX idx_role_permission_role_id ON "role_permission"("role_id");
@@ -103,9 +137,11 @@ CREATE INDEX idx_permission_module ON "permission"("module");
 -- ============================================================================
 
 -- Comentarios de tablas
-COMMENT ON TABLE "user" IS 'Tabla principal de usuarios del sistema. Contiene la información básica de identificación y estado de cada usuario registrado.';
-COMMENT ON TABLE "session" IS 'Sesiones activas manejadas por Lucia Auth. Cada registro representa una sesión válida de usuario con su tiempo de expiración.';
-COMMENT ON TABLE "key" IS 'Claves de autenticación (email/password, OAuth, etc.). Tabla de Lucia Auth para manejar diferentes métodos de autenticación por usuario.';
+COMMENT ON TABLE "user" IS 'Tabla principal de usuarios del sistema compatible con Auth.js. Contiene la información básica de identificación y estado de cada usuario registrado.';
+COMMENT ON TABLE "session" IS 'Sesiones activas manejadas por Auth.js. Cada registro representa una sesión válida de usuario con su tiempo de expiración.';
+COMMENT ON TABLE "account" IS 'Cuentas de proveedores Auth.js (OAuth, credentials). Maneja diferentes métodos de autenticación vinculados a usuarios.';
+COMMENT ON TABLE "verificationToken" IS 'Tokens de verificación Auth.js para procesos como verificación de email o reset de password.';
+COMMENT ON TABLE "user_credentials" IS 'Credenciales de usuario (passwords). Tabla separada para mantener las contraseñas hasheadas de forma segura.';
 COMMENT ON TABLE "role" IS 'Roles del sistema para control de acceso basado en roles (RBAC). Define los diferentes niveles de acceso en la aplicación.';
 COMMENT ON TABLE "permission" IS 'Permisos granulares con IDs semánticos. Define las acciones específicas que pueden realizar los usuarios (ej: user:create, role:delete).';
 COMMENT ON TABLE "user_role" IS 'Tabla de unión para asignación de roles a usuarios. Relación muchos-a-muchos entre usuarios y roles con auditoría.';
@@ -114,23 +150,44 @@ COMMENT ON TABLE "role_permission" IS 'Tabla de unión para asignación de permi
 -- Comentarios de todas las columnas por tabla
 
 -- Tabla USER
-COMMENT ON COLUMN "user"."id" IS 'Clave primaria UUID generada por Lucia Auth. Identificador único inmutable del usuario.';
-COMMENT ON COLUMN "user"."first_name" IS 'Nombre(s) del usuario. Campo requerido con validación de longitud mínima.';
-COMMENT ON COLUMN "user"."last_name" IS 'Apellido(s) del usuario. Campo requerido con validación de longitud mínima.';
+COMMENT ON COLUMN "user"."id" IS 'Clave primaria UUID generada automáticamente con uuidv7(). Identificador único inmutable del usuario.';
+COMMENT ON COLUMN "user"."name" IS 'Nombre completo del usuario. Campo estándar de Auth.js, se puede derivar de first_name + last_name.';
+COMMENT ON COLUMN "user"."first_name" IS 'Nombre(s) del usuario. Campo opcional complementario al estándar Auth.js.';
+COMMENT ON COLUMN "user"."last_name" IS 'Apellido(s) del usuario. Campo opcional complementario al estándar Auth.js.';
 COMMENT ON COLUMN "user"."email" IS 'Dirección de correo electrónico única del usuario. Utilizada para autenticación y comunicación.';
-COMMENT ON COLUMN "user"."email_verified" IS 'Indica si el email del usuario ha sido verificado. Por defecto FALSE hasta confirmación.';
+COMMENT ON COLUMN "user"."emailVerified" IS 'Timestamp de verificación del email. NULL si no verificado. Formato estándar Auth.js.';
+COMMENT ON COLUMN "user"."image" IS 'URL de la imagen de perfil del usuario. Campo estándar Auth.js para avatares.';
 COMMENT ON COLUMN "user"."created_at" IS 'Timestamp de creación del registro. Se establece automáticamente al insertar.';
 COMMENT ON COLUMN "user"."updated_at" IS 'Timestamp de última actualización. Se actualiza automáticamente vía trigger.';
 
 -- Tabla SESSION
-COMMENT ON COLUMN "session"."id" IS 'Clave primaria UUID de la sesión generada por Lucia Auth. Token de sesión opaco.';
-COMMENT ON COLUMN "session"."user_id" IS 'Referencia al usuario propietario de la sesión. FK hacia user.id con CASCADE DELETE.';
-COMMENT ON COLUMN "session"."expires_at" IS 'Fecha y hora de expiración de la sesión. Las sesiones expiradas son inválidas automáticamente.';
+COMMENT ON COLUMN "session"."sessionToken" IS 'Token de sesión único generado por Auth.js. Clave primaria string opaca e inmutable.';
+COMMENT ON COLUMN "session"."userId" IS 'Referencia al usuario propietario de la sesión. FK hacia user.id con CASCADE DELETE.';
+COMMENT ON COLUMN "session"."expires" IS 'Fecha y hora de expiración de la sesión. Las sesiones expiradas son inválidas automáticamente.';
 
--- Tabla KEY
-COMMENT ON COLUMN "key"."id" IS 'Identificador semántico de la clave (ej: "email:user@domain.com"). PK compuesta por tipo y valor.';
-COMMENT ON COLUMN "key"."user_id" IS 'Referencia al usuario propietario de esta clave de autenticación. FK hacia user.id.';
-COMMENT ON COLUMN "key"."hashed_password" IS 'Contraseña hasheada con bcrypt. Nullable para proveedores OAuth que no requieren contraseña local.';
+-- Tabla ACCOUNT
+COMMENT ON COLUMN "account"."userId" IS 'Referencia al usuario propietario de esta cuenta. FK hacia user.id con CASCADE DELETE.';
+COMMENT ON COLUMN "account"."type" IS 'Tipo de cuenta Auth.js (ej: "credentials", "oauth"). Define el mecanismo de autenticación.';
+COMMENT ON COLUMN "account"."provider" IS 'Proveedor de autenticación (ej: "credentials", "google", "github"). Identifica el servicio usado.';
+COMMENT ON COLUMN "account"."providerAccountId" IS 'ID de la cuenta en el proveedor externo. Único dentro del proveedor específico.';
+COMMENT ON COLUMN "account"."refresh_token" IS 'Token de refresh OAuth para renovar access tokens expirados. Específico de OAuth providers.';
+COMMENT ON COLUMN "account"."access_token" IS 'Token de acceso OAuth para llamadas autenticadas a APIs. Temporal y renovable.';
+COMMENT ON COLUMN "account"."expires_at" IS 'Timestamp de expiración del access_token en segundos desde Unix epoch. Para gestión de tokens.';
+COMMENT ON COLUMN "account"."token_type" IS 'Tipo de token OAuth (usualmente "Bearer"). Especifica cómo usar el access_token.';
+COMMENT ON COLUMN "account"."scope" IS 'Alcance de permisos OAuth concedidos. Define qué recursos puede acceder el token.';
+COMMENT ON COLUMN "account"."id_token" IS 'JWT de identidad OpenID Connect. Contiene información del usuario del proveedor.';
+COMMENT ON COLUMN "account"."session_state" IS 'Estado de sesión OAuth para manejo de sesiones avanzadas. Específico del proveedor.';
+
+-- Tabla VERIFICATION_TOKEN
+COMMENT ON COLUMN "verificationToken"."identifier" IS 'Identificador del proceso de verificación (email, teléfono, etc). Clave compuesta parte 1.';
+COMMENT ON COLUMN "verificationToken"."token" IS 'Token único de verificación generado aleatoriamente. Clave compuesta parte 2.';
+COMMENT ON COLUMN "verificationToken"."expires" IS 'Timestamp de expiración del token. Los tokens expirados son automáticamente inválidos.';
+
+-- Tabla USER_CREDENTIALS
+COMMENT ON COLUMN "user_credentials"."user_id" IS 'Referencia única al usuario. FK y PK hacia user.id con CASCADE DELETE.';
+COMMENT ON COLUMN "user_credentials"."hashed_password" IS 'Contraseña hasheada con bcrypt. Almacenamiento seguro separado de datos principales.';
+COMMENT ON COLUMN "user_credentials"."created_at" IS 'Timestamp de creación de las credenciales. Para auditoría de seguridad.';
+COMMENT ON COLUMN "user_credentials"."updated_at" IS 'Timestamp de última actualización. Rastrea cambios de contraseña.';
 
 -- Tabla ROLE
 COMMENT ON COLUMN "role"."id" IS 'Clave primaria UUID v7 auto-generada. Identificador único del rol siguiendo ADR-002.';

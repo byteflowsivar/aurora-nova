@@ -8,59 +8,94 @@ import {
   pgTable,
   uuid,
   varchar,
-  boolean,
   timestamp,
   text,
   primaryKey,
   index,
   check,
+  integer,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 
 // ============================================================================
-// TABLA USER - Usuarios del sistema
+// TABLA USER - Usuarios del sistema (Compatible con Auth.js)
 // ============================================================================
 export const userTable = pgTable('user', {
-  id: uuid('id').primaryKey(), // Generado por Lucia Auth
-  firstName: varchar('first_name', { length: 255 }).notNull(),
-  lastName: varchar('last_name', { length: 255 }).notNull(),
-  email: varchar('email', { length: 255 }).notNull().unique(),
-  emailVerified: boolean('email_verified').notNull().default(false),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  id: text('id').primaryKey().default(sql`gen_random_uuid()::text`), // Auth.js expects text ID
+  name: text('name'), // Auth.js field
+  firstName: varchar('first_name', { length: 255 }),
+  lastName: varchar('last_name', { length: 255 }),
+  email: text('email').notNull().unique(),
+  emailVerified: timestamp('emailVerified'), // Auth.js format without timezone
+  image: text('image'), // Auth.js field for profile images
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({
   // Constraints de validación
-  firstNameCheck: check('user_first_name_check', sql`LENGTH(TRIM(${table.firstName})) > 0`),
-  lastNameCheck: check('user_last_name_check', sql`LENGTH(TRIM(${table.lastName})) > 0`),
   emailCheck: check('user_email_check', sql`${table.email} ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$'`),
   // Índices
   emailIdx: index('idx_user_email').on(table.email),
 }));
 
 // ============================================================================
-// TABLA SESSION - Sesiones de Lucia Auth
+// TABLA SESSION - Sesiones de Auth.js
 // ============================================================================
 export const sessionTable = pgTable('session', {
-  id: uuid('id').primaryKey(), // Generado por Lucia Auth
-  userId: uuid('user_id').notNull().references(() => userTable.id, { onDelete: 'cascade' }),
-  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  sessionToken: text('sessionToken').primaryKey(), // Auth.js format
+  userId: text('userId').notNull().references(() => userTable.id, { onDelete: 'cascade' }),
+  expires: timestamp('expires').notNull(),
 }, (table) => ({
   // Índices
   userIdIdx: index('idx_session_user_id').on(table.userId),
-  expiresAtIdx: index('idx_session_expires_at').on(table.expiresAt),
+  expiresIdx: index('idx_session_expires').on(table.expires),
 }));
 
 // ============================================================================
-// TABLA KEY - Claves de autenticación de Lucia Auth
+// TABLA ACCOUNT - Cuentas de proveedores Auth.js (OAuth, credentials)
 // ============================================================================
-export const keyTable = pgTable('key', {
-  id: varchar('id', { length: 255 }).primaryKey(), // Semántico: "email:user@domain.com"
-  userId: uuid('user_id').notNull().references(() => userTable.id, { onDelete: 'cascade' }),
-  hashedPassword: varchar('hashed_password', { length: 255 }), // Nullable para OAuth
+export const accountTable = pgTable('account', {
+  userId: text('userId').notNull().references(() => userTable.id, { onDelete: 'cascade' }),
+  type: text('type').notNull(), // "credentials", "oauth", etc.
+  provider: text('provider').notNull(), // "credentials", "google", etc.
+  providerAccountId: text('providerAccountId').notNull(),
+  refresh_token: text('refresh_token'),
+  access_token: text('access_token'),
+  expires_at: integer('expires_at'),
+  token_type: text('token_type'),
+  scope: text('scope'),
+  id_token: text('id_token'),
+  session_state: text('session_state'),
+}, (table) => ({
+  // Primary key compuesto
+  compoundKey: primaryKey(table.provider, table.providerAccountId),
+  // Índices
+  userIdIdx: index('idx_account_user_id').on(table.userId),
+}));
+
+// ============================================================================
+// TABLA VERIFICATION_TOKEN - Tokens de verificación Auth.js
+// ============================================================================
+export const verificationTokenTable = pgTable('verificationToken', {
+  identifier: text('identifier').notNull(), // email u otro identificador
+  token: text('token').notNull(),
+  expires: timestamp('expires').notNull(),
+}, (table) => ({
+  // Primary key compuesto
+  compoundKey: primaryKey(table.identifier, table.token),
+}));
+
+// ============================================================================
+// TABLA USER_CREDENTIALS - Credenciales de usuarios (passwords)
+// ============================================================================
+export const userCredentialsTable = pgTable('user_credentials', {
+  userId: text('user_id').primaryKey().references(() => userTable.id, { onDelete: 'cascade' }),
+  hashedPassword: varchar('hashed_password', { length: 255 }).notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({
   // Índices
-  userIdIdx: index('idx_key_user_id').on(table.userId),
+  userIdIdx: index('idx_user_credentials_user_id').on(table.userId),
 }));
 
 // ============================================================================
@@ -70,8 +105,8 @@ export const roleTable = pgTable('role', {
   id: uuid('id').primaryKey().default(sql`uuidv7()`), // UUID v7 nativo de PostgreSQL 18+
   name: varchar('name', { length: 50 }).notNull().unique(),
   description: text('description'),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({
   // Constraints de validación
   nameCheck: check('role_name_check', sql`LENGTH(TRIM(${table.name})) > 0`),
@@ -84,7 +119,7 @@ export const permissionTable = pgTable('permission', {
   id: varchar('id', { length: 100 }).primaryKey(), // Semántico: "user:create"
   module: varchar('module', { length: 50 }).notNull(),
   description: text('description'),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => ({
   // Constraints de validación
   idCheck: check('permission_id_check', sql`${table.id} ~* '^[a-z_]+:[a-z_]+$'`),
@@ -97,10 +132,10 @@ export const permissionTable = pgTable('permission', {
 // TABLA USER_ROLE - Asignación de roles a usuarios (muchos a muchos)
 // ============================================================================
 export const userRoleTable = pgTable('user_role', {
-  userId: uuid('user_id').notNull().references(() => userTable.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => userTable.id, { onDelete: 'cascade' }),
   roleId: uuid('role_id').notNull().references(() => roleTable.id, { onDelete: 'restrict' }),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  createdBy: uuid('created_by').references(() => userTable.id), // Auditoría
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  createdBy: text('created_by').references(() => userTable.id), // Auditoría
 }, (table) => ({
   // Clave primaria compuesta
   pk: primaryKey({ columns: [table.userId, table.roleId] }),
@@ -115,7 +150,7 @@ export const userRoleTable = pgTable('user_role', {
 export const rolePermissionTable = pgTable('role_permission', {
   roleId: uuid('role_id').notNull().references(() => roleTable.id, { onDelete: 'cascade' }),
   permissionId: varchar('permission_id', { length: 100 }).notNull().references(() => permissionTable.id, { onDelete: 'cascade' }),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => ({
   // Clave primaria compuesta
   pk: primaryKey({ columns: [table.roleId, table.permissionId] }),
@@ -128,9 +163,10 @@ export const rolePermissionTable = pgTable('role_permission', {
 // RELACIONES DRIZZLE (para joins tipados)
 // ============================================================================
 
-export const userRelations = relations(userTable, ({ many }) => ({
+export const userRelations = relations(userTable, ({ many, one }) => ({
   sessions: many(sessionTable),
-  keys: many(keyTable),
+  accounts: many(accountTable),
+  credentials: one(userCredentialsTable),
   userRoles: many(userRoleTable),
   createdRoleAssignments: many(userRoleTable, { relationName: 'createdBy' }),
 }));
@@ -142,9 +178,16 @@ export const sessionRelations = relations(sessionTable, ({ one }) => ({
   }),
 }));
 
-export const keyRelations = relations(keyTable, ({ one }) => ({
+export const accountRelations = relations(accountTable, ({ one }) => ({
   user: one(userTable, {
-    fields: [keyTable.userId],
+    fields: [accountTable.userId],
+    references: [userTable.id],
+  }),
+}));
+
+export const userCredentialsRelations = relations(userCredentialsTable, ({ one }) => ({
+  user: one(userTable, {
+    fields: [userCredentialsTable.userId],
     references: [userTable.id],
   }),
 }));
@@ -192,7 +235,9 @@ export const rolePermissionRelations = relations(rolePermissionTable, ({ one }) 
 // Tipos para selects (datos que vienen de la BD)
 export type User = typeof userTable.$inferSelect;
 export type Session = typeof sessionTable.$inferSelect;
-export type Key = typeof keyTable.$inferSelect;
+export type Account = typeof accountTable.$inferSelect;
+export type VerificationToken = typeof verificationTokenTable.$inferSelect;
+export type UserCredentials = typeof userCredentialsTable.$inferSelect;
 export type Role = typeof roleTable.$inferSelect;
 export type Permission = typeof permissionTable.$inferSelect;
 export type UserRole = typeof userRoleTable.$inferSelect;
@@ -201,7 +246,9 @@ export type RolePermission = typeof rolePermissionTable.$inferSelect;
 // Tipos para inserts (datos que se envían a la BD)
 export type InsertUser = typeof userTable.$inferInsert;
 export type InsertSession = typeof sessionTable.$inferInsert;
-export type InsertKey = typeof keyTable.$inferInsert;
+export type InsertAccount = typeof accountTable.$inferInsert;
+export type InsertVerificationToken = typeof verificationTokenTable.$inferInsert;
+export type InsertUserCredentials = typeof userCredentialsTable.$inferInsert;
 export type InsertRole = typeof roleTable.$inferInsert;
 export type InsertPermission = typeof permissionTable.$inferInsert;
 export type InsertUserRole = typeof userRoleTable.$inferInsert;

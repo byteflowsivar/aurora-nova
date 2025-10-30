@@ -45,8 +45,8 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 
 | ID | Nombre | Descripción | Estado | Dependencias | Estimación |
 |---|---|---|---|---|---|
-| **T006** | Instalación y configuración de Lucia Auth | Instalar Lucia Auth, configurar adaptadores para PostgreSQL y configuración inicial | Pendiente | T002, T004 | 6h |
-| **T007** | Modelos de datos y tipos TypeScript | Definir interfaces TypeScript para User, Session, Key y configurar tipos para Lucia Auth | Pendiente | T006 | 4h |
+| **T006** | Instalación y configuración de Auth.js | Instalar Auth.js, configurar adaptadores para PostgreSQL y configuración inicial | **✅ COMPLETADO** | T002, T004 | ~~6h~~ |
+| **T007** | Modelos de datos y tipos TypeScript | Definir interfaces TypeScript para User, Session, Account y configurar tipos para Auth.js | **✅ COMPLETADO** | T006 | ~~4h~~ |
 | **T008** | Implementación de registro de usuarios | Crear funcionalidad para registrar nuevos usuarios con validación de email y hash de contraseñas | Pendiente | T007 | 8h |
 | **T009** | Implementación de login/logout | Desarrollar endpoints y lógica para inicio y cierre de sesión usando Lucia Auth | Pendiente | T008 | 6h |
 | **T010** | Middleware de autenticación | Crear middleware para validar sesiones en rutas protegidas | Pendiente | T009 | 4h |
@@ -170,17 +170,34 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
   - ✅ Tema "Blue" configurado según ADR-001
   - ✅ CSS variables actualizadas con colores blue en light/dark mode
 
+- **T006 - Auth.js**: Sistema de autenticación configurado
+  - ✅ Auth.js v5 instalado (migrado desde Lucia Auth deprecado)
+  - ✅ Drizzle adapter configurado para PostgreSQL
+  - ✅ Credentials provider para email/password
+  - ✅ Configuración personalizada para RBAC
+  - ✅ API routes configurados (/api/auth/[...nextauth])
+  - ✅ Middleware de protección de rutas implementado
+
+- **T007 - Tipos TypeScript**: Sistema de tipos completo
+  - ✅ Tipos extendidos para Auth.js (Session, User)
+  - ✅ Interfaces para RBAC (UserRole, Permission)
+  - ✅ Tipos de autenticación (Login, Register, etc.)
+  - ✅ Hooks personalizados para React (useAuth, usePermission)
+  - ✅ Utilidades de autenticación y gestión de usuarios
+  - ✅ Schema de BD actualizado para compatibilidad Auth.js
+
 ### ⏳ Próximas Tareas Prioritarias
-1. **T006**: Instalar y configurar Lucia Auth
-2. **T007**: Modelos de datos y tipos TypeScript para Lucia
-3. **T008**: Implementación de registro de usuarios
+1. **T008**: Implementación de registro de usuarios
+2. **T009**: Implementación de login/logout con Auth.js
+3. **T010**: Middleware de autenticación
 
 ### 📊 Progreso General
-- **Horas ahorradas**: 24h (T001-T005 + T018 completados, T004 adicional de Fase 2)
-- **Estimación revisada**: 203h → **169h (~4.2 semanas)**
+- **Horas ahorradas**: 34h (T001-T007 + T018 completados)
+- **Estimación revisada**: 203h → **159h (~4.0 semanas)**
 - **Fase 1 progreso**: 5/5 tareas (100% completado) ✅
+- **Fase 2 progreso**: 2/6 tareas (T006, T007 completados) ✅
 - **Fase 4 progreso**: 1/6 tareas (T018 completado) ✅
-- **Bonus**: T004 también completado de Fase 2
+- **Migración exitosa**: Lucia Auth → Auth.js por deprecación
 
 ---
 

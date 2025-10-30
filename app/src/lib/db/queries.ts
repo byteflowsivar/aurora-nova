@@ -235,11 +235,11 @@ export async function getAllRolesWithPermissions(): Promise<RoleWithPermissions[
 /**
  * Obtener sesión por ID
  */
-export async function getSessionById(sessionId: string) {
+export async function getSessionByToken(sessionToken: string) {
   const result = await db
     .select()
     .from(sessionTable)
-    .where(eq(sessionTable.id, sessionId))
+    .where(eq(sessionTable.sessionToken, sessionToken))
     .limit(1);
 
   return result[0];
@@ -255,7 +255,7 @@ export async function getUserActiveSessions(userId: string) {
     .where(
       and(
         eq(sessionTable.userId, userId),
-        sql`${sessionTable.expiresAt} > NOW()`
+        sql`${sessionTable.expires} > NOW()`
       )
     );
 }
@@ -266,8 +266,8 @@ export async function getUserActiveSessions(userId: string) {
 export async function cleanExpiredSessions() {
   const result = await db
     .delete(sessionTable)
-    .where(sql`${sessionTable.expiresAt} <= NOW()`)
-    .returning({ id: sessionTable.id });
+    .where(sql`${sessionTable.expires} <= NOW()`)
+    .returning({ sessionToken: sessionTable.sessionToken });
 
   return result.length;
 }
@@ -286,7 +286,7 @@ export async function getSystemStats() {
   const [activeSessionsCount] = await db
     .select({ count: sql<number>`count(*)` })
     .from(sessionTable)
-    .where(sql`${sessionTable.expiresAt} > NOW()`);
+    .where(sql`${sessionTable.expires} > NOW()`);
 
   return {
     users: Number(usersCount.count),
