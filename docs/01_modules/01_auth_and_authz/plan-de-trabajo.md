@@ -36,7 +36,7 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 | **T001** | Configuración PostgreSQL 18+ | Instalar y configurar PostgreSQL 18+ en desarrollo con soporte nativo para uuidv7() | **✅ COMPLETADO** | - | ~~4h~~ |
 | **T002** | Configuración del entorno Next.js | Inicializar proyecto Next.js con TypeScript, configurar variables de entorno y estructura base | **✅ COMPLETADO** | - | ~~2h~~ |
 | **T003** | Creación del esquema de base de datos | Ejecutar scripts SQL para crear todas las tablas del módulo auth (user, session, key, role, permission, user_role, role_permission) | **✅ COMPLETADO** | T001 | ~~3h~~ |
-| **T004** | Configuración de migraciones | Configurar sistema de migraciones de BD (Drizzle ORM o similar) y crear migración inicial | Pendiente | T002, T003 | 4h |
+| **T004** | Configuración de migraciones | Configurar sistema de migraciones de BD (Drizzle ORM o similar) y crear migración inicial | **✅ COMPLETADO** | T002, T003 | ~~4h~~ |
 | **T005** | Seeders de datos iniciales | Crear scripts para poblar permisos base y rol de Super Administrador | **✅ COMPLETADO** | T003 | ~~3h~~ |
 
 ---
@@ -153,6 +153,12 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
   - ✅ Índices optimizados para rendimiento
   - ✅ Función uuidv7() verificada y funcionando
   - ✅ Triggers automáticos para updated_at
+- **T004 - Migraciones**: Sistema de migraciones con Drizzle ORM configurado
+  - ✅ Drizzle ORM instalado y configurado
+  - ✅ Esquemas TypeScript equivalentes al SQL
+  - ✅ Migración inicial generada y validada
+  - ✅ Scripts de BD y utilidades completas
+  - ✅ Queries tipadas y conexión lazy loading
 - **T005 - Seeders**: Datos iniciales poblados
   - ✅ 16 permisos base en 3 módulos
   - ✅ 3 roles predefinidos con permisos asignados
@@ -165,13 +171,14 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 
 ### ⏳ Próximas Tareas Prioritarias
 1. **T018 (completar)**: Ajustar tema de shadcn/ui a "Blue"
-2. **T004**: Configurar ORM y sistema de migraciones
-3. **T006**: Instalar y configurar Lucia Auth
+2. **T006**: Instalar y configurar Lucia Auth
+3. **T007**: Modelos de datos y tipos TypeScript para Lucia
 
 ### 📊 Progreso General
-- **Horas ahorradas**: 18h (T001, T002, T003, T005 completados + reducciones en T018)
-- **Estimación revisada**: 193h → **175h (~4.4 semanas)**
-- **Fase 1 progreso**: 5/5 tareas (100% completado) ✅**
+- **Horas ahorradas**: 22h (T001, T002, T003, T004, T005 completados + reducciones en T018)
+- **Estimación revisada**: 193h → **171h (~4.3 semanas)**
+- **Fase 1 progreso**: 5/5 tareas (100% completado) ✅
+- **Bonus**: T004 también completado de Fase 2**
 
 ---
 
