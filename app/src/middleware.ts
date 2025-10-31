@@ -1,10 +1,11 @@
 /**
- * Middleware de Next.js para Aurora Nova - Sistema Híbrido
+ * Middleware de Next.js para Aurora Nova - Sistema Híbrido + RBAC
  * Maneja autenticación, autorización y protección de rutas
  *
  * Sistema Híbrido de Validación:
  * - Validación JWT (rápida): Para todas las rutas protegidas
  * - Validación BD (estricta): Solo para rutas sensibles (opcional, configurable)
+ * - Verificación RBAC (permisos): Granular por ruta con lógica AND/OR
  *
  * La validación en BD asegura que sesiones manualmente invalidadas
  * no puedan acceder aunque tengan un JWT válido.
@@ -13,8 +14,12 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
-import { getUserPermissions } from '@/lib/auth-utils'
+import { getUserPermissions } from '@/lib/prisma/permission-queries'
 import { isSessionValid } from '@/lib/prisma/session-queries'
+
+// ============================================================================
+// CONFIGURACIÓN DE RUTAS
+// ============================================================================
 
 // Rutas que requieren autenticación
 const protectedRoutes = [
@@ -25,15 +30,90 @@ const protectedRoutes = [
   '/settings',
 ]
 
-// Rutas que requieren permisos específicos
-const permissionRoutes: Record<string, string[]> = {
-  '/admin': ['user:list', 'role:list'],
-  '/users': ['user:list'],
-  '/users/create': ['user:create'],
-  '/users/edit': ['user:update'],
-  '/roles': ['role:list'],
-  '/roles/create': ['role:create'],
-  '/roles/edit': ['role:update'],
+/**
+ * Configuración de permisos requeridos por ruta
+ * Soporta lógica AND y OR para verificación de permisos
+ */
+interface RoutePermissionConfig {
+  /** Array de permisos requeridos */
+  permissions: string[]
+  /**
+   * Modo de verificación:
+   * - 'any': Requiere AL MENOS UNO de los permisos (OR)
+   * - 'all': Requiere TODOS los permisos (AND)
+   * @default 'any'
+   */
+  mode?: 'any' | 'all'
+}
+
+/**
+ * Mapa de rutas a configuración de permisos
+ * Las rutas más específicas deben ir primero (se evalúan en orden)
+ */
+const permissionRoutes: Record<string, RoutePermissionConfig> = {
+  // Rutas de usuarios - específicas primero
+  '/users/create': {
+    permissions: ['user:create'],
+    mode: 'any',
+  },
+  '/users/[id]/edit': {
+    permissions: ['user:update'],
+    mode: 'any',
+  },
+  '/users/[id]/delete': {
+    permissions: ['user:delete'],
+    mode: 'any',
+  },
+  '/users': {
+    permissions: ['user:list', 'user:read'],
+    mode: 'any', // Puede listar O leer
+  },
+
+  // Rutas de roles - específicas primero
+  '/roles/create': {
+    permissions: ['role:create'],
+    mode: 'any',
+  },
+  '/roles/[id]/edit': {
+    permissions: ['role:update'],
+    mode: 'any',
+  },
+  '/roles/[id]/permissions': {
+    permissions: ['role:update', 'permission:manage'],
+    mode: 'all', // Requiere AMBOS permisos
+  },
+  '/roles/[id]/delete': {
+    permissions: ['role:delete'],
+    mode: 'any',
+  },
+  '/roles': {
+    permissions: ['role:list', 'role:read'],
+    mode: 'any',
+  },
+
+  // Rutas de administración
+  '/admin/permissions': {
+    permissions: ['permission:manage', 'system:admin'],
+    mode: 'any', // Admin O gestor de permisos
+  },
+  '/admin/system': {
+    permissions: ['system:admin', 'system:config'],
+    mode: 'all', // Requiere AMBOS permisos
+  },
+  '/admin': {
+    permissions: ['system:admin', 'user:manage', 'role:manage'],
+    mode: 'any', // Cualquier permiso de gestión
+  },
+
+  // Rutas de configuración sensibles
+  '/settings/security': {
+    permissions: ['user:update'], // Puede cambiar su propia seguridad
+    mode: 'any',
+  },
+  '/settings/password': {
+    permissions: ['user:update'],
+    mode: 'any',
+  },
 }
 
 // Rutas que requieren validación ESTRICTA en BD (además de JWT)
@@ -60,6 +140,86 @@ const publicRoutes = [
   '/auth/reset-password',
   '/api/auth',
 ]
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Encuentra la configuración de permisos que coincide con el pathname
+ * Soporta rutas dinámicas con [id] y [...slug]
+ *
+ * @param pathname - Pathname actual del request
+ * @param routes - Mapa de configuraciones de rutas
+ * @returns Configuración de permisos o null
+ */
+function findMatchingRouteConfig(
+  pathname: string,
+  routes: Record<string, RoutePermissionConfig>
+): RoutePermissionConfig | null {
+  // 1. Buscar coincidencia exacta primero
+  if (routes[pathname]) {
+    return routes[pathname]
+  }
+
+  // 2. Buscar coincidencias con rutas dinámicas
+  // Ordenar por especificidad (más segmentos = más específico)
+  const routePatterns = Object.keys(routes).sort((a, b) => {
+    const aSegments = a.split('/').length
+    const bSegments = b.split('/').length
+    return bSegments - aSegments
+  })
+
+  for (const pattern of routePatterns) {
+    if (matchDynamicRoute(pathname, pattern)) {
+      return routes[pattern]
+    }
+  }
+
+  return null
+}
+
+/**
+ * Verifica si un pathname coincide con un patrón de ruta dinámica
+ * Soporta [param] y [...slug]
+ *
+ * @param pathname - Pathname actual
+ * @param pattern - Patrón de ruta (ej: '/users/[id]/edit')
+ * @returns true si coincide
+ */
+function matchDynamicRoute(pathname: string, pattern: string): boolean {
+  const pathSegments = pathname.split('/').filter(Boolean)
+  const patternSegments = pattern.split('/').filter(Boolean)
+
+  // Si tienen diferente número de segmentos y no hay catch-all, no coincide
+  if (pathSegments.length !== patternSegments.length) {
+    // Excepto si hay catch-all
+    const hasCatchAll = patternSegments.some(s => s.startsWith('[...'))
+    if (!hasCatchAll) return false
+  }
+
+  for (let i = 0; i < patternSegments.length; i++) {
+    const patternSegment = patternSegments[i]
+    const pathSegment = pathSegments[i]
+
+    // Catch-all segment [...slug] coincide con resto de path
+    if (patternSegment.startsWith('[...') && patternSegment.endsWith(']')) {
+      return true
+    }
+
+    // Dynamic segment [id] coincide con cualquier valor
+    if (patternSegment.startsWith('[') && patternSegment.endsWith(']')) {
+      continue
+    }
+
+    // Segmento estático debe coincidir exactamente
+    if (patternSegment !== pathSegment) {
+      return false
+    }
+  }
+
+  return true
+}
 
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -119,21 +279,41 @@ export default async function middleware(request: NextRequest) {
       }
     }
 
-    // 3. Verificar permisos específicos (RBAC)
-    const requiredPermissions = permissionRoutes[pathname]
-    if (requiredPermissions && requiredPermissions.length > 0) {
+    // 3. Verificar permisos específicos (RBAC) con lógica AND/OR
+    const routeConfig = findMatchingRouteConfig(pathname, permissionRoutes)
+
+    if (routeConfig && routeConfig.permissions.length > 0) {
       try {
         const userPermissions = await getUserPermissions(session.user.id)
+        const { permissions, mode = 'any' } = routeConfig
 
-        // Verificar si el usuario tiene al menos uno de los permisos requeridos
-        const hasRequiredPermission = requiredPermissions.some(permission =>
-          userPermissions.includes(permission)
-        )
+        let hasRequiredPermission: boolean
+
+        if (mode === 'all') {
+          // Modo AND: Requiere TODOS los permisos
+          hasRequiredPermission = permissions.every(permission =>
+            userPermissions.includes(permission)
+          )
+        } else {
+          // Modo OR (default): Requiere AL MENOS UNO
+          hasRequiredPermission = permissions.some(permission =>
+            userPermissions.includes(permission)
+          )
+        }
 
         if (!hasRequiredPermission) {
           // Redireccionar a página de error de permisos
           const errorUrl = new URL('/auth/error', request.url)
           errorUrl.searchParams.set('error', 'insufficient_permissions')
+
+          // Agregar información de permisos faltantes para debugging (solo en dev)
+          if (process.env.NODE_ENV === 'development') {
+            const missing = permissions.filter(p => !userPermissions.includes(p))
+            errorUrl.searchParams.set('required', permissions.join(','))
+            errorUrl.searchParams.set('missing', missing.join(','))
+            errorUrl.searchParams.set('mode', mode)
+          }
+
           return NextResponse.redirect(errorUrl)
         }
       } catch (error) {

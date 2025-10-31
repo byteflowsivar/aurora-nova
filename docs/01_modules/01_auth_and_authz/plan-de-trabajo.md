@@ -58,7 +58,7 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 
 | ID | Nombre | Descripción | Estado | Dependencias | Estimación |
 |---|---|---|---|---|---|
-| **T012** | Sistema de permisos base | Implementar lógica para verificar permisos usando IDs semánticos (ej: 'user:create') | Pendiente | T010 | 6h |
+| **T012** | Sistema de permisos base | Implementar lógica para verificar permisos usando IDs semánticos (ej: 'user:create') | **✅ COMPLETADO** | T010 | ~~6h~~ |
 | **T013** | Gestión de roles - CRUD | Crear operaciones CRUD para roles con validaciones y restricciones de seguridad | Pendiente | T012 | 8h |
 | **T014** | Asignación de permisos a roles | Implementar funcionalidad para asignar/desasignar permisos a roles específicos | Pendiente | T013 | 6h |
 | **T015** | Asignación de roles a usuarios | Desarrollar sistema para asignar/desasignar roles a usuarios con auditoría | Pendiente | T014 | 6h |
@@ -109,12 +109,12 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 |---|---|---|---|
 | **Fase 1** | T001 - T005 | ~~20h~~ **✅ 0h** | Configuración base **COMPLETADA** |
 | **Fase 2** | T006 - T011 | ~~33h~~ **✅ 0h** | Auth.js + Sistema Híbrido **COMPLETADO** |
-| **Fase 3** | T012 - T017 | 35h | RBAC completo |
+| **Fase 3** | T012 - T017 | ~~35h~~ **29h** | RBAC completo (T012 ✅) |
 | **Fase 4** | T018 - T023 | ~~52h~~ **50h** | UI funcional |
 | **Fase 5** | T024 - T028 | 44h | Sistema validado |
 | **Fase 6** | T029 - T032 | 19h | Listo para producción |
 
-**TOTAL ESTIMADO:** ~~203h~~ **142 horas (~3.5 semanas para 1 desarrollador)**
+**TOTAL ESTIMADO:** ~~203h~~ **136 horas (~3.4 semanas para 1 desarrollador)**
 
 ---
 
@@ -228,34 +228,50 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
   - ✅ Parse de UserAgent para identificar navegador/OS/dispositivo
   - ✅ Documentación completa del sistema híbrido (400+ líneas)
 
+- **T012 - Sistema de permisos base**: Sistema RBAC completo implementado
+  - ✅ 15+ queries Prisma para operaciones de permisos (getUserPermissions, userHasPermission, etc.)
+  - ✅ Utilidades de servidor (hasPermission, hasAnyPermission, hasAllPermissions)
+  - ✅ Utilidades de cliente (checkPermission, checkAnyPermission, checkAllPermissions)
+  - ✅ 8 React hooks para verificación de permisos en UI (usePermission, useAnyPermission, etc.)
+  - ✅ 6 componentes de autorización (PermissionGate, ProtectedComponent, AdminOnly, etc.)
+  - ✅ Helpers de servidor para enforcing de permisos (requirePermission, withPermission, withAuth)
+  - ✅ Middleware mejorado con verificación granular de permisos (AND/OR logic)
+  - ✅ Soporte para rutas dinámicas en middleware ([id], [...slug])
+  - ✅ Errores personalizados (PermissionDeniedError, UnauthenticatedError)
+  - ✅ Type-safety completo con SYSTEM_PERMISSIONS y SystemPermission type
+  - ✅ Script de prueba manual (test-permissions.ts)
+  - ✅ Documentación completa del sistema RBAC (1000+ líneas)
+
 ### ⏳ Próximas Tareas Prioritarias
-1. **T012**: Sistema de permisos base
-2. **T013**: Gestión de roles - CRUD
-3. **T014**: Asignación de permisos a roles
+1. **T013**: Gestión de roles - CRUD
+2. **T014**: Asignación de permisos a roles
+3. **T015**: Asignación de roles a usuarios
 
 ### 📊 Progreso General
-- **Horas completadas**: 61h (T001-T011 + T018 completados)
-- **Estimación restante**: 203h → **142h (~3.5 semanas)**
+- **Horas completadas**: 67h (T001-T012 + T018 completados)
+- **Estimación restante**: 203h → **136h (~3.4 semanas)**
 - **Fase 1 progreso**: 5/5 tareas (100% completado) ✅
 - **Fase 2 progreso**: 6/6 tareas (100% completado) ✅
   - ✅ **T006-T009**: Auth.js, tipos, registro, login/logout
   - ✅ **T010**: Middleware con validación híbrida JWT + BD
   - ✅ **T011**: Sistema completo de gestión de sesiones
-- **Fase 3 progreso**: 0/6 tareas (Sistema RBAC pendiente)
+- **Fase 3 progreso**: 1/6 tareas (T012 completado - Sistema de permisos base) ✅
+  - ✅ **T012**: Sistema RBAC completo con queries, utils, hooks, components y middleware
 - **Fase 4 progreso**: 1/6 tareas (T018 completado - shadcn/ui) ✅
 - **Sistema Híbrido**: JWT + Database Session Tracking completamente funcional
+- **Sistema RBAC**: Verificación de permisos en todas las capas (BD, servidor, cliente, UI, middleware)
 
 ### 🎯 Hitos Alcanzados
 - ✅ **Fase 1 COMPLETA**: Configuración de BD y entorno
 - ✅ **Fase 2 COMPLETA**: Sistema de autenticación con gestión de sesiones
-- ⏳ **Fase 3 EN ESPERA**: Sistema RBAC (permisos y roles)
+- ⏳ **Fase 3 EN PROGRESO**: Sistema RBAC (1/6 completado - permisos base implementado)
 - ⏳ **Fase 4 EN PROGRESO**: Interfaces de usuario (1/6 completado)
 
 ---
 
 **Próxima Revisión:** Al completar Fase 3 (RBAC)
 **Responsable del Plan:** Equipo de Desarrollo
-**Última Actualización:** 2025-10-31 (T010 y T011 completadas - Fase 2 100% completa)
+**Última Actualización:** 2025-10-31 (T012 completada - Sistema RBAC base implementado)
 
 ---
 
@@ -267,3 +283,12 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
   - API reference de todas las funciones
   - Guías de seguridad y mejores prácticas
   - Casos de uso y testing
+
+- **Sistema RBAC de Permisos**: Ver `docs/01_modules/01_auth_and_authz/rbac-permission-system.md`
+  - Arquitectura del sistema RBAC (1000+ líneas)
+  - Conceptos clave (permisos, roles, lógica AND/OR)
+  - Esquema de base de datos
+  - Uso de las 5 capas del sistema (Database, Business Logic, Authorization, Presentation, Routing)
+  - Ejemplos completos y casos de uso
+  - Mejores prácticas y consideraciones de seguridad
+  - Guía de testing
