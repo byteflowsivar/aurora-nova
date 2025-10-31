@@ -119,7 +119,7 @@ export async function registerUser(
     if (error instanceof z.ZodError) {
       const fieldErrors: Record<string, string[]> = {}
 
-      error.errors.forEach((err) => {
+      error.issues.forEach((err) => {
         const path = err.path.join(".")
         if (!fieldErrors[path]) {
           fieldErrors[path] = []
@@ -178,7 +178,7 @@ export async function loginUser(
     const validatedData = loginSchema.parse(input)
 
     // Intentar login con Auth.js
-    const result = await signIn("credentials", {
+    await signIn("credentials", {
       email: validatedData.email,
       password: validatedData.password,
       redirect: false,
@@ -198,7 +198,7 @@ export async function loginUser(
     if (error instanceof z.ZodError) {
       const fieldErrors: Record<string, string[]> = {}
 
-      error.errors.forEach((err) => {
+      error.issues.forEach((err) => {
         const path = err.path.join(".")
         if (!fieldErrors[path]) {
           fieldErrors[path] = []

@@ -47,8 +47,8 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 |---|---|---|---|---|---|
 | **T006** | Instalación y configuración de Auth.js | Instalar Auth.js, configurar adaptadores para PostgreSQL y configuración inicial | **✅ COMPLETADO** | T002, T004 | ~~6h~~ |
 | **T007** | Modelos de datos y tipos TypeScript | Definir interfaces TypeScript para User, Session, Account y configurar tipos para Auth.js | **✅ COMPLETADO** | T006 | ~~4h~~ |
-| **T008** | Implementación de registro de usuarios | Crear funcionalidad para registrar nuevos usuarios con validación de email y hash de contraseñas | Pendiente | T007 | 8h |
-| **T009** | Implementación de login/logout | Desarrollar endpoints y lógica para inicio y cierre de sesión usando Lucia Auth | Pendiente | T008 | 6h |
+| **T008** | Implementación de registro de usuarios | Crear funcionalidad para registrar nuevos usuarios con validación de email y hash de contraseñas | **✅ COMPLETADO** | T007 | ~~8h~~ |
+| **T009** | Implementación de login/logout | Desarrollar endpoints y lógica para inicio y cierre de sesión usando Auth.js | **✅ COMPLETADO** | T008 | ~~6h~~ |
 | **T010** | Middleware de autenticación | Crear middleware para validar sesiones en rutas protegidas | Pendiente | T009 | 4h |
 | **T011** | Gestión de sesiones | Implementar funcionalidades para listar, invalidar y gestionar sesiones activas | Pendiente | T010 | 5h |
 
@@ -186,16 +186,37 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
   - ✅ Utilidades de autenticación y gestión de usuarios
   - ✅ Schema de BD actualizado para compatibilidad Auth.js
 
+- **T008 - Registro de usuarios**: Funcionalidad de registro implementada
+  - ✅ Esquemas de validación con Zod (registro, login, recovery, etc.)
+  - ✅ Server actions para autenticación (registerUser, loginUser, logoutUser)
+  - ✅ Hash de contraseñas con bcrypt (factor 12)
+  - ✅ Asignación automática de rol "Usuario" por defecto
+  - ✅ Validaciones robustas (email único, contraseña fuerte)
+  - ✅ Tipos TypeScript para respuestas de actions (ActionResponse)
+  - ✅ Scripts de prueba funcionales
+
+- **T009 - Login/Logout**: Sistema completo de inicio y cierre de sesión
+  - ✅ Página de login (/auth/signin) con diseño responsive
+  - ✅ Formulario de login con validación en cliente y servidor
+  - ✅ Server actions para login y logout integrados con Auth.js
+  - ✅ Dashboard protegido con información del usuario
+  - ✅ Componente LogoutButton reutilizable
+  - ✅ Redirecciones automáticas (/ → /auth/signin o /dashboard)
+  - ✅ Middleware de Next.js validando rutas protegidas
+  - ✅ Manejo de errores y estados de carga (UX optimizada)
+
 ### ⏳ Próximas Tareas Prioritarias
-1. **T008**: Implementación de registro de usuarios
-2. **T009**: Implementación de login/logout con Auth.js
-3. **T010**: Middleware de autenticación
+1. **T010**: Middleware de autenticación (ya implementado, necesita validación)
+2. **T011**: Gestión de sesiones
+3. **T012**: Sistema de permisos base
 
 ### 📊 Progreso General
-- **Horas ahorradas**: 34h (T001-T007 + T018 completados)
-- **Estimación revisada**: 203h → **159h (~4.0 semanas)**
+- **Horas completadas**: 48h (T001-T009 + T018 completados)
+- **Estimación restante**: 203h → **145h (~3.6 semanas)**
 - **Fase 1 progreso**: 5/5 tareas (100% completado) ✅
-- **Fase 2 progreso**: 2/6 tareas (T006, T007 completados) ✅
+- **Fase 2 progreso**: 4/6 tareas (T006, T007, T008, T009 completados) ✅
+  - **T010 (Middleware)**: Implementado en T006, requiere validación formal
+  - **T011 (Gestión sesiones)**: Pendiente
 - **Fase 4 progreso**: 1/6 tareas (T018 completado) ✅
 - **Migración exitosa**: Lucia Auth → Auth.js por deprecación
 
@@ -203,4 +224,4 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 
 **Próxima Revisión:** Al completar cada fase
 **Responsable del Plan:** Equipo de Desarrollo
-**Última Actualización:** 2025-10-29
+**Última Actualización:** 2025-10-30 (T009 completada - 66% de Fase 2 completo)

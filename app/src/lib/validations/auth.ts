@@ -11,18 +11,14 @@ import { z } from "zod"
 
 export const registerSchema = z.object({
   email: z
-    .string({
-      required_error: "El email es requerido",
-    })
+    .string({ message: "El email es requerido" })
     .min(1, "El email es requerido")
     .email("Debe ser un email válido")
     .toLowerCase()
     .trim(),
 
   password: z
-    .string({
-      required_error: "La contraseña es requerida",
-    })
+    .string({ message: "La contraseña es requerida" })
     .min(8, "La contraseña debe tener al menos 8 caracteres")
     .max(100, "La contraseña no puede exceder 100 caracteres")
     .regex(
@@ -31,9 +27,7 @@ export const registerSchema = z.object({
     ),
 
   confirmPassword: z
-    .string({
-      required_error: "Debes confirmar la contraseña",
-    })
+    .string({ message: "Debes confirmar la contraseña" })
     .min(1, "Debes confirmar la contraseña"),
 
   firstName: z
@@ -60,18 +54,14 @@ export type RegisterInput = z.infer<typeof registerSchema>
 
 export const loginSchema = z.object({
   email: z
-    .string({
-      required_error: "El email es requerido",
-    })
+    .string({ message: "El email es requerido" })
     .min(1, "El email es requerido")
     .email("Debe ser un email válido")
     .toLowerCase()
     .trim(),
 
   password: z
-    .string({
-      required_error: "La contraseña es requerida",
-    })
+    .string({ message: "La contraseña es requerida" })
     .min(1, "La contraseña es requerida"),
 })
 
@@ -83,8 +73,7 @@ export type LoginInput = z.infer<typeof loginSchema>
 
 export const forgotPasswordSchema = z.object({
   email: z
-    .string({
-      required_error: "El email es requerido",
+    .string({ message: "El email es requerido",
     })
     .min(1, "El email es requerido")
     .email("Debe ser un email válido")
@@ -98,8 +87,7 @@ export const resetPasswordSchema = z.object({
   token: z.string().min(1, "Token inválido"),
 
   password: z
-    .string({
-      required_error: "La contraseña es requerida",
+    .string({ message: "La contraseña es requerida",
     })
     .min(8, "La contraseña debe tener al menos 8 caracteres")
     .max(100, "La contraseña no puede exceder 100 caracteres")
@@ -109,8 +97,7 @@ export const resetPasswordSchema = z.object({
     ),
 
   confirmPassword: z
-    .string({
-      required_error: "Debes confirmar la contraseña",
+    .string({ message: "Debes confirmar la contraseña",
     })
     .min(1, "Debes confirmar la contraseña"),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -126,14 +113,12 @@ export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>
 
 export const changePasswordSchema = z.object({
   currentPassword: z
-    .string({
-      required_error: "La contraseña actual es requerida",
+    .string({ message: "La contraseña actual es requerida",
     })
     .min(1, "La contraseña actual es requerida"),
 
   newPassword: z
-    .string({
-      required_error: "La nueva contraseña es requerida",
+    .string({ message: "La nueva contraseña es requerida",
     })
     .min(8, "La contraseña debe tener al menos 8 caracteres")
     .max(100, "La contraseña no puede exceder 100 caracteres")
@@ -143,8 +128,7 @@ export const changePasswordSchema = z.object({
     ),
 
   confirmPassword: z
-    .string({
-      required_error: "Debes confirmar la contraseña",
+    .string({ message: "Debes confirmar la contraseña",
     })
     .min(1, "Debes confirmar la contraseña"),
 }).refine((data) => data.newPassword === data.confirmPassword, {
