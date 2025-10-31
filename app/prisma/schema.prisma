@@ -1,6 +1,6 @@
 // Aurora Nova Prisma Schema
 // Compatible with Auth.js and PostgreSQL 18+ with UUIDs v7
-// Migrated from Drizzle ORM for better Auth.js compatibility
+// Using Prisma ORM for optimal Auth.js compatibility
 
 generator client {
   provider = "prisma-client-js"
