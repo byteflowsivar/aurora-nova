@@ -31,3 +31,15 @@ declare module "next-auth" {
   }
 }
 
+declare module "next-auth/jwt" {
+  interface JWT {
+    id?: string
+    email?: string
+    name?: string
+    firstName?: string | null
+    lastName?: string | null
+    emailVerified?: Date | null
+    sessionToken?: string  // Para sistema híbrido: ID de sesión en BD
+  }
+}
+

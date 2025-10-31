@@ -66,12 +66,16 @@ model Session {
   sessionToken String   @id @map("sessionToken")
   userId       String   @map("userId") @db.Uuid
   expires      DateTime
+  createdAt    DateTime @default(now()) @map("createdAt")
+  ipAddress    String?  @map("ipAddress")
+  userAgent    String?  @map("userAgent")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("session")
   @@index([userId], map: "idx_session_user_id")
   @@index([expires], map: "idx_session_expires")
+  @@index([createdAt], map: "idx_session_created_at")
 }
 
 model VerificationToken {

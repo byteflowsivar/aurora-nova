@@ -1,14 +1,19 @@
 /**
- * Server Actions para autenticación
+ * Server Actions para autenticación - Sistema Híbrido JWT + Database
  * Aurora Nova - Módulo Auth
+ *
+ * Este módulo implementa server actions para autenticación con sistema híbrido:
+ * - Login: Crea JWT + registro en tabla session con IP y UserAgent
+ * - Logout: Elimina registro de session (invalida sesión)
  */
 
 "use server"
 
-import { signIn, signOut } from "@/lib/auth"
+import { signIn, signOut, auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma/connection"
 import { createUserWithCredentials } from "@/lib/auth-utils"
 import { getRoleByName } from "@/lib/prisma/queries"
+import { deleteSession } from "@/lib/prisma/session-queries"
 import {
   registerSchema,
   loginSchema,
@@ -19,6 +24,7 @@ import type { ActionResponse } from "@/types/action-response"
 import { successResponse, errorResponse } from "@/types/action-response"
 import { AuthError } from "next-auth"
 import { z } from "zod"
+import { headers } from "next/headers"
 
 // ============================================================================
 // TIPOS
@@ -152,7 +158,12 @@ export async function registerUser(
 // ============================================================================
 
 /**
- * Iniciar sesión con credenciales
+ * Iniciar sesión con credenciales - Sistema Híbrido
+ *
+ * Este action implementa el sistema híbrido de autenticación:
+ * 1. Valida credenciales del usuario
+ * 2. Crea JWT para autenticación (via Auth.js)
+ * 3. Crea registro en tabla session con IP y UserAgent (via callback JWT)
  *
  * @param input - Credenciales del usuario (email y password)
  * @returns Respuesta con resultado del login
@@ -177,15 +188,26 @@ export async function loginUser(
     // Validar datos de entrada
     const validatedData = loginSchema.parse(input)
 
-    // Intentar login con Auth.js
+    // Obtener información del request para el sistema híbrido
+    const headersList = await headers()
+    const ipAddress = headersList.get("x-forwarded-for") ||
+                     headersList.get("x-real-ip") ||
+                     "unknown"
+    const userAgent = headersList.get("user-agent") || "unknown"
+
+    // Intentar login con Auth.js + metadata para sistema híbrido
+    // Los campos ipAddress y userAgent se pasan al authorize callback
+    // que los incluye en el user object, y el JWT callback los usa para crear la sesión
     await signIn("credentials", {
       email: validatedData.email,
       password: validatedData.password,
+      ipAddress,
+      userAgent,
       redirect: false,
     })
 
     // El signIn de Auth.js lanza una excepción si falla
-    // Si llegamos aquí, el login fue exitoso
+    // Si llegamos aquí, el login fue exitoso y la sesión fue creada en BD (ver auth.ts callback)
     return successResponse(
       {
         success: true,
@@ -231,7 +253,12 @@ export async function loginUser(
 // ============================================================================
 
 /**
- * Cerrar sesión del usuario actual
+ * Cerrar sesión del usuario actual - Sistema Híbrido
+ *
+ * Este action implementa logout con sistema híbrido:
+ * 1. Obtiene el sessionToken de la sesión actual
+ * 2. Elimina el registro de tabla session (invalida sesión en BD)
+ * 3. Cierra la sesión JWT (via Auth.js)
  *
  * @returns Respuesta con resultado del logout
  *
@@ -247,6 +274,27 @@ export async function loginUser(
  */
 export async function logoutUser(): Promise<ActionResponse<void>> {
   try {
+    // 1. Obtener sesión actual para extraer sessionToken
+    const session = await auth()
+
+    // 2. Si existe sessionToken, eliminar de BD (sistema híbrido)
+    if (session && (session as any).sessionToken) {
+      const sessionToken = (session as any).sessionToken as string
+
+      try {
+        const deleted = await deleteSession(sessionToken)
+        if (deleted) {
+          console.log(`Sesión ${sessionToken} eliminada de BD`)
+        } else {
+          console.warn(`Sesión ${sessionToken} no encontrada en BD`)
+        }
+      } catch (dbError) {
+        // Si falla la eliminación en BD, solo logear pero continuar con logout
+        console.error("Error al eliminar sesión de BD:", dbError)
+      }
+    }
+
+    // 3. Cerrar sesión JWT (elimina cookie)
     await signOut({ redirect: false })
 
     return successResponse(undefined, "Sesión cerrada exitosamente")

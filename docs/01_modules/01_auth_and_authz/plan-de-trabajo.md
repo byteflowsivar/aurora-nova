@@ -49,8 +49,8 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 | **T007** | Modelos de datos y tipos TypeScript | Definir interfaces TypeScript para User, Session, Account y configurar tipos para Auth.js | **✅ COMPLETADO** | T006 | ~~4h~~ |
 | **T008** | Implementación de registro de usuarios | Crear funcionalidad para registrar nuevos usuarios con validación de email y hash de contraseñas | **✅ COMPLETADO** | T007 | ~~8h~~ |
 | **T009** | Implementación de login/logout | Desarrollar endpoints y lógica para inicio y cierre de sesión usando Auth.js | **✅ COMPLETADO** | T008 | ~~6h~~ |
-| **T010** | Middleware de autenticación | Crear middleware para validar sesiones en rutas protegidas | Pendiente | T009 | 4h |
-| **T011** | Gestión de sesiones | Implementar funcionalidades para listar, invalidar y gestionar sesiones activas | Pendiente | T010 | 5h |
+| **T010** | Middleware de autenticación | Crear middleware para validar sesiones en rutas protegidas | **✅ COMPLETADO** | T009 | ~~4h~~ |
+| **T011** | Gestión de sesiones | Implementar funcionalidades para listar, invalidar y gestionar sesiones activas | **✅ COMPLETADO** | T010 | ~~5h~~ |
 
 ---
 
@@ -108,13 +108,13 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 | Fase | Tareas | Estimación Total | Dependencia Crítica |
 |---|---|---|---|
 | **Fase 1** | T001 - T005 | ~~20h~~ **✅ 0h** | Configuración base **COMPLETADA** |
-| **Fase 2** | T006 - T011 | 33h | Lucia Auth funcional |
+| **Fase 2** | T006 - T011 | ~~33h~~ **✅ 0h** | Auth.js + Sistema Híbrido **COMPLETADO** |
 | **Fase 3** | T012 - T017 | 35h | RBAC completo |
 | **Fase 4** | T018 - T023 | ~~52h~~ **50h** | UI funcional |
 | **Fase 5** | T024 - T028 | 44h | Sistema validado |
 | **Fase 6** | T029 - T032 | 19h | Listo para producción |
 
-**TOTAL ESTIMADO:** ~~203h~~ **175 horas (~4.4 semanas para 1 desarrollador)**
+**TOTAL ESTIMADO:** ~~203h~~ **142 horas (~3.5 semanas para 1 desarrollador)**
 
 ---
 
@@ -205,23 +205,65 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
   - ✅ Middleware de Next.js validando rutas protegidas
   - ✅ Manejo de errores y estados de carga (UX optimizada)
 
+- **T010 - Middleware de autenticación**: Sistema híbrido de validación implementado
+  - ✅ Validación JWT (rápida) para todas las rutas protegidas
+  - ✅ Validación BD (estricta) configurable para rutas sensibles
+  - ✅ Configuración de rutas con validación estricta
+  - ✅ Flag global para habilitar validación estricta en todas las rutas
+  - ✅ Manejo de errores y redirecciones según tipo de fallo
+  - ✅ Integración completa con sistema RBAC (verificación de permisos)
+
+- **T011 - Gestión de sesiones**: Sistema completo de gestión de sesiones activas
+  - ✅ Tabla session extendida con campos: createdAt, ipAddress, userAgent
+  - ✅ Índices optimizados para rendimiento (userId, expires, createdAt)
+  - ✅ 11 funciones de queries Prisma para operaciones de sesiones
+  - ✅ Server actions para listar sesiones con detalles (browser, OS, device)
+  - ✅ Invalidación de sesión específica (logout remoto)
+  - ✅ Cierre de todas las sesiones excepto actual
+  - ✅ Cierre de todas las sesiones (incluyendo actual)
+  - ✅ Contador de sesiones activas
+  - ✅ Función de limpieza de sesiones expiradas
+  - ✅ Login con captura de IP y UserAgent automática
+  - ✅ Logout con eliminación de sesión en BD
+  - ✅ Parse de UserAgent para identificar navegador/OS/dispositivo
+  - ✅ Documentación completa del sistema híbrido (400+ líneas)
+
 ### ⏳ Próximas Tareas Prioritarias
-1. **T010**: Middleware de autenticación (ya implementado, necesita validación)
-2. **T011**: Gestión de sesiones
-3. **T012**: Sistema de permisos base
+1. **T012**: Sistema de permisos base
+2. **T013**: Gestión de roles - CRUD
+3. **T014**: Asignación de permisos a roles
 
 ### 📊 Progreso General
-- **Horas completadas**: 48h (T001-T009 + T018 completados)
-- **Estimación restante**: 203h → **145h (~3.6 semanas)**
+- **Horas completadas**: 61h (T001-T011 + T018 completados)
+- **Estimación restante**: 203h → **142h (~3.5 semanas)**
 - **Fase 1 progreso**: 5/5 tareas (100% completado) ✅
-- **Fase 2 progreso**: 4/6 tareas (T006, T007, T008, T009 completados) ✅
-  - **T010 (Middleware)**: Implementado en T006, requiere validación formal
-  - **T011 (Gestión sesiones)**: Pendiente
-- **Fase 4 progreso**: 1/6 tareas (T018 completado) ✅
-- **Migración exitosa**: Lucia Auth → Auth.js por deprecación
+- **Fase 2 progreso**: 6/6 tareas (100% completado) ✅
+  - ✅ **T006-T009**: Auth.js, tipos, registro, login/logout
+  - ✅ **T010**: Middleware con validación híbrida JWT + BD
+  - ✅ **T011**: Sistema completo de gestión de sesiones
+- **Fase 3 progreso**: 0/6 tareas (Sistema RBAC pendiente)
+- **Fase 4 progreso**: 1/6 tareas (T018 completado - shadcn/ui) ✅
+- **Sistema Híbrido**: JWT + Database Session Tracking completamente funcional
+
+### 🎯 Hitos Alcanzados
+- ✅ **Fase 1 COMPLETA**: Configuración de BD y entorno
+- ✅ **Fase 2 COMPLETA**: Sistema de autenticación con gestión de sesiones
+- ⏳ **Fase 3 EN ESPERA**: Sistema RBAC (permisos y roles)
+- ⏳ **Fase 4 EN PROGRESO**: Interfaces de usuario (1/6 completado)
 
 ---
 
-**Próxima Revisión:** Al completar cada fase
+**Próxima Revisión:** Al completar Fase 3 (RBAC)
 **Responsable del Plan:** Equipo de Desarrollo
-**Última Actualización:** 2025-10-30 (T009 completada - 66% de Fase 2 completo)
+**Última Actualización:** 2025-10-31 (T010 y T011 completadas - Fase 2 100% completa)
+
+---
+
+## 📚 Documentación Adicional
+
+- **Sistema Híbrido JWT + Database**: Ver `docs/01_modules/01_auth_and_authz/auth-hybrid-system.md`
+  - Arquitectura completa del sistema
+  - Flujos de autenticación detallados
+  - API reference de todas las funciones
+  - Guías de seguridad y mejores prácticas
+  - Casos de uso y testing

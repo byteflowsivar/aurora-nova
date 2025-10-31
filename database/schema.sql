@@ -41,9 +41,12 @@ CREATE TRIGGER update_user_updated_at BEFORE UPDATE
 
 -- Tabla de sesiones (Auth.js)
 CREATE TABLE "session" (
-    "sessionToken" TEXT PRIMARY KEY, -- Auth.js format
+    "sessionToken" TEXT PRIMARY KEY, -- Auth.js format (JWT ID)
     "userId" UUID NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
-    "expires" TIMESTAMP NOT NULL
+    "expires" TIMESTAMP NOT NULL,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "ipAddress" TEXT,
+    "userAgent" TEXT
 );
 
 -- Tabla de cuentas de proveedores Auth.js (OAuth, credentials)
@@ -124,6 +127,7 @@ CREATE TABLE "role_permission" (
 CREATE INDEX idx_user_email ON "user"("email");
 CREATE INDEX idx_session_user_id ON "session"("userId");
 CREATE INDEX idx_session_expires ON "session"("expires");
+CREATE INDEX idx_session_created_at ON "session"("createdAt");
 CREATE INDEX idx_account_user_id ON "account"("userId");
 CREATE INDEX idx_user_credentials_user_id ON "user_credentials"("user_id");
 CREATE INDEX idx_user_role_user_id ON "user_role"("user_id");
@@ -164,6 +168,9 @@ COMMENT ON COLUMN "user"."updated_at" IS 'Timestamp de última actualización. S
 COMMENT ON COLUMN "session"."sessionToken" IS 'Token de sesión único generado por Auth.js. Clave primaria string opaca e inmutable.';
 COMMENT ON COLUMN "session"."userId" IS 'Referencia al usuario propietario de la sesión. FK hacia user.id con CASCADE DELETE.';
 COMMENT ON COLUMN "session"."expires" IS 'Fecha y hora de expiración de la sesión. Las sesiones expiradas son inválidas automáticamente.';
+COMMENT ON COLUMN "session"."createdAt" IS 'Timestamp de creación de la sesión. Útil para auditoría y ordenamiento de sesiones activas.';
+COMMENT ON COLUMN "session"."ipAddress" IS 'Dirección IP desde donde se creó la sesión. Ayuda a identificar dispositivos/ubicaciones.';
+COMMENT ON COLUMN "session"."userAgent" IS 'User-Agent del navegador/cliente. Permite identificar el tipo de dispositivo de la sesión.';
 
 -- Tabla ACCOUNT
 COMMENT ON COLUMN "account"."userId" IS 'Referencia al usuario propietario de esta cuenta. FK hacia user.id con CASCADE DELETE.';
@@ -217,6 +224,7 @@ COMMENT ON COLUMN "role_permission"."created_at" IS 'Timestamp de asignación de
 COMMENT ON INDEX "idx_user_email" IS 'Índice único en email para búsquedas rápidas durante autenticación y validación de unicidad.';
 COMMENT ON INDEX "idx_session_user_id" IS 'Índice en userId para consultas eficientes de sesiones por usuario.';
 COMMENT ON INDEX "idx_session_expires" IS 'Índice en expires para limpieza eficiente de sesiones expiradas.';
+COMMENT ON INDEX "idx_session_created_at" IS 'Índice en createdAt para ordenar sesiones por fecha de creación.';
 COMMENT ON INDEX "idx_account_user_id" IS 'Índice en userId para consultas de cuentas por usuario.';
 COMMENT ON INDEX "idx_user_credentials_user_id" IS 'Índice en user_id para consultas de credenciales por usuario.';
 COMMENT ON INDEX "idx_user_role_user_id" IS 'Índice en user_id para consultas eficientes de roles por usuario.';
