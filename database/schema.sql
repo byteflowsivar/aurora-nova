@@ -25,14 +25,14 @@ $$ language 'plpgsql';
 -- Tabla de usuarios (Compatible con Auth.js)
 CREATE TABLE "user" (
     "id" UUID PRIMARY KEY DEFAULT uuidv7(),
-    "name" VARCHAR(255), -- Auth.js field
+    "name" TEXT, -- Auth.js field
     "first_name" VARCHAR(255),
     "last_name" VARCHAR(255),
-    "email" VARCHAR(255) NOT NULL UNIQUE CHECK ("email" ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
-    "emailVerified" TIMESTAMPTZ, -- Auth.js format
-    "image" VARCHAR(500), -- Auth.js field for profile images
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    "email" TEXT NOT NULL UNIQUE CHECK ("email" ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
+    "emailVerified" TIMESTAMP, -- Auth.js format
+    "image" TEXT, -- Auth.js field for profile images
+    "created_at" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "updated_at" TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- Trigger para actualizar updated_at en user
@@ -41,21 +41,21 @@ CREATE TRIGGER update_user_updated_at BEFORE UPDATE
 
 -- Tabla de sesiones (Auth.js)
 CREATE TABLE "session" (
-    "sessionToken" VARCHAR(255) PRIMARY KEY, -- Auth.js format
+    "sessionToken" TEXT PRIMARY KEY, -- Auth.js format
     "userId" UUID NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
-    "expires" TIMESTAMPTZ NOT NULL
+    "expires" TIMESTAMP NOT NULL
 );
 
 -- Tabla de cuentas de proveedores Auth.js (OAuth, credentials)
 CREATE TABLE "account" (
     "userId" UUID NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
-    "type" VARCHAR(255) NOT NULL, -- "credentials", "oauth", etc.
-    "provider" VARCHAR(255) NOT NULL, -- "credentials", "google", etc.
-    "providerAccountId" VARCHAR(255) NOT NULL,
+    "type" TEXT NOT NULL, -- "credentials", "oauth", etc.
+    "provider" TEXT NOT NULL, -- "credentials", "google", etc.
+    "providerAccountId" TEXT NOT NULL,
     "refresh_token" TEXT,
     "access_token" TEXT,
     "expires_at" INTEGER,
-    "token_type" VARCHAR(255),
+    "token_type" TEXT,
     "scope" TEXT,
     "id_token" TEXT,
     "session_state" TEXT,
@@ -64,9 +64,9 @@ CREATE TABLE "account" (
 
 -- Tabla de tokens de verificación Auth.js
 CREATE TABLE "verificationToken" (
-    "identifier" VARCHAR(255) NOT NULL, -- email u otro identificador
-    "token" VARCHAR(255) NOT NULL,
-    "expires" TIMESTAMPTZ NOT NULL,
+    "identifier" TEXT NOT NULL, -- email u otro identificador
+    "token" TEXT NOT NULL,
+    "expires" TIMESTAMP NOT NULL,
     PRIMARY KEY ("identifier", "token")
 );
 
@@ -74,8 +74,8 @@ CREATE TABLE "verificationToken" (
 CREATE TABLE "user_credentials" (
     "user_id" UUID PRIMARY KEY REFERENCES "user"("id") ON DELETE CASCADE,
     "hashed_password" VARCHAR(255) NOT NULL,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    "created_at" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "updated_at" TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- Trigger para actualizar updated_at en user_credentials
@@ -87,8 +87,8 @@ CREATE TABLE "role" (
     "id" UUID PRIMARY KEY DEFAULT uuidv7(),
     "name" VARCHAR(50) NOT NULL UNIQUE CHECK (LENGTH(TRIM("name")) > 0),
     "description" TEXT,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    "created_at" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "updated_at" TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- Trigger para actualizar updated_at en role
@@ -100,14 +100,14 @@ CREATE TABLE "permission" (
     "id" VARCHAR(100) PRIMARY KEY CHECK ("id" ~* '^[a-z_]+:[a-z_]+$'), -- ej: "user:create"
     "module" VARCHAR(50) NOT NULL CHECK (LENGTH(TRIM("module")) > 0),
     "description" TEXT,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    "created_at" TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- Tabla de unión: usuarios-roles
 CREATE TABLE "user_role" (
     "user_id" UUID NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
     "role_id" UUID NOT NULL REFERENCES "role"("id") ON DELETE RESTRICT,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "created_at" TIMESTAMP NOT NULL DEFAULT NOW(),
     "created_by" UUID REFERENCES "user"("id"), -- Quien asignó el rol
     PRIMARY KEY ("user_id", "role_id")
 );
@@ -116,7 +116,7 @@ CREATE TABLE "user_role" (
 CREATE TABLE "role_permission" (
     "role_id" UUID NOT NULL REFERENCES "role"("id") ON DELETE CASCADE,
     "permission_id" VARCHAR(100) NOT NULL REFERENCES "permission"("id") ON DELETE CASCADE,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "created_at" TIMESTAMP NOT NULL DEFAULT NOW(),
     PRIMARY KEY ("role_id", "permission_id")
 );
 

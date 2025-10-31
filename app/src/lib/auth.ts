@@ -1,30 +1,19 @@
 /**
  * Configuración de Auth.js para Aurora Nova
  * Incluye providers, callbacks y configuración personalizada para RBAC
+ * Migrado a Prisma para mejor compatibilidad
  */
 
 import NextAuth from "next-auth"
 import '@/lib/auth-types' // Importar tipos extendidos
-import { DrizzleAdapter } from "@auth/drizzle-adapter"
+import { PrismaAdapter } from "@auth/prisma-adapter"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { db } from "@/lib/db/connection"
-import {
-  userTable,
-  sessionTable,
-  accountTable,
-  verificationTokenTable,
-  userCredentialsTable,
-} from "@/lib/db/schema"
-import { eq } from "drizzle-orm"
+import { prisma } from "@/lib/prisma/connection"
+import { getUserByEmail, getUserWithCredentials } from "@/lib/prisma/queries"
 import bcrypt from "bcryptjs"
 
-// Configuración del adapter Drizzle para Auth.js con tablas personalizadas
-const customAdapter = DrizzleAdapter(db, {
-  usersTable: userTable,
-  accountsTable: accountTable,
-  sessionsTable: sessionTable,
-  verificationTokensTable: verificationTokenTable,
-})
+// Configuración del adapter Prisma para Auth.js
+const authAdapter = PrismaAdapter(prisma)
 
 export const {
   handlers: { GET, POST },
@@ -32,7 +21,7 @@ export const {
   signIn,
   signOut
 } = NextAuth({
-  adapter: customAdapter,
+  adapter: authAdapter,
   session: {
     strategy: "database",
     maxAge: 30 * 24 * 60 * 60, // 30 días
@@ -51,30 +40,22 @@ export const {
 
         try {
           // Buscar usuario por email
-          const [user] = await db
-            .select()
-            .from(userTable)
-            .where(eq(userTable.email, credentials.email as string))
-            .limit(1)
+          const user = await getUserByEmail(credentials.email as string)
 
           if (!user) {
             return null
           }
 
-          // Verificar password
-          const [userCredentials] = await db
-            .select()
-            .from(userCredentialsTable)
-            .where(eq(userCredentialsTable.userId, user.id))
-            .limit(1)
+          // Buscar credenciales del usuario
+          const userWithCredentials = await getUserWithCredentials(user.id)
 
-          if (!userCredentials) {
+          if (!userWithCredentials?.credentials) {
             return null
           }
 
           const isValidPassword = await bcrypt.compare(
             credentials.password as string,
-            userCredentials.hashedPassword
+            userWithCredentials.credentials.hashedPassword
           )
 
           if (!isValidPassword) {

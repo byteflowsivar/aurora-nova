@@ -1,5 +1,5 @@
 /**
- * Script para probar la configuración de Drizzle ORM
+ * Script para probar la configuración de Prisma ORM
  * Verifica conexión, esquemas y queries básicas
  */
 
@@ -8,7 +8,45 @@ import * as dotenv from 'dotenv';
 // Cargar variables de entorno
 dotenv.config({ path: '.env.local' });
 
-import { testConnection, verifyPostgreSQLVersion, getSystemStats } from '../src/lib/db';
+import { prisma } from '../src/lib/prisma/connection';
+import { getSystemStats } from '../src/lib/prisma/queries';
+
+async function testConnection(): Promise<boolean> {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    console.log('✅ Conexión a PostgreSQL exitosa');
+    return true;
+  } catch (error) {
+    console.error('❌ Error de conexión:', error);
+    return false;
+  }
+}
+
+async function verifyPostgreSQLVersion(): Promise<boolean> {
+  try {
+    const result = await prisma.$queryRaw<[{ version: string }]>`SELECT version()`;
+    const version = result[0].version;
+    console.log(`📌 ${version}`);
+
+    // Verificar uuidv7()
+    const uuidResult = await prisma.$queryRaw<[{ uuid: string }]>`SELECT uuidv7() as uuid`;
+    const uuid = uuidResult[0].uuid;
+    console.log(`🔑 UUID v7 generado: ${uuid}`);
+
+    // Verificar que es un UUID válido
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(uuid)) {
+      console.log('✅ uuidv7() funciona correctamente');
+      return true;
+    } else {
+      console.error('❌ uuidv7() no genera UUIDs válidos');
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Error verificando PostgreSQL/uuidv7():', error);
+    return false;
+  }
+}
 
 async function testDatabase() {
   console.log('🧪 Iniciando pruebas de base de datos...\n');
@@ -38,11 +76,13 @@ async function testDatabase() {
     console.log(`   - Sesiones activas: ${stats.activeSessions}`);
 
     console.log('\n✅ Todas las pruebas pasaron exitosamente!');
-    console.log('🎯 Drizzle ORM está configurado correctamente');
+    console.log('🎯 Prisma ORM está configurado correctamente');
 
   } catch (error) {
     console.error('\n❌ Error en las pruebas:', error);
     process.exit(1);
+  } finally {
+    await prisma.$disconnect();
   }
 }
 

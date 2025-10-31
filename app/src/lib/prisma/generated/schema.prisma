@@ -1,0 +1,158 @@
+// Aurora Nova Prisma Schema
+// Compatible with Auth.js and PostgreSQL 18+ with UUIDs v7
+// Migrated from Drizzle ORM for better Auth.js compatibility
+
+generator client {
+  provider   = "prisma-client-js"
+  output     = "../src/lib/prisma/generated"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// AUTH.JS TABLES - Required for authentication
+// ============================================================================
+
+model User {
+  // Auth.js required fields
+  id            String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name          String?
+  email         String    @unique
+  emailVerified DateTime? @map("emailVerified")
+  image         String?
+
+  // Aurora Nova custom fields
+  firstName String?  @map("first_name") @db.VarChar(255)
+  lastName  String?  @map("last_name") @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  // Relations
+  accounts     Account[]
+  sessions     Session[]
+  credentials  UserCredentials?
+  userRoles    UserRole[]
+  createdRoles UserRole[]       @relation("CreatedBy")
+
+  @@index([email], map: "idx_user_email")
+  @@map("user")
+}
+
+model Account {
+  userId            String  @map("userId") @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String  @map("providerAccountId")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+  @@index([userId], map: "idx_account_user_id")
+  @@map("account")
+}
+
+model Session {
+  sessionToken String   @id @map("sessionToken")
+  userId       String   @map("userId") @db.Uuid
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_session_user_id")
+  @@index([expires], map: "idx_session_expires")
+  @@map("session")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+  @@map("verificationToken")
+}
+
+// ============================================================================
+// AUTHENTICATION TABLES - Custom credentials and RBAC
+// ============================================================================
+
+model UserCredentials {
+  userId         String   @id @map("user_id") @db.Uuid
+  hashedPassword String   @map("hashed_password") @db.VarChar(255)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_user_credentials_user_id")
+  @@map("user_credentials")
+}
+
+model Role {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name        String   @unique @db.VarChar(50)
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  // Relations
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@map("role")
+}
+
+model Permission {
+  id          String   @id @db.VarChar(100) // Semantic ID like "user:create"
+  module      String   @db.VarChar(50)
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  rolePermissions RolePermission[]
+
+  @@map("permission")
+}
+
+model UserRole {
+  userId    String   @map("user_id") @db.Uuid
+  roleId    String   @map("role_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String?  @map("created_by") @db.Uuid
+
+  // Relations
+  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role    Role  @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  creator User? @relation("CreatedBy", fields: [createdBy], references: [id])
+
+  @@id([userId, roleId])
+  @@index([userId], map: "idx_user_role_user_id")
+  @@index([roleId], map: "idx_user_role_role_id")
+  @@map("user_role")
+}
+
+model RolePermission {
+  roleId       String   @map("role_id") @db.Uuid
+  permissionId String   @map("permission_id") @db.VarChar(100)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // Relations
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([roleId], map: "idx_role_permission_role_id")
+  @@index([permissionId], map: "idx_role_permission_permission_id")
+  @@map("role_permission")
+}

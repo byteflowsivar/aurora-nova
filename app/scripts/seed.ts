@@ -1,5 +1,5 @@
 /**
- * Script de seeding para Aurora Nova usando Drizzle ORM
+ * Script de seeding para Aurora Nova usando Prisma ORM
  * Equivalente al seeds.sql pero con tipado TypeScript
  */
 
@@ -8,19 +8,10 @@ import * as dotenv from 'dotenv';
 // Cargar variables de entorno
 dotenv.config({ path: '.env.local' });
 
-import { db } from '../src/lib/db/connection';
-import {
-  permissionTable,
-  roleTable,
-  rolePermissionTable,
-  type InsertPermission,
-  type InsertRole,
-  type InsertRolePermission,
-} from '../src/lib/db/schema';
-import { sql } from 'drizzle-orm';
+import { prisma } from '../src/lib/prisma/connection';
 
 // Datos de permisos base
-const permissions: InsertPermission[] = [
+const permissions = [
   // Permisos de usuarios
   { id: 'user:create', module: 'Users', description: 'Crear nuevos usuarios' },
   { id: 'user:read', module: 'Users', description: 'Ver información de usuarios' },
@@ -45,19 +36,16 @@ const permissions: InsertPermission[] = [
 ];
 
 // Datos de roles base
-const roles: InsertRole[] = [
+const roles = [
   {
-    id: undefined, // Se generará automáticamente con uuidv7()
     name: 'Super Administrador',
     description: 'Acceso completo al sistema con todos los permisos',
   },
   {
-    id: undefined,
     name: 'Administrador',
     description: 'Acceso administrativo con permisos limitados',
   },
   {
-    id: undefined,
     name: 'Usuario',
     description: 'Usuario estándar con permisos básicos',
   },
@@ -81,88 +69,106 @@ async function seedDatabase() {
 
     // 1. Insertar permisos
     console.log('📝 Insertando permisos...');
-    await db.insert(permissionTable)
-      .values(permissions)
-      .onConflictDoNothing();
+    for (const permission of permissions) {
+      await prisma.permission.upsert({
+        where: { id: permission.id },
+        update: {},
+        create: permission
+      });
+    }
 
     // 2. Insertar roles
     console.log('👥 Insertando roles...');
-    const insertedRoles = await db.insert(roleTable)
-      .values(roles)
-      .onConflictDoNothing()
-      .returning();
-
-    // Si no se insertaron roles (ya existían), obtenerlos
-    let allRoles = insertedRoles;
-    if (allRoles.length === 0) {
-      allRoles = await db.select().from(roleTable);
+    const insertedRoles = [];
+    for (const role of roles) {
+      const insertedRole = await prisma.role.upsert({
+        where: { name: role.name },
+        update: {},
+        create: role
+      });
+      insertedRoles.push(insertedRole);
     }
 
-    // 3. Obtener todos los permisos insertados
-    const allPermissions = await db.select().from(permissionTable);
-
-    // 4. Asignar permisos al Super Administrador (todos los permisos)
-    const superAdminRole = allRoles.find(r => r.name === 'Super Administrador');
+    // 3. Asignar permisos al Super Administrador (todos los permisos)
+    const superAdminRole = insertedRoles.find(r => r.name === 'Super Administrador');
     if (superAdminRole) {
       console.log('🔐 Asignando todos los permisos al Super Administrador...');
-      const superAdminPerms: InsertRolePermission[] = allPermissions.map(p => ({
-        roleId: superAdminRole.id,
-        permissionId: p.id,
-      }));
-
-      await db.insert(rolePermissionTable)
-        .values(superAdminPerms)
-        .onConflictDoNothing();
+      for (const permission of permissions) {
+        await prisma.rolePermission.upsert({
+          where: {
+            roleId_permissionId: {
+              roleId: superAdminRole.id,
+              permissionId: permission.id
+            }
+          },
+          update: {},
+          create: {
+            roleId: superAdminRole.id,
+            permissionId: permission.id
+          }
+        });
+      }
     }
 
-    // 5. Asignar permisos limitados al Administrador
-    const adminRole = allRoles.find(r => r.name === 'Administrador');
+    // 4. Asignar permisos limitados al Administrador
+    const adminRole = insertedRoles.find(r => r.name === 'Administrador');
     if (adminRole) {
       console.log('📋 Asignando permisos limitados al Administrador...');
-      const adminPerms: InsertRolePermission[] = adminPermissions.map(permId => ({
-        roleId: adminRole.id,
-        permissionId: permId,
-      }));
-
-      await db.insert(rolePermissionTable)
-        .values(adminPerms)
-        .onConflictDoNothing();
+      for (const permId of adminPermissions) {
+        await prisma.rolePermission.upsert({
+          where: {
+            roleId_permissionId: {
+              roleId: adminRole.id,
+              permissionId: permId
+            }
+          },
+          update: {},
+          create: {
+            roleId: adminRole.id,
+            permissionId: permId
+          }
+        });
+      }
     }
 
-    // 6. Asignar permisos básicos al Usuario
-    const userRole = allRoles.find(r => r.name === 'Usuario');
+    // 5. Asignar permisos básicos al Usuario
+    const userRole = insertedRoles.find(r => r.name === 'Usuario');
     if (userRole) {
       console.log('👤 Asignando permisos básicos al Usuario...');
-      const userPerms: InsertRolePermission[] = userPermissions.map(permId => ({
-        roleId: userRole.id,
-        permissionId: permId,
-      }));
-
-      await db.insert(rolePermissionTable)
-        .values(userPerms)
-        .onConflictDoNothing();
+      for (const permId of userPermissions) {
+        await prisma.rolePermission.upsert({
+          where: {
+            roleId_permissionId: {
+              roleId: userRole.id,
+              permissionId: permId
+            }
+          },
+          update: {},
+          create: {
+            roleId: userRole.id,
+            permissionId: permId
+          }
+        });
+      }
     }
 
-    // 7. Verificar datos insertados
-    const permCountResult = await db.execute(sql`SELECT COUNT(*) as count FROM permission`);
-    const roleCountResult = await db.execute(sql`SELECT COUNT(*) as count FROM role`);
-    const superAdminPermCountResult = await db.execute(sql`
-      SELECT COUNT(*) as count
-      FROM role_permission rp
-      JOIN role r ON rp.role_id = r.id
-      WHERE r.name = 'Super Administrador'
-    `);
-
-    const permCount = permCountResult.rows[0] as { count: string };
-    const roleCount = roleCountResult.rows[0] as { count: string };
-    const superAdminPermCount = superAdminPermCountResult.rows[0] as { count: string };
+    // 6. Verificar datos insertados
+    const permCount = await prisma.permission.count();
+    const roleCount = await prisma.role.count();
+    const superAdminPermCount = await prisma.rolePermission.count({
+      where: {
+        role: {
+          name: 'Super Administrador'
+        }
+      }
+    });
 
     console.log('📊 Datos iniciales creados:');
-    console.log(`   - Permisos: ${permCount.count}`);
-    console.log(`   - Roles: ${roleCount.count}`);
-    console.log(`   - Permisos de Super Administrador: ${superAdminPermCount.count}`);
+    console.log(`   - Permisos: ${permCount}`);
+    console.log(`   - Roles: ${roleCount}`);
+    console.log(`   - Permisos de Super Administrador: ${superAdminPermCount}`);
 
-    if (Number(superAdminPermCount.count) === permissions.length) {
+    if (superAdminPermCount === permissions.length) {
       console.log('✅ Super Administrador tiene todos los permisos asignados');
     } else {
       console.warn('⚠️  Super Administrador no tiene todos los permisos');
@@ -173,6 +179,8 @@ async function seedDatabase() {
   } catch (error) {
     console.error('❌ Error durante el seeding:', error);
     process.exit(1);
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
