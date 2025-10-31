@@ -215,9 +215,10 @@ COMMENT ON COLUMN "role_permission"."created_at" IS 'Timestamp de asignación de
 
 -- Comentarios de todos los índices
 COMMENT ON INDEX "idx_user_email" IS 'Índice único en email para búsquedas rápidas durante autenticación y validación de unicidad.';
-COMMENT ON INDEX "idx_session_user_id" IS 'Índice en user_id para consultas eficientes de sesiones por usuario.';
-COMMENT ON INDEX "idx_session_expires_at" IS 'Índice en expires_at para limpieza eficiente de sesiones expiradas.';
-COMMENT ON INDEX "idx_key_user_id" IS 'Índice en user_id para consultas rápidas de claves de autenticación por usuario.';
+COMMENT ON INDEX "idx_session_user_id" IS 'Índice en userId para consultas eficientes de sesiones por usuario.';
+COMMENT ON INDEX "idx_session_expires" IS 'Índice en expires para limpieza eficiente de sesiones expiradas.';
+COMMENT ON INDEX "idx_account_user_id" IS 'Índice en userId para consultas de cuentas por usuario.';
+COMMENT ON INDEX "idx_user_credentials_user_id" IS 'Índice en user_id para consultas de credenciales por usuario.';
 COMMENT ON INDEX "idx_user_role_user_id" IS 'Índice en user_id para consultas eficientes de roles por usuario.';
 COMMENT ON INDEX "idx_user_role_role_id" IS 'Índice en role_id para consultas de usuarios por rol.';
 COMMENT ON INDEX "idx_role_permission_role_id" IS 'Índice en role_id para consultas rápidas de permisos por rol.';
@@ -227,18 +228,11 @@ COMMENT ON INDEX "idx_permission_module" IS 'Índice en module para agrupación 
 -- Comentarios de funciones y triggers
 COMMENT ON FUNCTION update_updated_at_column() IS 'Función trigger para actualizar automáticamente la columna updated_at con NOW() en cada UPDATE.';
 COMMENT ON TRIGGER update_user_updated_at ON "user" IS 'Trigger que actualiza automáticamente updated_at en la tabla user antes de cada UPDATE.';
+COMMENT ON TRIGGER update_user_credentials_updated_at ON "user_credentials" IS 'Trigger que actualiza automáticamente updated_at en la tabla user_credentials antes de cada UPDATE.';
 COMMENT ON TRIGGER update_role_updated_at ON "role" IS 'Trigger que actualiza automáticamente updated_at en la tabla role antes de cada UPDATE.';
 
--- Comentarios de constraints principales
-COMMENT ON CONSTRAINT "user_email_check" ON "user" IS 'Validación de formato de email con expresión regular RFC compliant.';
-COMMENT ON CONSTRAINT "user_first_name_check" ON "user" IS 'Validación de que first_name no esté vacío después de trim.';
-COMMENT ON CONSTRAINT "user_last_name_check" ON "user" IS 'Validación de que last_name no esté vacío después de trim.';
-COMMENT ON CONSTRAINT "role_name_check" ON "role" IS 'Validación de que el nombre del rol no esté vacío después de trim.';
-COMMENT ON CONSTRAINT "permission_id_check" ON "permission" IS 'Validación de formato semántico module:action para IDs de permisos (ADR-003).';
-COMMENT ON CONSTRAINT "permission_module_check" ON "permission" IS 'Validación de que el módulo no esté vacío después de trim.';
-
 -- Comentario sobre compliance del esquema
-COMMENT ON SCHEMA public IS 'Esquema principal de Aurora Nova - Sistema de autenticación y autorización basado en roles (RBAC) usando Lucia Auth y PostgreSQL 18+.';
+COMMENT ON SCHEMA public IS 'Esquema principal de Aurora Nova - Sistema de autenticación y autorización basado en roles (RBAC) usando Auth.js y PostgreSQL 18+.';
 
 -- Verificar que uuidv7() funciona correctamente
 DO $$
