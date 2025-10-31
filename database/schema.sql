@@ -7,7 +7,7 @@ DROP TABLE IF EXISTS "role_permission" CASCADE;
 DROP TABLE IF EXISTS "user_role" CASCADE;
 DROP TABLE IF EXISTS "session" CASCADE;
 DROP TABLE IF EXISTS "account" CASCADE;
-DROP TABLE IF EXISTS "verificationToken" CASCADE;
+DROP TABLE IF EXISTS "verification_token" CASCADE;
 DROP TABLE IF EXISTS "user_credentials" CASCADE;
 DROP TABLE IF EXISTS "permission" CASCADE;
 DROP TABLE IF EXISTS "role" CASCADE;
@@ -63,7 +63,7 @@ CREATE TABLE "account" (
 );
 
 -- Tabla de tokens de verificación Auth.js
-CREATE TABLE "verificationToken" (
+CREATE TABLE "verification_token" (
     "identifier" TEXT NOT NULL, -- email u otro identificador
     "token" TEXT NOT NULL,
     "expires" TIMESTAMP NOT NULL,
@@ -140,7 +140,7 @@ CREATE INDEX idx_permission_module ON "permission"("module");
 COMMENT ON TABLE "user" IS 'Tabla principal de usuarios del sistema compatible con Auth.js. Contiene la información básica de identificación y estado de cada usuario registrado.';
 COMMENT ON TABLE "session" IS 'Sesiones activas manejadas por Auth.js. Cada registro representa una sesión válida de usuario con su tiempo de expiración.';
 COMMENT ON TABLE "account" IS 'Cuentas de proveedores Auth.js (OAuth, credentials). Maneja diferentes métodos de autenticación vinculados a usuarios.';
-COMMENT ON TABLE "verificationToken" IS 'Tokens de verificación Auth.js para procesos como verificación de email o reset de password.';
+COMMENT ON TABLE "verification_token" IS 'Tokens de verificación Auth.js para procesos como verificación de email o reset de password.';
 COMMENT ON TABLE "user_credentials" IS 'Credenciales de usuario (passwords). Tabla separada para mantener las contraseñas hasheadas de forma segura.';
 COMMENT ON TABLE "role" IS 'Roles del sistema para control de acceso basado en roles (RBAC). Define los diferentes niveles de acceso en la aplicación.';
 COMMENT ON TABLE "permission" IS 'Permisos granulares con IDs semánticos. Define las acciones específicas que pueden realizar los usuarios (ej: user:create, role:delete).';
@@ -179,9 +179,9 @@ COMMENT ON COLUMN "account"."id_token" IS 'JWT de identidad OpenID Connect. Cont
 COMMENT ON COLUMN "account"."session_state" IS 'Estado de sesión OAuth para manejo de sesiones avanzadas. Específico del proveedor.';
 
 -- Tabla VERIFICATION_TOKEN
-COMMENT ON COLUMN "verificationToken"."identifier" IS 'Identificador del proceso de verificación (email, teléfono, etc). Clave compuesta parte 1.';
-COMMENT ON COLUMN "verificationToken"."token" IS 'Token único de verificación generado aleatoriamente. Clave compuesta parte 2.';
-COMMENT ON COLUMN "verificationToken"."expires" IS 'Timestamp de expiración del token. Los tokens expirados son automáticamente inválidos.';
+COMMENT ON COLUMN "verification_token"."identifier" IS 'Identificador del proceso de verificación (email, teléfono, etc). Clave compuesta parte 1.';
+COMMENT ON COLUMN "verification_token"."token" IS 'Token único de verificación generado aleatoriamente. Clave compuesta parte 2.';
+COMMENT ON COLUMN "verification_token"."expires" IS 'Timestamp de expiración del token. Los tokens expirados son automáticamente inválidos.';
 
 -- Tabla USER_CREDENTIALS
 COMMENT ON COLUMN "user_credentials"."user_id" IS 'Referencia única al usuario. FK y PK hacia user.id con CASCADE DELETE.';

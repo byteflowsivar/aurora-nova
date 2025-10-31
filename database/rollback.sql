@@ -36,7 +36,7 @@ BEGIN
     SELECT COUNT(*) INTO table_count
     FROM information_schema.tables
     WHERE table_schema = 'public'
-    AND table_name IN ('user', 'session', 'account', 'verificationToken', 'user_credentials', 'role', 'permission', 'user_role', 'role_permission');
+    AND table_name IN ('user', 'session', 'account', 'verification_token', 'user_credentials', 'role', 'permission', 'user_role', 'role_permission');
 
     SELECT COUNT(*) INTO function_count
     FROM information_schema.routines
@@ -79,7 +79,7 @@ DROP TABLE IF EXISTS "user_role" CASCADE;
 -- Eliminar tablas dependientes (Auth.js)
 DROP TABLE IF EXISTS "session" CASCADE;
 DROP TABLE IF EXISTS "account" CASCADE;
-DROP TABLE IF EXISTS "verificationToken" CASCADE;
+DROP TABLE IF EXISTS "verification_token" CASCADE;
 DROP TABLE IF EXISTS "user_credentials" CASCADE;
 
 -- Eliminar tablas de referencia

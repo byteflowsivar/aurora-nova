@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS "account" (
 );
 
 -- Tabla de tokens de verificación Auth.js
-CREATE TABLE IF NOT EXISTS "verificationToken" (
+CREATE TABLE IF NOT EXISTS "verification_token" (
     "identifier" VARCHAR(255) NOT NULL,
     "token" VARCHAR(255) NOT NULL,
     "expires" TIMESTAMPTZ NOT NULL,
@@ -162,7 +162,7 @@ COMMENT ON COLUMN "session"."expires" IS 'Fecha y hora de expiración de la sesi
 
 -- Comentarios para las nuevas tablas
 COMMENT ON TABLE "account" IS 'Cuentas de proveedores Auth.js (OAuth, credentials). Maneja diferentes métodos de autenticación vinculados a usuarios.';
-COMMENT ON TABLE "verificationToken" IS 'Tokens de verificación Auth.js para procesos como verificación de email o reset de password.';
+COMMENT ON TABLE "verification_token" IS 'Tokens de verificación Auth.js para procesos como verificación de email o reset de password.';
 COMMENT ON TABLE "user_credentials" IS 'Credenciales de usuario (passwords). Tabla separada para mantener las contraseñas hasheadas de forma segura.';
 
 -- ============================================================================

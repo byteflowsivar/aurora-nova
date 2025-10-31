@@ -80,7 +80,7 @@ model VerificationToken {
   expires    DateTime
 
   @@id([identifier, token])
-  @@map("verificationToken")
+  @@map("verification_token")
 }
 
 // ============================================================================
