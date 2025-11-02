@@ -75,7 +75,7 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 | **T019** | Páginas de autenticación | Crear páginas de login, registro y recuperación de contraseña con validaciones | **✅ COMPLETADO** | T009, T018 | ~~10h~~ |
 | **T020** | Dashboard principal | Desarrollar dashboard principal con navegación y información de usuario autenticado | **✅ COMPLETADO** | T017, T019 | ~~8h~~ |
 | **T021** | Interfaz de gestión de usuarios | Crear páginas para listar, crear, editar y gestionar usuarios del sistema | **✅ COMPLETADO** | T020 | ~~12h~~ |
-| **T022** | Interfaz de gestión de roles | Desarrollar páginas para administrar roles y sus permisos asociados | **⚠️ PARCIAL** | T021 | ~~10h~~ 5h |
+| **T022** | Interfaz de gestión de roles | Desarrollar páginas para administrar roles y sus permisos asociados | **✅ COMPLETADO** | T021 | ~~10h~~ |
 | **T023** | Interfaz de asignación de roles | Crear funcionalidad UI para asignar roles a usuarios con búsqueda y filtros | **Pendiente** | T022 | 8h |
 
 ---
@@ -110,11 +110,11 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 | **Fase 1** | T001 - T005 | ~~20h~~ **✅ 0h** | Configuración base **COMPLETADA** |
 | **Fase 2** | T006 - T011 | ~~33h~~ **✅ 0h** | Auth.js + Sistema Híbrido **COMPLETADO** |
 | **Fase 3** | T012 - T017 | ~~35h~~ **✅ 0h** | RBAC completo **COMPLETADO** |
-| **Fase 4** | T018 - T023 | ~~52h~~ **13h** | UI funcional (4/6 completadas, 1 parcial, 1 pendiente) |
+| **Fase 4** | T018 - T023 | ~~52h~~ **8h** | UI funcional (5/6 completadas, 1 pendiente) |
 | **Fase 5** | T024 - T028 | 44h | Sistema validado |
 | **Fase 6** | T029 - T032 | 19h | Listo para producción |
 
-**TOTAL ESTIMADO:** ~~203h~~ **76 horas (~1.9 semanas para 1 desarrollador)**
+**TOTAL ESTIMADO:** ~~203h~~ **71 horas (~1.8 semanas para 1 desarrollador)**
 
 ---
 
@@ -289,13 +289,19 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
   - ✅ Visualización de roles, avatares y estados
   - ✅ Integración con APIs corregidas (Prisma naming)
 
-- **T022 - Interfaz de gestión de roles**: ⚠️ PARCIALMENTE COMPLETADA
+- **T022 - Interfaz de gestión de roles**: ✅ COMPLETADA
   - ✅ Data table con información de roles
   - ✅ Contador de permisos y usuarios por rol
   - ✅ Diálogo de creación/edición de roles
   - ✅ Diálogo de confirmación para eliminación
+  - ✅ Diálogo de gestión de permisos (ManageRolePermissionsDialog)
+    - Diseño de dos columnas (permisos asignados / disponibles)
+    - Búsqueda en tiempo real de permisos disponibles
+    - Asignación/remoción de permisos con feedback visual
+    - Agrupación por módulos
+    - Notificaciones toast de éxito/error
+  - ✅ Botón "Gestionar Permisos" en menú de acciones
   - ✅ 100% estilo shadcn/ui
-  - ❌ **FALTA**: UI para gestionar permisos asociados a cada rol
 
 - **T023 - Interfaz de asignación de roles**: ❌ PENDIENTE
   - ✅ API implementada (/api/users/[id]/roles)
@@ -304,37 +310,36 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
   - ❌ **FALTA**: Búsqueda y filtrado de roles disponibles
 
 ### ⏳ Próximas Tareas Prioritarias
-1. **T022**: Completar interfaz para gestionar permisos de roles (5h restantes)
-2. **T023**: Implementar interfaz de asignación de roles a usuarios (8h)
-3. **T024**: Tests unitarios - Autenticación
-4. **T025**: Tests unitarios - Autorización
+1. **T023**: Implementar interfaz de asignación de roles a usuarios (8h)
+2. **T024**: Tests unitarios - Autenticación
+3. **T025**: Tests unitarios - Autorización
+4. **T026**: Tests de integración - API
 
 ### 📊 Progreso General
-- **Horas completadas**: 127h (T001-T021 completados + T022 parcial)
-- **Estimación restante**: 203h → **76h (~1.9 semanas)**
+- **Horas completadas**: 132h (T001-T022 completados)
+- **Estimación restante**: 203h → **71h (~1.8 semanas)**
 - **Fase 1 progreso**: 5/5 tareas (100% completado) ✅
 - **Fase 2 progreso**: 6/6 tareas (100% completado) ✅
 - **Fase 3 progreso**: 6/6 tareas (100% completado) ✅
   - ✅ **T012**: Sistema RBAC completo
   - ✅ **T013-T015**: APIs de gestión de roles, permisos y asignaciones
   - ✅ **T016-T017**: Middleware y helpers de autorización
-- **Fase 4 progreso**: 4.5/6 tareas (75% completado) ⏳
-  - ✅ **T018-T021**: shadcn/ui, autenticación, dashboard, gestión de usuarios
-  - ⚠️ **T022**: Gestión de roles (CRUD básico completo, falta UI de permisos)
-  - ❌ **T023**: Interfaz de asignación de roles (PENDIENTE)
-- **Sistema**: Dashboard funcional con CRUD de Users y Roles. APIs de permisos y roles implementadas.
+- **Fase 4 progreso**: 5/6 tareas (83% completado) ⏳
+  - ✅ **T018-T022**: shadcn/ui, autenticación, dashboard, gestión de usuarios y roles completa
+  - ❌ **T023**: Interfaz de asignación de roles a usuarios (PENDIENTE)
+- **Sistema**: Dashboard completamente funcional con CRUD de Users y Roles + gestión de permisos.
 
 ### 🎯 Hitos Alcanzados
 - ✅ **Fase 1 COMPLETA**: Configuración de BD y entorno
 - ✅ **Fase 2 COMPLETA**: Sistema de autenticación con gestión de sesiones
 - ✅ **Fase 3 COMPLETA**: Sistema RBAC completamente funcional (APIs)
-- ⏳ **Fase 4 EN PROGRESO**: Interfaces de usuario (75% completado - faltan T022 y T023)
+- ⏳ **Fase 4 EN PROGRESO**: Interfaces de usuario (83% completado - solo falta T023)
 
 ---
 
 **Próxima Revisión:** Al completar Fase 4 (Interfaces de Usuario)
 **Responsable del Plan:** Equipo de Desarrollo
-**Última Actualización:** 2025-11-02 (T013-T021 completadas, T022 parcial - Fase 3 completa, Fase 4 al 75% - Dashboard con CRUD de usuarios y roles, faltan UIs de asignación)
+**Última Actualización:** 2025-11-02 (T013-T022 completadas - Fase 3 completa, Fase 4 al 83% - Dashboard completo con gestión de usuarios, roles y permisos. Solo falta T023: UI de asignación de roles)
 
 ---
 

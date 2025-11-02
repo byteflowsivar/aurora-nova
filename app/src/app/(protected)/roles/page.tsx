@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge"
 import { DataTable } from "@/components/ui/data-table"
 import { RoleDialog } from "./components/role-dialog"
 import { DeleteRoleDialog } from "./components/delete-role-dialog"
+import { ManageRolePermissionsDialog } from "./components/manage-role-permissions-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 
 interface Role {
@@ -34,6 +35,7 @@ export default function RolesPage() {
   const [loading, setLoading] = React.useState(true)
   const [roleDialogOpen, setRoleDialogOpen] = React.useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
+  const [permissionsDialogOpen, setPermissionsDialogOpen] = React.useState(false)
   const [selectedRole, setSelectedRole] = React.useState<Role | null>(null)
 
   const fetchRoles = React.useCallback(async () => {
@@ -66,6 +68,11 @@ export default function RolesPage() {
   const handleCreate = () => {
     setSelectedRole(null)
     setRoleDialogOpen(true)
+  }
+
+  const handleManagePermissions = (role: Role) => {
+    setSelectedRole(role)
+    setPermissionsDialogOpen(true)
   }
 
   const columns: ColumnDef<Role>[] = [
@@ -142,6 +149,10 @@ export default function RolesPage() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Acciones</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleManagePermissions(role)}>
+                <Key className="mr-2 size-4" />
+                Gestionar Permisos
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleEdit(role)}>
                 <Pencil className="mr-2 size-4" />
                 Editar
@@ -212,6 +223,16 @@ export default function RolesPage() {
         role={selectedRole}
         onSuccess={fetchRoles}
       />
+
+      {selectedRole && (
+        <ManageRolePermissionsDialog
+          open={permissionsDialogOpen}
+          onOpenChange={setPermissionsDialogOpen}
+          roleId={selectedRole.id}
+          roleName={selectedRole.name}
+          onUpdate={fetchRoles}
+        />
+      )}
     </>
   )
 }
