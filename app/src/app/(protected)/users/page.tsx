@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge"
 import { DataTable } from "@/components/ui/data-table"
 import { UserDialog } from "./components/user-dialog"
 import { DeleteUserDialog } from "./components/delete-user-dialog"
+import { ManageUserRolesDialog } from "./components/manage-user-roles-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 
 interface User {
@@ -42,6 +43,7 @@ export default function UsersPage() {
   const [loading, setLoading] = React.useState(true)
   const [userDialogOpen, setUserDialogOpen] = React.useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
+  const [rolesDialogOpen, setRolesDialogOpen] = React.useState(false)
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null)
 
   const fetchUsers = React.useCallback(async () => {
@@ -74,6 +76,11 @@ export default function UsersPage() {
   const handleCreate = () => {
     setSelectedUser(null)
     setUserDialogOpen(true)
+  }
+
+  const handleManageRoles = (user: User) => {
+    setSelectedUser(user)
+    setRolesDialogOpen(true)
   }
 
   const getUserInitials = (user: User) => {
@@ -173,6 +180,10 @@ export default function UsersPage() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Acciones</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleManageRoles(user)}>
+                <Shield className="mr-2 size-4" />
+                Gestionar Roles
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleEdit(user)}>
                 <Pencil className="mr-2 size-4" />
                 Editar
@@ -243,6 +254,21 @@ export default function UsersPage() {
         user={selectedUser}
         onSuccess={fetchUsers}
       />
+
+      {selectedUser && (
+        <ManageUserRolesDialog
+          open={rolesDialogOpen}
+          onOpenChange={setRolesDialogOpen}
+          userId={selectedUser.id}
+          userName={
+            selectedUser.name ||
+            (selectedUser.firstName && selectedUser.lastName
+              ? `${selectedUser.firstName} ${selectedUser.lastName}`
+              : selectedUser.email)
+          }
+          onUpdate={fetchUsers}
+        />
+      )}
     </>
   )
 }
