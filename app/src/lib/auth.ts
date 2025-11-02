@@ -24,6 +24,7 @@ import { getUserByEmail, getUserWithCredentials } from "@/lib/prisma/queries"
 import { createSession } from "@/lib/prisma/session-queries"
 import { generateSessionToken, getSessionExpiry } from "@/lib/utils/session-utils"
 import bcrypt from "bcryptjs"
+import logger from "@/lib/logger";
 
 // Configuración del adapter Prisma para Auth.js
 const authAdapter = PrismaAdapter(prisma)
@@ -50,7 +51,9 @@ export const {
         userAgent: { label: "User Agent", type: "text" },
       },
       async authorize(credentials) {
+        logger.info(`Authentication attempt for email: ${credentials?.email}`);
         if (!credentials?.email || !credentials?.password) {
+          logger.warn('Authentication failed: Missing credentials');
           return null
         }
 
@@ -59,6 +62,7 @@ export const {
           const user = await getUserByEmail(credentials.email as string)
 
           if (!user) {
+            logger.warn(`Authentication failed: User not found for email: ${credentials.email}`);
             return null
           }
 
@@ -66,6 +70,7 @@ export const {
           const userWithCredentials = await getUserWithCredentials(user.id)
 
           if (!userWithCredentials?.credentials) {
+            logger.error(`Authentication failed: Credentials not found for user: ${user.id}`);
             return null
           }
 
@@ -75,9 +80,11 @@ export const {
           )
 
           if (!isValidPassword) {
+            logger.warn(`Authentication failed: Invalid password for user: ${user.id}`);
             return null
           }
 
+          logger.info(`Authentication successful for user: ${user.id}`);
           // Retornar usuario en formato Auth.js + metadata para sistema híbrido
           return {
             id: user.id,
@@ -92,7 +99,7 @@ export const {
             userAgent: credentials.userAgent as string | undefined,
           }
         } catch (error) {
-          console.error("Error during authentication:", error)
+          logger.error(error, "Error during authentication:")
           return null
         }
       }

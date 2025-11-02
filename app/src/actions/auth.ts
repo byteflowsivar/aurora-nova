@@ -67,89 +67,73 @@ type LoginResponse = {
  * }
  * ```
  */
-export async function registerUser(
-  input: RegisterInput
-): Promise<ActionResponse<RegisterResponse>> {
-  try {
-    // Validar datos de entrada
-    const validatedData = registerSchema.parse(input)
+import { z } from "zod";
+import { hash } from "bcryptjs";
+import { prisma } from "@/lib/prisma/connection";
+import { ActionResponse } from "@/types/action-response";
+import { RegisterSchema } from "@/lib/validations/auth";
+import logger from "@/lib/logger";
 
-    // Verificar si el email ya existe
+export async function registerUser(
+  values: z.infer<typeof RegisterSchema>
+): Promise<ActionResponse> {
+  logger.info('Starting user registration');
+  const validatedFields = RegisterSchema.safeParse(values);
+
+  if (!validatedFields.success) {
+    logger.error('Invalid registration fields');
+    return {
+      success: false,
+      error: "Campos inválidos",
+    };
+  }
+
+  const { email, password, firstName, lastName } = validatedFields.data;
+
+  try {
     const existingUser = await prisma.user.findUnique({
-      where: { email: validatedData.email },
-    })
+      where: { email },
+    });
 
     if (existingUser) {
-      return errorResponse("Este email ya está registrado")
+      logger.warn(`Registration attempt for existing email: ${email}`);
+      return {
+        success: false,
+        error: "El correo electrónico ya está en uso",
+      };
     }
 
-    // Crear usuario con credenciales
-    const user = await createUserWithCredentials({
-      email: validatedData.email,
-      password: validatedData.password,
-      firstName: validatedData.firstName,
-      lastName: validatedData.lastName,
-      name: `${validatedData.firstName} ${validatedData.lastName}`,
-    })
+    const hashedPassword = await hash(password, 12);
 
-    // Obtener el rol "Usuario" (rol básico por defecto)
-    const defaultRole = await getRoleByName("Usuario")
-
-    if (!defaultRole) {
-      // Si no existe el rol "Usuario", logeamos el error pero no fallamos el registro
-      console.error(
-        'ADVERTENCIA: No se encontró el rol "Usuario" en la base de datos. El usuario fue creado sin rol asignado.'
-      )
-    } else {
-      // Asignar rol básico al usuario
-      await prisma.userRole.create({
-        data: {
-          userId: user.id,
-          roleId: defaultRole.id,
-          createdBy: user.id, // Auto-asignado durante registro
+    const user = await prisma.user.create({
+      data: {
+        name: `${firstName} ${lastName}`,
+        email,
+        firstName,
+        lastName,
+        credentials: {
+          create: {
+            hashedPassword,
+          },
         },
-      })
-    }
-
-    return successResponse(
-      {
-        userId: user.id,
-        email: user.email,
-        firstName: user.firstName || "",
-        lastName: user.lastName || "",
       },
-      "Usuario registrado exitosamente"
-    )
+    });
+
+    logger.info(`User registered successfully: ${user.id}`);
+    return {
+      success: true,
+      data: {
+        userId: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+    };
   } catch (error) {
-    // Errores de validación de Zod
-    if (error instanceof z.ZodError) {
-      const fieldErrors: Record<string, string[]> = {}
-
-      error.issues.forEach((err) => {
-        const path = err.path.join(".")
-        if (!fieldErrors[path]) {
-          fieldErrors[path] = []
-        }
-        fieldErrors[path].push(err.message)
-      })
-
-      return errorResponse("Error de validación", fieldErrors)
-    }
-
-    // Errores de base de datos
-    if (error instanceof Error) {
-      // Error de email duplicado (por si acaso)
-      if (error.message.includes("unique constraint")) {
-        return errorResponse("Este email ya está registrado")
-      }
-
-      console.error("Error en registerUser:", error)
-      return errorResponse(`Error al registrar usuario: ${error.message}`)
-    }
-
-    // Error genérico
-    console.error("Error desconocido en registerUser:", error)
-    return errorResponse("Error desconocido al registrar usuario")
+    logger.error(error, 'Error during user registration');
+    return {
+      success: false,
+      error: "Ocurrió un error al registrar el usuario",
+    };
   }
 }
 
