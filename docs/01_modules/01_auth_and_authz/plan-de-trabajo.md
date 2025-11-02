@@ -88,8 +88,8 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 | **T025** | Tests unitarios - Autorización | Crear tests unitarios para sistema RBAC y verificación de permisos | **✅ COMPLETADO** | T017 | ~~8h~~ |
 | **T026** | Tests de integración - API | Desarrollar tests de integración para todos los endpoints de la API de auth | **❌ REMOVIDO** | T025 | 10h |
 | **Nota T026:** Las pruebas de integración para la API de usuarios (`api-users.test.ts`) fueron removidas temporalmente debido a un problema conocido de compatibilidad entre `next-auth` y Vitest (`Cannot find module 'next/server'`). Se documenta para futura revisión y posible re-implementación con una estrategia de testing diferente o cuando el problema sea resuelto por las librerías.
-| **T027** | Tests E2E - Flujos críticos | Implementar tests end-to-end para flujos de login, registro y gestión de usuarios | Pendiente | T023 | 12h |
-| **T028** | Validación de seguridad | Realizar auditoría de seguridad, validar hashing de contraseñas y protección CSRF/XSS | Pendiente | T027 | 6h |
+| **T027** | Tests E2E - Flujos críticos | Implementar tests end-to-end para flujos de login, registro y gestión de usuarios | 🟡 POSPUESTO | T023 | 12h |
+| **T028** | Validación de seguridad | Realizar auditoría de seguridad, validar hashing de contraseñas y protección CSRF/XSS | **✅ COMPLETADO** | T027 | 6h |
 
 ---
 
@@ -112,10 +112,10 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 | **Fase 2** | T006 - T011 | ~~33h~~ **✅ 0h** | Auth.js + Sistema Híbrido **COMPLETADO** |
 | **Fase 3** | T012 - T017 | ~~35h~~ **✅ 0h** | RBAC completo **COMPLETADO** |
 | **Fase 4** | T018 - T023 | ~~52h~~ **✅ 0h** | UI funcional **COMPLETADA** |
-| **Fase 5** | T024 - T028 | ~~44h~~ **⏳ 28h (40% completo)** | Sistema validado **EN PROGRESO** |
+| **Fase 5** | T024 - T028 | ~~44h~~ **⏳ 16h (60% completo)** | Sistema validado **EN PROGRESO** |
 | **Fase 6** | T029 - T032 | 19h | Listo para producción |
 
-**TOTAL ESTIMADO:** ~~203h~~ **47 horas (~1.2 semanas para 1 desarrollador)**
+**TOTAL ESTIMADO:** ~~203h~~ **41 horas (~1 semana para 1 desarrollador)**
 
 ---
 
@@ -388,10 +388,11 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
   - ✅ **T021**: Gestión completa de usuarios (CRUD + gestión de roles)
   - ✅ **T022**: Gestión completa de roles (CRUD + gestión de permisos)
   - ✅ **T023**: Interfaz de asignación de roles a usuarios
-- **Fase 5 progreso**: 2/5 tareas (40% completado) ⏳
+- **Fase 5 progreso**: 3/5 tareas (60% completado) ⏳
   - ✅ **T024**: Tests unitarios de autenticación (45 tests, 3 bugs corregidos)
   - ✅ **T025**: Tests unitarios de autorización (44 tests, 92.85% coverage)
-  - ⏳ **T026-T028**: Pendientes
+  - ✅ **T028**: Validación de seguridad (Auditoría de hashing de contraseñas, protección CSRF y XSS completada y satisfactoria)
+  - ⏳ **T026-T027**: Pendientes/Removidas
 - **Sistema**: Dashboard completamente funcional con gestión integral de usuarios, roles y permisos. Testing framework completo con **89 tests unitarios**.
 
 ### 🎯 Hitos Alcanzados
@@ -405,7 +406,7 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 
 **Próxima Revisión:** Al completar Fase 5 (Testing y Validación)
 **Responsable del Plan:** Equipo de Desarrollo
-**Última Actualización:** 2025-11-02 (T001-T025 COMPLETADAS - Fases 1-4 100% + Fase 5 40% - Testing unitario completado. 89 tests unitarios implementados (45 auth + 44 RBAC). 3 bugs de producción encontrados y corregidos. Cobertura promedio: 78.37%.)
+**Última Actualización:** 2025-11-02 (T001-T025, T028 COMPLETADAS - Fases 1-4 100% + Fase 5 60% - Testing unitario y validación de seguridad completados. 89 tests unitarios implementados (45 auth + 44 RBAC). 3 bugs de producción encontrados y corregidos. Cobertura promedio: 78.37%.)
 
 ---
 
