@@ -84,7 +84,7 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 
 | ID | Nombre | Descripción | Estado | Dependencias | Estimación |
 |---|---|---|---|---|---|
-| **T024** | Tests unitarios - Autenticación | Escribir tests unitarios para todas las funciones de autenticación y Lucia Auth | Pendiente | T011 | 8h |
+| **T024** | Tests unitarios - Autenticación | Escribir tests unitarios para todas las funciones de autenticación y Auth.js | **✅ COMPLETADO** | T011 | ~~8h~~ |
 | **T025** | Tests unitarios - Autorización | Crear tests unitarios para sistema RBAC y verificación de permisos | Pendiente | T017 | 8h |
 | **T026** | Tests de integración - API | Desarrollar tests de integración para todos los endpoints de la API de auth | Pendiente | T025 | 10h |
 | **T027** | Tests E2E - Flujos críticos | Implementar tests end-to-end para flujos de login, registro y gestión de usuarios | Pendiente | T023 | 12h |
@@ -111,10 +111,10 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 | **Fase 2** | T006 - T011 | ~~33h~~ **✅ 0h** | Auth.js + Sistema Híbrido **COMPLETADO** |
 | **Fase 3** | T012 - T017 | ~~35h~~ **✅ 0h** | RBAC completo **COMPLETADO** |
 | **Fase 4** | T018 - T023 | ~~52h~~ **✅ 0h** | UI funcional **COMPLETADA** |
-| **Fase 5** | T024 - T028 | 44h | Sistema validado |
+| **Fase 5** | T024 - T028 | ~~44h~~ **⏳ 36h (20% completo)** | Sistema validado **EN PROGRESO** |
 | **Fase 6** | T029 - T032 | 19h | Listo para producción |
 
-**TOTAL ESTIMADO:** ~~203h~~ **63 horas (~1.6 semanas para 1 desarrollador)**
+**TOTAL ESTIMADO:** ~~203h~~ **55 horas (~1.4 semanas para 1 desarrollador)**
 
 ---
 
@@ -315,15 +315,53 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
   - ✅ Botón "Gestionar Roles" en menú de acciones de usuarios
   - ✅ 100% estilo shadcn/ui
 
+- **T024 - Tests unitarios - Autenticación**: ✅ COMPLETADA
+  - ✅ Configuración de Vitest para Next.js 15
+    - Vitest v4.0.6 con soporte para React y JSX
+    - Testing Library (@testing-library/react v16.3.0)
+    - Happy-dom para entorno de testing rápido
+    - Vitest UI para interfaz visual de tests
+    - Coverage con v8 provider
+  - ✅ Estructura de directorios de testing
+    - `src/__tests__/unit/` - Tests unitarios
+    - `src/__tests__/integration/` - Tests de integración
+    - `src/__tests__/helpers/` - Utilidades de testing
+    - `src/__tests__/mocks/` - Mocks y datos de prueba
+  - ✅ Mocks de Prisma con vitest-mock-extended
+  - ✅ Tests de session-utils (20 tests) - **96.77% coverage**
+    - Generación de tokens UUID
+    - Parsing de User-Agent (detecta navegadores, OS, dispositivos)
+    - Cálculo de fechas de expiración
+    - **Bugs encontrados y corregidos**: Orden de detección de OS/dispositivos
+  - ✅ Tests de session-queries (7 tests) - **27.27% coverage**
+    - Creación de sesiones en BD
+    - Validación de sesiones
+    - Manejo de errores de BD
+  - ✅ Tests de auth-validations (18 tests) - **70% coverage**
+    - Schemas de registro (email, password, nombres)
+    - Schemas de login
+    - Validaciones de seguridad
+    - Transformaciones (lowercase, trim)
+  - ✅ Scripts npm configurados
+    - `npm test` - Modo watch
+    - `npm run test:run` - Ejecutar una vez
+    - `npm run test:ui` - Interfaz visual
+    - `npm run test:coverage` - Reporte de cobertura
+  - ✅ **45 tests pasando en total**
+  - ✅ **Bugs de producción encontrados y corregidos**: 3
+    - Parser de User-Agent detectaba Linux antes que Android
+    - Parser detectaba macOS antes que iOS
+    - Parser detectaba Mobile antes que Tablet
+
 ### ⏳ Próximas Tareas Prioritarias
-1. **T024**: Tests unitarios - Autenticación (8h)
-2. **T025**: Tests unitarios - Autorización (8h)
-3. **T026**: Tests de integración - API (10h)
-4. **T027**: Tests E2E - Flujos críticos (12h)
+1. **T025**: Tests unitarios - Autorización (8h)
+2. **T026**: Tests de integración - API (10h)
+3. **T027**: Tests E2E - Flujos críticos (12h)
+4. **T028**: Validación de seguridad (6h)
 
 ### 📊 Progreso General
-- **Horas completadas**: 140h (T001-T023 completados - Fases 1-4 completas)
-- **Estimación restante**: 203h → **63h (~1.6 semanas)**
+- **Horas completadas**: 148h (T001-T024 completados - Fases 1-4 completas + T024)
+- **Estimación restante**: 203h → **55h (~1.4 semanas)**
 - **Fase 1 progreso**: 5/5 tareas (100% completado) ✅
 - **Fase 2 progreso**: 6/6 tareas (100% completado) ✅
 - **Fase 3 progreso**: 6/6 tareas (100% completado) ✅
@@ -335,19 +373,23 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
   - ✅ **T021**: Gestión completa de usuarios (CRUD + gestión de roles)
   - ✅ **T022**: Gestión completa de roles (CRUD + gestión de permisos)
   - ✅ **T023**: Interfaz de asignación de roles a usuarios
-- **Sistema**: Dashboard completamente funcional con gestión integral de usuarios, roles y permisos.
+- **Fase 5 progreso**: 1/5 tareas (20% completado) ⏳
+  - ✅ **T024**: Tests unitarios de autenticación (45 tests, 3 bugs corregidos)
+  - ⏳ **T025-T028**: Pendientes
+- **Sistema**: Dashboard completamente funcional con gestión integral de usuarios, roles y permisos. Testing framework configurado con 45 tests.
 
 ### 🎯 Hitos Alcanzados
 - ✅ **Fase 1 COMPLETA**: Configuración de BD y entorno
 - ✅ **Fase 2 COMPLETA**: Sistema de autenticación con gestión de sesiones
 - ✅ **Fase 3 COMPLETA**: Sistema RBAC completamente funcional (APIs)
 - ✅ **Fase 4 COMPLETA**: Interfaces de usuario completamente funcionales
+- ⏳ **Fase 5 EN PROGRESO**: Testing framework configurado, tests unitarios iniciados (20%)
 
 ---
 
 **Próxima Revisión:** Al completar Fase 5 (Testing y Validación)
 **Responsable del Plan:** Equipo de Desarrollo
-**Última Actualización:** 2025-11-02 (T001-T023 COMPLETADAS - Fases 1-4 100% COMPLETAS - Dashboard completamente funcional con gestión integral de usuarios, roles y permisos. Sistema RBAC operativo con interfaces completas.)
+**Última Actualización:** 2025-11-02 (T001-T024 COMPLETADAS - Fases 1-4 100% + Fase 5 20% - Sistema de testing configurado con Vitest. 45 tests unitarios de autenticación implementados. 3 bugs de producción encontrados y corregidos.)
 
 ---
 

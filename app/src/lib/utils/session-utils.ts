@@ -35,19 +35,19 @@ export function parseUserAgent(userAgent: string): {
   else if (ua.includes("safari")) browser = "Safari"
   else if (ua.includes("opera")) browser = "Opera"
 
-  // Detectar OS
+  // Detectar OS (orden importante: más específico primero)
   let os: string | undefined
-  if (ua.includes("windows")) os = "Windows"
-  else if (ua.includes("mac")) os = "macOS"
-  else if (ua.includes("linux")) os = "Linux"
-  else if (ua.includes("android")) os = "Android"
+  if (ua.includes("android")) os = "Android"
   else if (ua.includes("ios") || ua.includes("iphone") || ua.includes("ipad"))
     os = "iOS"
+  else if (ua.includes("windows")) os = "Windows"
+  else if (ua.includes("mac")) os = "macOS"
+  else if (ua.includes("linux")) os = "Linux"
 
-  // Detectar tipo de dispositivo
+  // Detectar tipo de dispositivo (orden importante: más específico primero)
   let device: string | undefined
-  if (ua.includes("mobile")) device = "Mobile"
-  else if (ua.includes("tablet") || ua.includes("ipad")) device = "Tablet"
+  if (ua.includes("tablet") || ua.includes("ipad")) device = "Tablet"
+  else if (ua.includes("mobile")) device = "Mobile"
   else device = "Desktop"
 
   return { browser, os, device }
