@@ -9,6 +9,7 @@ import * as dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
 import { prisma } from '../src/lib/prisma/connection';
+import { hash } from 'bcryptjs';
 
 // Datos de permisos base
 const permissions = [
@@ -152,7 +153,47 @@ async function seedDatabase() {
       }
     }
 
-    // 6. Verificar datos insertados
+    // 6. Crear un usuario de prueba para los tests de integración
+    console.log('🧪 Creando usuario de prueba para integración...');
+    const testUserPassword = 'Password123!';
+    const hashedTestUserPassword = await hash(testUserPassword, 12);
+
+    const testUser = await prisma.user.upsert({
+      where: { email: 'john@example.com' },
+      update: {},
+      create: {
+        id: 'user-1',
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john@example.com',
+        emailVerified: new Date(),
+        credentials: {
+          create: {
+            hashedPassword: hashedTestUserPassword,
+          },
+        },
+      },
+    });
+
+    // Asignar el rol 'Usuario' al usuario de prueba
+    if (userRole) {
+      await prisma.userRole.upsert({
+        where: {
+          userId_roleId: {
+            userId: testUser.id,
+            roleId: userRole.id,
+          },
+        },
+        update: {},
+        create: {
+          userId: testUser.id,
+          roleId: userRole.id,
+          createdBy: testUser.id, // O un ID de sistema si aplica
+        },
+      });
+    }
+
+    // 7. Verificar datos insertados
     const permCount = await prisma.permission.count();
     const roleCount = await prisma.role.count();
     const superAdminPermCount = await prisma.rolePermission.count({
@@ -162,11 +203,13 @@ async function seedDatabase() {
         }
       }
     });
+    const userCount = await prisma.user.count();
 
     console.log('📊 Datos iniciales creados:');
     console.log(`   - Permisos: ${permCount}`);
     console.log(`   - Roles: ${roleCount}`);
     console.log(`   - Permisos de Super Administrador: ${superAdminPermCount}`);
+    console.log(`   - Usuarios: ${userCount}`);
 
     if (superAdminPermCount === permissions.length) {
       console.log('✅ Super Administrador tiene todos los permisos asignados');

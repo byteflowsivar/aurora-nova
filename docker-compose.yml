@@ -25,6 +25,22 @@ services:
     volumes:
       - aurora-nova-db-data:/var/lib/postgresql/data
 
+  test-db:
+    image: postgres:18-alpine3.22
+    container_name: aurora-nova-test-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: test_db
+      TZ: America/El_Salvador
+      LANG: es_SV.UTF-8
+    ports:
+      - "5433:5432"
+    volumes:
+      - aurora-nova-test-db-data:/var/lib/postgresql/data
+
 # Definición del volumen nombrado para la persistencia de datos.
 volumes:
   aurora-nova-db-data:
+  aurora-nova-test-db-data:

@@ -12,6 +12,9 @@ import {
   userHasAllPermissions,
   getUserPermissionsDetailed,
   getUserRolesWithPermissions,
+  getAllPermissions,
+  getPermissionsByModule,
+  permissionExists,
 } from '@/lib/prisma/permission-queries'
 
 describe('permission-queries', () => {
@@ -390,6 +393,92 @@ describe('permission-queries', () => {
       const result = await getUserRolesWithPermissions('user-no-roles')
 
       expect(result).toEqual([])
+    })
+  })
+
+  // ===========================================================================
+  // TESTS PARA QUERIES DE PERMISOS (CATÁLOGO)
+  // ===========================================================================
+
+  describe('getAllPermissions', () => {
+    it('debe retornar todos los permisos del sistema ordenados por módulo e id', async () => {
+      const mockPermissions = [
+        { id: 'role:create', module: 'role', description: 'Crear roles' },
+        { id: 'user:create', module: 'user', description: 'Crear usuarios' },
+        { id: 'user:read', module: 'user', description: 'Leer usuarios' },
+      ]
+      prismaMock.permission.findMany.mockResolvedValue(mockPermissions as any)
+
+      const result = await getAllPermissions()
+
+      expect(prismaMock.permission.findMany).toHaveBeenCalledWith({
+        select: {
+          id: true,
+          module: true,
+          description: true,
+        },
+        orderBy: [{ module: 'asc' }, { id: 'asc' }],
+      })
+      expect(result).toEqual(mockPermissions)
+    })
+
+    it('debe retornar un array vacío si no hay permisos en el sistema', async () => {
+      prismaMock.permission.findMany.mockResolvedValue([])
+      const result = await getAllPermissions()
+      expect(result).toEqual([])
+    })
+  })
+
+  describe('getPermissionsByModule', () => {
+    it('debe retornar permisos de un módulo específico', async () => {
+      const module = 'user'
+      const mockPermissions = [
+        { id: 'user:create', module: 'user', description: 'Crear usuarios' },
+        { id: 'user:read', module: 'user', description: 'Leer usuarios' },
+      ]
+      prismaMock.permission.findMany.mockResolvedValue(mockPermissions as any)
+
+      const result = await getPermissionsByModule(module)
+
+      expect(prismaMock.permission.findMany).toHaveBeenCalledWith({
+        where: { module },
+        select: {
+          id: true,
+          module: true,
+          description: true,
+        },
+        orderBy: { id: 'asc' },
+      })
+      expect(result).toEqual(mockPermissions)
+    })
+
+    it('debe retornar un array vacío si el módulo no existe o no tiene permisos', async () => {
+      prismaMock.permission.findMany.mockResolvedValue([])
+      const result = await getPermissionsByModule('nonexistent-module')
+      expect(result).toEqual([])
+    })
+  })
+
+  describe('permissionExists', () => {
+    it('debe retornar true si el permiso existe', async () => {
+      const permissionId = 'user:create'
+      prismaMock.permission.count.mockResolvedValue(1)
+
+      const result = await permissionExists(permissionId)
+
+      expect(prismaMock.permission.count).toHaveBeenCalledWith({
+        where: { id: permissionId },
+      })
+      expect(result).toBe(true)
+    })
+
+    it('debe retornar false si el permiso no existe', async () => {
+      const permissionId = 'nonexistent:permission'
+      prismaMock.permission.count.mockResolvedValue(0)
+
+      const result = await permissionExists(permissionId)
+
+      expect(result).toBe(false)
     })
   })
 })
