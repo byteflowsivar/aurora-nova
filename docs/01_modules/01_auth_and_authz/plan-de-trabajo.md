@@ -97,8 +97,9 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 
 | ID | Nombre | Descripción | Estado | Dependientes | Estimación |
 |---|---|---|---|---|---|
-| **T029** | Script de creación de Super Admin | Implementar CLI tool para crear el primer usuario Super Admin según RF-001 | Pendiente | T028 | 5h |
-| **T030** | Configuración de producción | Configurar variables de entorno, secretos y configuraciones específicas para producción | Pendiente | T029 | 4h |
+| **T029** | Script de creación de Super Admin | Implementar CLI tool para crear el primer usuario Super Admin según RF-001 | **✅ COMPLETADO** | T028 | 5h |
+| **T029.1** | Script de creación de usuario de prueba | Implementar CLI tool para crear un usuario de prueba | **✅ COMPLETADO** | T028 | 1h |
+| **Nota T029.1:** Se separa la creación de usuarios del script de seeding. El script `create-test-user.ts` ya existía y cumple con los requisitos.
 | **T031** | Documentación de despliegue | Crear guías de despliegue, configuración de BD en producción y procedimientos operativos | Pendiente | T030 | 6h |
 | **T032** | Monitoring y logs | Implementar logging detallado y métricas para monitoreo de autenticación y errores | Pendiente | T031 | 4h |
 
@@ -113,9 +114,9 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 | **Fase 3** | T012 - T017 | ~~35h~~ **✅ 0h** | RBAC completo **COMPLETADO** |
 | **Fase 4** | T018 - T023 | ~~52h~~ **✅ 0h** | UI funcional **COMPLETADA** |
 | **Fase 5** | T024 - T028 | ~~44h~~ **⏳ 16h (60% completo)** | Sistema validado **EN PROGRESO** |
-| **Fase 6** | T029 - T032 | 19h | Listo para producción |
+| **Fase 6** | T029 - T032 | 13h | Listo para producción |
 
-**TOTAL ESTIMADO:** ~~203h~~ **41 horas (~1 semana para 1 desarrollador)**
+**TOTAL ESTIMADO:** ~~203h~~ **35 horas (~0.9 semanas para 1 desarrollador)**
 
 ---
 
@@ -393,6 +394,10 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
   - ✅ **T025**: Tests unitarios de autorización (44 tests, 92.85% coverage)
   - ✅ **T028**: Validación de seguridad (Auditoría de hashing de contraseñas, protección CSRF y XSS completada y satisfactoria)
   - ⏳ **T026-T027**: Pendientes/Removidas
+- **Fase 6 progreso**: 2/4 tareas (25% completado) ⏳
+  - ✅ **T029**: Script de creación de Super Admin (Implementado y validado)
+  - ✅ **T029.1**: Script de creación de usuario de prueba (Implementado y validado)
+  - ⏳ **T030-T032**: Pendientes
 - **Sistema**: Dashboard completamente funcional con gestión integral de usuarios, roles y permisos. Testing framework completo con **89 tests unitarios**.
 
 ### 🎯 Hitos Alcanzados
@@ -406,7 +411,7 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 
 **Próxima Revisión:** Al completar Fase 5 (Testing y Validación)
 **Responsable del Plan:** Equipo de Desarrollo
-**Última Actualización:** 2025-11-02 (T001-T025, T028 COMPLETADAS - Fases 1-4 100% + Fase 5 60% - Testing unitario y validación de seguridad completados. 89 tests unitarios implementados (45 auth + 44 RBAC). 3 bugs de producción encontrados y corregidos. Cobertura promedio: 78.37%.)
+**Última Actualización:** 2025-11-02 (T001-T025, T028, T029, T029.1 COMPLETADAS - Fases 1-4 100% + Fase 5 60% + Fase 6 25% - Testing unitario, validación de seguridad y scripts de creación de usuarios completados. 89 tests unitarios implementados (45 auth + 44 RBAC). 3 bugs de producción encontrados y corregidos. Cobertura promedio: 78.37%.)
 
 ---
 
