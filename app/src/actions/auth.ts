@@ -15,6 +15,7 @@ import { deleteSession } from "@/lib/prisma/session-queries"
 import {
   loginSchema,
   type LoginInput,
+  registerSchema,
 } from "@/lib/validations/auth"
 import type { ActionResponse } from "@/types/action-response"
 import { successResponse, errorResponse } from "@/types/action-response"
@@ -22,6 +23,7 @@ import { AuthError } from "next-auth"
 import { z } from "zod"
 import { headers } from "next/headers"
 import logger from "@/lib/logger";
+import { hash } from "bcryptjs";
 
 // ============================================================================
 // TIPOS
@@ -58,10 +60,10 @@ type LoginResponse = {
  * ```
  */
 export async function registerUser(
-  values: z.infer<typeof RegisterSchema>
-): Promise<ActionResponse<{ userId: string; firstName: string | null; lastName: string | null; }>> {
+  values: z.infer<typeof registerSchema>
+): Promise<ActionResponse<{ userId: string; firstName: string | null; lastName: string | null; email: string; }>> {
   logger.info('Starting user registration');
-  const validatedFields = RegisterSchema.safeParse(values);
+  const validatedFields = registerSchema.safeParse(values);
 
   if (!validatedFields.success) {
     logger.error('Invalid registration fields');
@@ -109,6 +111,7 @@ export async function registerUser(
         userId: user.id,
         firstName: user.firstName,
         lastName: user.lastName,
+        email: user.email,
       },
     };
   } catch (error) {
