@@ -24,7 +24,7 @@ export async function GET(
 
     const { id } = await params
 
-    const rolePermissions = await prisma.RolePermission.findMany({
+    const rolePermissions = await prisma.rolePermission.findMany({
       where: { roleId: id },
       select: {
         permission: {
@@ -74,7 +74,7 @@ export async function POST(
     const validationResult = assignPermissionSchema.safeParse(body)
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Datos inválidos", details: validationResult.error.errors },
+        { error: "Datos inválidos", details: validationResult.error.issues },
         { status: 400 }
       )
     }
@@ -82,7 +82,7 @@ export async function POST(
     const { permissionId } = validationResult.data
 
     // Verificar que el rol existe
-    const role = await prisma.Role.findUnique({
+    const role = await prisma.role.findUnique({
       where: { id },
     })
 
@@ -94,7 +94,7 @@ export async function POST(
     }
 
     // Verificar que el permiso existe
-    const permission = await prisma.Permission.findUnique({
+    const permission = await prisma.permission.findUnique({
       where: { id: permissionId },
     })
 
@@ -106,7 +106,7 @@ export async function POST(
     }
 
     // Verificar si ya tiene el permiso
-    const existingAssignment = await prisma.RolePermission.findUnique({
+    const existingAssignment = await prisma.rolePermission.findUnique({
       where: {
         roleId_permissionId: {
           roleId: id,
@@ -123,7 +123,7 @@ export async function POST(
     }
 
     // Asignar permiso
-    await prisma.RolePermission.create({
+    await prisma.rolePermission.create({
       data: {
         roleId: id,
         permissionId: permissionId,
@@ -167,7 +167,7 @@ export async function DELETE(
     }
 
     // Eliminar asignación
-    const deleted = await prisma.RolePermission.deleteMany({
+    const deleted = await prisma.rolePermission.deleteMany({
       where: {
         roleId: id,
         permissionId: permissionId,

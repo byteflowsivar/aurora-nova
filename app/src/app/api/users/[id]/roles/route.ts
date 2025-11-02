@@ -73,7 +73,7 @@ export async function POST(
     const validationResult = assignRoleSchema.safeParse(body)
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Datos inválidos", details: validationResult.error.errors },
+        { error: "Datos inválidos", details: validationResult.error.issues },
         { status: 400 }
       )
     }
@@ -81,7 +81,7 @@ export async function POST(
     const { roleId } = validationResult.data
 
     // Verificar que el usuario existe
-    const user = await prisma.User.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id },
     })
 
@@ -93,7 +93,7 @@ export async function POST(
     }
 
     // Verificar que el rol existe
-    const role = await prisma.Role.findUnique({
+    const role = await prisma.role.findUnique({
       where: { id: roleId },
     })
 

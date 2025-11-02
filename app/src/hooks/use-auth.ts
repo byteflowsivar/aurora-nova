@@ -69,7 +69,7 @@ export function useAuth(): AuthContext {
   }
 
   // Crear objeto de usuario extendido
-  const user: UserWithRolesAndPermissions | null = session?.user
+  const user: UserWithRolesAndPermissions | null = session?.user && session.user.id
     ? {
         id: session.user.id,
         name: session.user.name ?? null,

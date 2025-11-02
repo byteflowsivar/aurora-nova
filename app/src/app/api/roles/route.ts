@@ -20,7 +20,7 @@ export async function GET() {
       )
     }
 
-    const roles = await prisma.Role.findMany({
+    const roles = await prisma.role.findMany({
       select: {
         id: true,
         name: true,
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     const validationResult = createRoleSchema.safeParse(body)
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Datos inválidos", details: validationResult.error.errors },
+        { error: "Datos inválidos", details: validationResult.error.issues },
         { status: 400 }
       )
     }
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     const { name, description } = validationResult.data
 
     // Verificar si el nombre ya existe
-    const existingRole = await prisma.Role.findFirst({
+    const existingRole = await prisma.role.findFirst({
       where: { name },
     })
 
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Crear rol
-    const role = await prisma.Role.create({
+    const role = await prisma.role.create({
       data: {
         name,
         description,

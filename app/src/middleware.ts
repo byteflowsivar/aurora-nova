@@ -290,7 +290,7 @@ export default async function middleware(request: NextRequest) {
     // 3. Verificar permisos específicos (RBAC) con lógica AND/OR
     const routeConfig = findMatchingRouteConfig(pathname, permissionRoutes)
 
-    if (routeConfig && routeConfig.permissions.length > 0) {
+    if (routeConfig && routeConfig.permissions.length > 0 && session.user.id) {
       try {
         const userPermissions = await getUserPermissions(session.user.id)
         const { permissions, mode = 'any' } = routeConfig

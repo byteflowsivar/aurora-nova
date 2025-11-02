@@ -27,7 +27,7 @@ export async function GET(
 
     const { id } = await params
 
-    const user = await prisma.User.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
@@ -103,7 +103,7 @@ export async function PUT(
     const validationResult = updateUserSchema.safeParse(body)
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Datos inválidos", details: validationResult.error.errors },
+        { error: "Datos inválidos", details: validationResult.error.issues },
         { status: 400 }
       )
     }
@@ -111,7 +111,7 @@ export async function PUT(
     const { firstName, lastName, email } = validationResult.data
 
     // Verificar que el usuario existe
-    const existingUser = await prisma.User.findUnique({
+    const existingUser = await prisma.user.findUnique({
       where: { id },
     })
 
@@ -124,7 +124,7 @@ export async function PUT(
 
     // Si se está actualizando el email, verificar que no esté en uso
     if (email && email !== existingUser.email) {
-      const emailInUse = await prisma.User.findUnique({
+      const emailInUse = await prisma.user.findUnique({
         where: { email },
       })
 
@@ -153,7 +153,7 @@ export async function PUT(
     }
 
     // Actualizar usuario
-    const updatedUser = await prisma.User.update({
+    const updatedUser = await prisma.user.update({
       where: { id },
       data: updateData,
       select: {
@@ -227,7 +227,7 @@ export async function DELETE(
     }
 
     // Verificar que el usuario existe
-    const user = await prisma.User.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id },
     })
 
@@ -239,7 +239,7 @@ export async function DELETE(
     }
 
     // Eliminar usuario (cascade eliminará sesiones, credenciales, etc.)
-    await prisma.User.delete({
+    await prisma.user.delete({
       where: { id },
     })
 

@@ -81,7 +81,7 @@ export async function deleteSession(
       where: { sessionToken },
     })
     return true
-  } catch (error) {
+  } catch {
     // Si no existe, Prisma lanza error
     return false
   }

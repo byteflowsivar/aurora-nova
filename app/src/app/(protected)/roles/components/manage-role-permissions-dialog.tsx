@@ -14,7 +14,6 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
 
 interface Permission {
@@ -142,17 +141,17 @@ export function ManageRolePermissionsDialog({
 
   // Agrupar permisos disponibles por módulo
   const groupedAvailable = availablePermissions.reduce((acc, perm) => {
-    const module = perm.module || "Sin módulo"
-    if (!acc[module]) acc[module] = []
-    acc[module].push(perm)
+    const moduleName = perm.module || "Sin módulo"
+    if (!acc[moduleName]) acc[moduleName] = []
+    acc[moduleName].push(perm)
     return acc
   }, {} as Record<string, Permission[]>)
 
   // Agrupar permisos asignados por módulo
   const groupedAssigned = assignedPermissions.reduce((acc, perm) => {
-    const module = perm.module || "Sin módulo"
-    if (!acc[module]) acc[module] = []
-    acc[module].push(perm)
+    const moduleName = perm.module || "Sin módulo"
+    if (!acc[moduleName]) acc[moduleName] = []
+    acc[moduleName].push(perm)
     return acc
   }, {} as Record<string, RolePermission[]>)
 

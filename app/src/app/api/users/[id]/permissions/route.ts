@@ -20,7 +20,7 @@ export async function GET(
     const { id } = await params
 
     // Verificar que el usuario existe
-    const user = await prisma.User.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id },
     })
 
@@ -32,7 +32,7 @@ export async function GET(
     }
 
     // Obtener todos los permisos del usuario a través de sus roles
-    const userRoles = await prisma.UserRole.findMany({
+    const userRoles = await prisma.userRole.findMany({
       where: { userId: id },
       select: {
         role: {
@@ -60,7 +60,7 @@ export async function GET(
     const permissionsMap = new Map<string, {
       id: string
       module: string
-      description: string
+      description: string | null
       createdAt: Date
       roles: string[]
     }>()

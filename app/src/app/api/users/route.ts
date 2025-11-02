@@ -25,7 +25,7 @@ export async function GET() {
     }
 
     // Obtener usuarios con sus roles
-    const users = await prisma.User.findMany({
+    const users = await prisma.user.findMany({
       select: {
         id: true,
         name: true,
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     const validationResult = createUserSchema.safeParse(body)
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Datos inválidos", details: validationResult.error.errors },
+        { error: "Datos inválidos", details: validationResult.error.issues },
         { status: 400 }
       )
     }
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     const { firstName, lastName, email, password } = validationResult.data
 
     // Verificar si el email ya existe
-    const existingUser = await prisma.User.findUnique({
+    const existingUser = await prisma.user.findUnique({
       where: { email },
     })
 
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
     // Crear usuario y credenciales en una transacción
     const user = await prisma.$transaction(async (tx) => {
       // Crear usuario
-      const newUser = await tx.User.create({
+      const newUser = await tx.user.create({
         data: {
           name: `${firstName} ${lastName}`,
           firstName: firstName,
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
       })
 
       // Crear credenciales
-      await tx.UserCredentials.create({
+      await tx.userCredentials.create({
         data: {
           userId: newUser.id,
           hashedPassword: hashedPassword,
@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
       })
 
       // Crear cuenta de credentials provider
-      await tx.Account.create({
+      await tx.account.create({
         data: {
           userId: newUser.id,
           type: "credentials",

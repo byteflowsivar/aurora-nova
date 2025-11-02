@@ -101,7 +101,7 @@ export const {
   callbacks: {
     async jwt({ token, user }) {
       // Sistema Híbrido: En el primer login (cuando 'user' existe)
-      if (user) {
+      if (user && user.id) {
         // 1. Generar sessionToken único para el sistema híbrido
         const sessionToken = generateSessionToken()
 
@@ -130,9 +130,9 @@ export const {
         token.id = user.id
         token.email = user.email
         token.name = user.name
-        token.firstName = user.firstName
-        token.lastName = user.lastName
-        token.emailVerified = user.emailVerified
+        token.firstName = (user as any).firstName
+        token.lastName = (user as any).lastName
+        token.emailVerified = (user as any).emailVerified
       }
       return token
     },
@@ -142,9 +142,9 @@ export const {
         session.user.id = token.id as string
         session.user.email = token.email as string
         session.user.name = token.name as string
-        session.user.firstName = token.firstName as string | null
-        session.user.lastName = token.lastName as string | null
-        session.user.emailVerified = token.emailVerified as Date | null
+        ;(session.user as any).firstName = token.firstName as string | null
+        ;(session.user as any).lastName = token.lastName as string | null
+        ;(session.user as any).emailVerified = token.emailVerified as Date | null
         // Incluir sessionToken para poder invalidar sesión desde logout
         ;(session as any).sessionToken = token.sessionToken
       }

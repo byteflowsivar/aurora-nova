@@ -5,7 +5,7 @@
 
 import type { UserRole } from '@/lib/types/auth'
 
-declare module "next-auth" {
+declare module "@auth/core" {
   interface Session {
     user: {
       id: string
@@ -31,7 +31,7 @@ declare module "next-auth" {
   }
 }
 
-declare module "next-auth/jwt" {
+declare module "@auth/core/jwt" {
   interface JWT {
     id?: string
     email?: string

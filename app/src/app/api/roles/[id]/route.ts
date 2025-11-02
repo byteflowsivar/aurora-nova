@@ -25,7 +25,7 @@ export async function GET(
 
     const { id } = await params
 
-    const role = await prisma.Role.findUnique({
+    const role = await prisma.role.findUnique({
       where: { id },
       select: {
         id: true,
@@ -99,7 +99,7 @@ export async function PUT(
     const validationResult = updateRoleSchema.safeParse(body)
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Datos inválidos", details: validationResult.error.errors },
+        { error: "Datos inválidos", details: validationResult.error.issues },
         { status: 400 }
       )
     }
@@ -107,7 +107,7 @@ export async function PUT(
     const { name, description } = validationResult.data
 
     // Verificar que el rol existe
-    const existingRole = await prisma.Role.findUnique({
+    const existingRole = await prisma.role.findUnique({
       where: { id },
     })
 
@@ -120,7 +120,7 @@ export async function PUT(
 
     // Si se está actualizando el nombre, verificar que no esté en uso
     if (name && name !== existingRole.name) {
-      const nameInUse = await prisma.Role.findFirst({
+      const nameInUse = await prisma.role.findFirst({
         where: { name },
       })
 
@@ -133,7 +133,7 @@ export async function PUT(
     }
 
     // Actualizar rol
-    const updatedRole = await prisma.Role.update({
+    const updatedRole = await prisma.role.update({
       where: { id },
       data: {
         ...(name && { name }),
@@ -190,7 +190,7 @@ export async function DELETE(
     const { id } = await params
 
     // Verificar que el rol existe
-    const role = await prisma.Role.findUnique({
+    const role = await prisma.role.findUnique({
       where: { id },
       include: {
         _count: {
@@ -217,7 +217,7 @@ export async function DELETE(
     }
 
     // Eliminar rol (cascade eliminará rolePermissions)
-    await prisma.Role.delete({
+    await prisma.role.delete({
       where: { id },
     })
 
