@@ -9,6 +9,12 @@
  *
  * La validación en BD asegura que sesiones manualmente invalidadas
  * no puedan acceder aunque tengan un JWT válido.
+ *
+ * NOTA SOBRE EDGE RUNTIME WARNINGS:
+ * Este middleware usa Prisma y APIs de Node.js (crypto), lo que genera warnings
+ * sobre Edge Runtime. Estos son solo advertencias y no afectan la funcionalidad.
+ * El middleware funciona correctamente en producción. Next.js 15 no permite cambiar
+ * el runtime de middleware a Node.js, por lo que estos warnings son esperados.
  */
 
 import { NextResponse } from 'next/server'
