@@ -27,6 +27,7 @@ const protectedRoutes = [
   '/admin',
   '/users',
   '/roles',
+  '/permissions',
   '/settings',
 ]
 
@@ -91,6 +92,12 @@ const permissionRoutes: Record<string, RoutePermissionConfig> = {
     mode: 'any',
   },
 
+  // Rutas de permisos
+  '/permissions': {
+    permissions: ['permission:list', 'permission:read'],
+    mode: 'any',
+  },
+
   // Rutas de administración
   '/admin/permissions': {
     permissions: ['permission:manage', 'system:admin'],
@@ -123,6 +130,7 @@ const strictValidationRoutes = [
   '/admin',
   '/users',
   '/roles',
+  '/permissions',
   '/settings/security',
   '/settings/password',
 ]
@@ -254,7 +262,7 @@ export default async function middleware(request: NextRequest) {
       strictValidationRoutes.some(route => pathname.startsWith(route))
 
     if (requiresStrictValidation) {
-      const sessionToken = (session as any).sessionToken as string | undefined
+      const sessionToken = (session as { sessionToken?: string }).sessionToken
 
       if (sessionToken) {
         try {

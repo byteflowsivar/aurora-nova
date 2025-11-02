@@ -23,8 +23,21 @@ export function useAuth(): AuthContext {
           // Cargar permisos del usuario
           const permissionsResponse = await fetch(`/api/users/${session.user.id}/permissions`)
           if (permissionsResponse.ok) {
-            const permissions = await permissionsResponse.json()
-            setUserPermissions(permissions)
+            const data = await permissionsResponse.json()
+            // Extraer los módulos de permisos de la estructura anidada
+            const permissionModules: string[] = []
+            if (data.permissions) {
+              Object.values(data.permissions).forEach((perms: any) => {
+                if (Array.isArray(perms)) {
+                  perms.forEach((perm) => {
+                    if (perm.module) {
+                      permissionModules.push(perm.module)
+                    }
+                  })
+                }
+              })
+            }
+            setUserPermissions(permissionModules)
           }
 
           // Cargar roles del usuario

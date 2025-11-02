@@ -1,0 +1,1 @@
+B. Implementar un dashboard completo con navegación y páginas protegidas (como dashboard-01 de shadcn) pero la regla es que implementes todo con estilo shadcn, es cierto que tenemos tailwind instalado pero el estilo de las pantallas debe basarse 100% en shadcn. 
