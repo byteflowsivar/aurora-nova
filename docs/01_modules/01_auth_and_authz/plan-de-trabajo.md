@@ -85,7 +85,7 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 | ID | Nombre | Descripción | Estado | Dependencias | Estimación |
 |---|---|---|---|---|---|
 | **T024** | Tests unitarios - Autenticación | Escribir tests unitarios para todas las funciones de autenticación y Auth.js | **✅ COMPLETADO** | T011 | ~~8h~~ |
-| **T025** | Tests unitarios - Autorización | Crear tests unitarios para sistema RBAC y verificación de permisos | Pendiente | T017 | 8h |
+| **T025** | Tests unitarios - Autorización | Crear tests unitarios para sistema RBAC y verificación de permisos | **✅ COMPLETADO** | T017 | ~~8h~~ |
 | **T026** | Tests de integración - API | Desarrollar tests de integración para todos los endpoints de la API de auth | Pendiente | T025 | 10h |
 | **T027** | Tests E2E - Flujos críticos | Implementar tests end-to-end para flujos de login, registro y gestión de usuarios | Pendiente | T023 | 12h |
 | **T028** | Validación de seguridad | Realizar auditoría de seguridad, validar hashing de contraseñas y protección CSRF/XSS | Pendiente | T027 | 6h |
@@ -111,10 +111,10 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
 | **Fase 2** | T006 - T011 | ~~33h~~ **✅ 0h** | Auth.js + Sistema Híbrido **COMPLETADO** |
 | **Fase 3** | T012 - T017 | ~~35h~~ **✅ 0h** | RBAC completo **COMPLETADO** |
 | **Fase 4** | T018 - T023 | ~~52h~~ **✅ 0h** | UI funcional **COMPLETADA** |
-| **Fase 5** | T024 - T028 | ~~44h~~ **⏳ 36h (20% completo)** | Sistema validado **EN PROGRESO** |
+| **Fase 5** | T024 - T028 | ~~44h~~ **⏳ 28h (40% completo)** | Sistema validado **EN PROGRESO** |
 | **Fase 6** | T029 - T032 | 19h | Listo para producción |
 
-**TOTAL ESTIMADO:** ~~203h~~ **55 horas (~1.4 semanas para 1 desarrollador)**
+**TOTAL ESTIMADO:** ~~203h~~ **47 horas (~1.2 semanas para 1 desarrollador)**
 
 ---
 
@@ -353,15 +353,29 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
     - Parser detectaba macOS antes que iOS
     - Parser detectaba Mobile antes que Tablet
 
+- **T025 - Tests unitarios - Autorización (RBAC)**: ✅ COMPLETADA
+  - ✅ Tests de permission-queries (19 tests) - **85.71% coverage**
+    - getUserPermissions - obtener permisos de usuario
+    - userHasPermission - verificar permiso único
+    - userHasAnyPermission - verificar permisos con lógica OR
+    - userHasAllPermissions - verificar permisos con lógica AND
+    - getUserPermissionsDetailed - información detallada de permisos
+    - getUserRolesWithPermissions - roles con sus permisos
+  - ✅ Tests de permission-utils (25 tests) - **100% coverage**
+    - Server-side utilities (async): hasPermission, hasPermissions, hasAnyPermission, hasAllPermissions
+    - Client-side utilities (sync): checkPermission, checkAnyPermission, checkAllPermissions
+    - Edge cases: caracteres especiales, arrays vacíos, permisos parciales
+  - ✅ **44 tests de RBAC en total**
+  - ✅ Cobertura promedio de sistema RBAC: **92.85%**
+
 ### ⏳ Próximas Tareas Prioritarias
-1. **T025**: Tests unitarios - Autorización (8h)
-2. **T026**: Tests de integración - API (10h)
-3. **T027**: Tests E2E - Flujos críticos (12h)
-4. **T028**: Validación de seguridad (6h)
+1. **T026**: Tests de integración - API (10h)
+2. **T027**: Tests E2E - Flujos críticos (12h)
+3. **T028**: Validación de seguridad (6h)
 
 ### 📊 Progreso General
-- **Horas completadas**: 148h (T001-T024 completados - Fases 1-4 completas + T024)
-- **Estimación restante**: 203h → **55h (~1.4 semanas)**
+- **Horas completadas**: 156h (T001-T025 completados - Fases 1-4 completas + T024-T025)
+- **Estimación restante**: 203h → **47h (~1.2 semanas)**
 - **Fase 1 progreso**: 5/5 tareas (100% completado) ✅
 - **Fase 2 progreso**: 6/6 tareas (100% completado) ✅
 - **Fase 3 progreso**: 6/6 tareas (100% completado) ✅
@@ -373,23 +387,24 @@ El plan está dividido en **6 fases principales** con **32 tareas** en total. Ca
   - ✅ **T021**: Gestión completa de usuarios (CRUD + gestión de roles)
   - ✅ **T022**: Gestión completa de roles (CRUD + gestión de permisos)
   - ✅ **T023**: Interfaz de asignación de roles a usuarios
-- **Fase 5 progreso**: 1/5 tareas (20% completado) ⏳
+- **Fase 5 progreso**: 2/5 tareas (40% completado) ⏳
   - ✅ **T024**: Tests unitarios de autenticación (45 tests, 3 bugs corregidos)
-  - ⏳ **T025-T028**: Pendientes
-- **Sistema**: Dashboard completamente funcional con gestión integral de usuarios, roles y permisos. Testing framework configurado con 45 tests.
+  - ✅ **T025**: Tests unitarios de autorización (44 tests, 92.85% coverage)
+  - ⏳ **T026-T028**: Pendientes
+- **Sistema**: Dashboard completamente funcional con gestión integral de usuarios, roles y permisos. Testing framework completo con **89 tests unitarios**.
 
 ### 🎯 Hitos Alcanzados
 - ✅ **Fase 1 COMPLETA**: Configuración de BD y entorno
 - ✅ **Fase 2 COMPLETA**: Sistema de autenticación con gestión de sesiones
 - ✅ **Fase 3 COMPLETA**: Sistema RBAC completamente funcional (APIs)
 - ✅ **Fase 4 COMPLETA**: Interfaces de usuario completamente funcionales
-- ⏳ **Fase 5 EN PROGRESO**: Testing framework configurado, tests unitarios iniciados (20%)
+- ⏳ **Fase 5 EN PROGRESO**: Testing unitario completado (40% de Fase 5)
 
 ---
 
 **Próxima Revisión:** Al completar Fase 5 (Testing y Validación)
 **Responsable del Plan:** Equipo de Desarrollo
-**Última Actualización:** 2025-11-02 (T001-T024 COMPLETADAS - Fases 1-4 100% + Fase 5 20% - Sistema de testing configurado con Vitest. 45 tests unitarios de autenticación implementados. 3 bugs de producción encontrados y corregidos.)
+**Última Actualización:** 2025-11-02 (T001-T025 COMPLETADAS - Fases 1-4 100% + Fase 5 40% - Testing unitario completado. 89 tests unitarios implementados (45 auth + 44 RBAC). 3 bugs de producción encontrados y corregidos. Cobertura promedio: 78.37%.)
 
 ---
 
