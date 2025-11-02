@@ -3,7 +3,7 @@
  * T024: Tests de autenticación - Queries de sesión
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { prismaMock, resetPrismaMock } from '../mocks/prisma'
 import { createSession, isSessionValid } from '@/lib/prisma/session-queries'
 import type { CreateSessionData } from '@/lib/types/session'

@@ -11,13 +11,9 @@
 
 import { signIn, signOut, auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma/connection"
-import { createUserWithCredentials } from "@/lib/auth-utils"
-import { getRoleByName } from "@/lib/prisma/queries"
 import { deleteSession } from "@/lib/prisma/session-queries"
 import {
-  registerSchema,
   loginSchema,
-  type RegisterInput,
   type LoginInput,
 } from "@/lib/validations/auth"
 import type { ActionResponse } from "@/types/action-response"
@@ -25,17 +21,11 @@ import { successResponse, errorResponse } from "@/types/action-response"
 import { AuthError } from "next-auth"
 import { z } from "zod"
 import { headers } from "next/headers"
+import logger from "@/lib/logger";
 
 // ============================================================================
 // TIPOS
 // ============================================================================
-
-type RegisterResponse = {
-  userId: string
-  email: string
-  firstName: string
-  lastName: string
-}
 
 type LoginResponse = {
   success: boolean
@@ -67,16 +57,9 @@ type LoginResponse = {
  * }
  * ```
  */
-import { z } from "zod";
-import { hash } from "bcryptjs";
-import { prisma } from "@/lib/prisma/connection";
-import { ActionResponse } from "@/types/action-response";
-import { RegisterSchema } from "@/lib/validations/auth";
-import logger from "@/lib/logger";
-
 export async function registerUser(
   values: z.infer<typeof RegisterSchema>
-): Promise<ActionResponse> {
+): Promise<ActionResponse<{ userId: string; firstName: string | null; lastName: string | null; }>> {
   logger.info('Starting user registration');
   const validatedFields = RegisterSchema.safeParse(values);
 

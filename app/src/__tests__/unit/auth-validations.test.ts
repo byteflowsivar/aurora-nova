@@ -10,7 +10,7 @@ import {
   type RegisterInput,
   type LoginInput,
 } from '@/lib/validations/auth'
-import { z } from 'zod'
+
 
 describe('auth-validations', () => {
   describe('registerSchema', () => {

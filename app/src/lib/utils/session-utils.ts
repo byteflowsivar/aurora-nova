@@ -3,14 +3,12 @@
  * Aurora Nova
  */
 
-import { randomUUID } from "crypto"
-
 /**
  * Genera un ID único para una sesión
  * Compatible con el campo sessionToken de la tabla session
  */
 export function generateSessionToken(): string {
-  return randomUUID()
+  return crypto.randomUUID();
 }
 
 /**

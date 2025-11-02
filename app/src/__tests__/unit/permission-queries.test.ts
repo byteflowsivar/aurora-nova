@@ -431,17 +431,17 @@ describe('permission-queries', () => {
 
   describe('getPermissionsByModule', () => {
     it('debe retornar permisos de un módulo específico', async () => {
-      const module = 'user'
+      const moduleName = 'user'
       const mockPermissions = [
         { id: 'user:create', module: 'user', description: 'Crear usuarios' },
         { id: 'user:read', module: 'user', description: 'Leer usuarios' },
       ]
       prismaMock.permission.findMany.mockResolvedValue(mockPermissions as any)
 
-      const result = await getPermissionsByModule(module)
+      const result = await getPermissionsByModule(moduleName)
 
       expect(prismaMock.permission.findMany).toHaveBeenCalledWith({
-        where: { module },
+        where: { module: moduleName },
         select: {
           id: true,
           module: true,
