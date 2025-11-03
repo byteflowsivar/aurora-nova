@@ -13,83 +13,94 @@ Aurora Nova es una aplicación web moderna construida con Next.js, TypeScript y 
 *   **Autenticación Segura**: Utiliza `next-auth` para una autenticación segura.
 *   **Interfaz de Usuario Moderna**: Construida con `shadcn/ui` para una interfaz de usuario limpia y responsiva.
 
-## Getting Started
+## Primeros pasos
 
-### Prerequisites
+### Prerrequisitos
 
-*   [Node.js](https://nodejs.org) (v20.x or later)
-*   [npm](https://www.npmjs.com) (v9.x or later)
-*   [Docker](https://www.docker.com) and [Docker Compose](https://docs.docker.com/compose/)
+*   [Node.js](https://nodejs.org) (v20.x o superior)
+*   [npm](https://www.npmjs.com) (v9.x o superior)
+*   [Docker](https://www.docker.com) y [Docker Compose](https://docs.docker.com/compose/)
 
-### 1. Clone the repository
+### 1. Clonar el repositorio
 
 ```bash
 git clone <URL_DEL_REPOSITORIO>
 cd aurora-nova/app
 ```
 
-### 2. Install dependencies
+### 2. Instalar dependencias
 
 ```bash
 npm install
 ```
 
-### 3. Set up the database
+### 3. Configurar la base de datos
 
-This project uses Docker to run a PostgreSQL database. Start the database container with:
+Este proyecto usa Docker para ejecutar una base de datos PostgreSQL. Inicia el contenedor de la base de datos con:
 
 ```bash
 docker-compose up -d
 ```
 
-### 4. Set up environment variables
+### 4. Configurar variables de entorno
 
-Copy the `.env.example` file to `.env.local` and fill in the required environment variables.
+Copia el archivo `.env.example` a `.env.local` y completa las variables de entorno requeridas.
 
 ```bash
 cp .env.example .env.local
 ```
 
-### 5. Run database migrations and seed
+### 5. Ejecutar migraciones y seed de la base de datos
 
 ```bash
 npm run db:deploy
 npm run db:seed
 ```
 
-### 6. Run the development server
+### 6. Ejecutar el servidor de desarrollo
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre [http://localhost:3000](http://localhost:3000) en tu navegador para ver el resultado.
 
-## Building and Running with Docker
+## Construyendo y Ejecutando con Docker
 
-This project includes a `Dockerfile` to build and run the application in a container.
+Este proyecto incluye un `Dockerfile` para construir y ejecutar la aplicación en un contenedor.
 
-### Build the Docker image
+### Construir la imagen Docker
 
-To build the Docker image, run the following command in the `app` directory:
+Para construir la imagen Docker, ejecuta el siguiente comando en el directorio `app`:
 
+Si necesitas especificar argumentos de construcción, usa `docker buildx build`:
+```bash
+docker buildx build \
+--build-arg NEXTAUTH_URL="http://app:3000" \
+--build-arg AUTH_TRUST_HOST=true \
+--build-arg AUTH_URL="http://app:3000" \
+--build-arg APP_URL="http://app:3000" \
+-t byteflowsivar/aurora-nova:0.01 .
+```
+
+Alternativamente, para una construcción estándar:
 ```bash
 docker build -t aurora-nova .
 ```
 
-### Run the Docker container
+### Ejecutar el contenedor Docker
 
-Once the image is built, you can run it in a container:
+Una vez que la imagen ha sido construida, puedes ejecutarla en un contenedor:
 
 ```bash
 docker run -p 3000:3000 aurora-nova
 ```
 
-This will start the application on `http://localhost:3000`.
+Esto iniciará la aplicación en `http://localhost:3000`.
 
-**Note:** For the application to connect to the database, you need to provide the necessary environment variables to the container. You can do this using the `-e` flag in the `docker run` command, or by using an `--env-file`.
+**Nota:** Para que la aplicación se conecte a la base de datos, necesitas proporcionar las variables de entorno necesarias al contenedor. Puedes hacer esto usando la bandera `-e` en el comando `docker run`, o usando un `--env-file`.
 
-For example:
+Por ejemplo:
 ```bash
 docker run -p 3000:3000 \
   -e DATABASE_URL="postgresql://<user>:<password>@<host>:<port>/<database_name>" \
@@ -98,17 +109,17 @@ docker run -p 3000:3000 \
   aurora-nova
 ```
 
-## Learn More
+## Aprende más
 
-To learn more about Next.js, take a look at the following resources:
+Para aprender más sobre Next.js, echa un vistazo a los siguientes recursos:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- [Documentación de Next.js](https://nextjs.org/docs) - aprende sobre las características y la API de Next.js.
+- [Aprende Next.js](https://nextjs.org/learn) - un tutorial interactivo de Next.js.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Puedes consultar [el repositorio de Next.js en GitHub](https://github.com/vercel/next.js) - ¡tus comentarios y contribuciones son bienvenidos!
 
-## Deploy on Vercel
+## Despliegue en Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+La forma más fácil de desplegar tu aplicación Next.js es usar la [Plataforma Vercel](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) de los creadores de Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Consulta nuestra [documentación de despliegue de Next.js](https://nextjs.org/docs/app/building-your-application/deploying) para más detalles.
