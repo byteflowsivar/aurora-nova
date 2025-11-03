@@ -44,7 +44,7 @@ export const env = {
 
 // Validación adicional para desarrollo
 if (env.NODE_ENV === 'development') {
-  console.log('🔧 Variables de entorno cargadas:');
+  console.log('🔧 Variables de entorno desarrollo cargadas:');
   console.log(`   - NODE_ENV: ${env.NODE_ENV}`);
   console.log(`   - APP_NAME: ${env.APP_NAME}`);
   console.log(`   - APP_URL: ${env.APP_URL}`);
@@ -55,4 +55,15 @@ if (env.NODE_ENV === 'development') {
 // Validación de AUTH_SECRET en producción
 if (env.NODE_ENV === 'production' && env.AUTH_SECRET.length < 32) {
   throw new Error('AUTH_SECRET debe tener al menos 32 caracteres en producción');
+}
+
+// production
+if (env.NODE_ENV === 'production') {
+  console.log('🔧 Variables de entorno produccion cargadas:');
+  console.log(`   - NODE_ENV: ${env.NODE_ENV}`);
+  console.log(`   - APP_NAME: ${env.APP_NAME}`);
+  console.log(`   - APP_URL: ${env.APP_URL}`);
+  console.log(`   - NEXTAUTH_URL: ${env.NEXTAUTH_URL}`);
+  console.log(`   - DATABASE_URL: ${env.DATABASE_URL.replace(/:[^:]*@/, ':***@')}`); // Oculta la contraseña
+  console.log(`   - LOG_LEVEL: ${env.LOG_LEVEL}`);
 }

@@ -45,30 +45,31 @@ RUN npm run build
 
 FROM node:20-alpine AS production
 
-# Establecer el directorio de trabajo
 WORKDIR /app
 
-# Variables de entorno para producción
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED 1
 
-# Copiar dependencias de producción desde la fase de build
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/package.json ./
+# Crear un usuario y grupo no root para mayor seguridad
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# Copiar la aplicación construida desde la fase de build
-COPY --from=build /app/.next ./.next
+# Copiar los archivos de la salida standalone desde la fase de build
+COPY --from=build /app/.next/standalone ./
+
+# Copiar los assets estáticos y públicos
+COPY --from=build /app/.next/static ./.next/static
 COPY --from=build /app/public ./public
 
-# Copiar el cliente Prisma generado desde la fase de build
-COPY --from=build /app/src/lib/prisma/generated ./src/lib/prisma/generated
+# Copiar el schema de Prisma para que esté disponible en tiempo de ejecución
+COPY --from=build /app/prisma ./prisma
 
-# Variables de entorno para Auth.js en producción
-ARG APP_URL
-ENV AUTH_TRUST_HOST=true
-ENV AUTH_URL=$APP_URL
+# Cambiar al usuario no root
+USER nextjs
 
-# Exponer el puerto en el que corre la aplicación
 EXPOSE 3000
 
-# Comando para iniciar la aplicación en modo producción
-CMD ["npm", "run", "start"]
+ENV PORT 3000
+
+# El comando de inicio ahora usa el server.js generado por el modo standalone
+CMD ["node", "server.js"]

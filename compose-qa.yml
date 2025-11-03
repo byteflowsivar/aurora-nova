@@ -26,17 +26,19 @@ services:
       - aurora-nova-db-data:/var/lib/postgresql/data
 
   app:
-    image: docker.io/byteflowsivar/aurora-nova:0.01
+    image: docker.io/byteflowsivar/aurora-nova:0.0.1
     container_name: aurora-nova-app
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "80:3000"
     environment:
       TZ: America/El_Salvador
       LANG: es_SV.UTF-8
       DATABASE_URL: "postgresql://aurora_user:changeme_in_production@db:5432/aurora_nova_db"
       AUTH_SECRET: "dev-secret-key-change-this-in-production-aurora-nova-2025"
-      NEXTAUTH_URL: "http://app:3000"
+      # Url de la aplicación
+      NEXTAUTH_URL: "http://aurora.nova.local"
+      # Configuración de autenticación
       AUTH_TRUST_HOST: true
       # Configuración de la aplicación
       APP_NAME: "Aurora Nova"
@@ -47,4 +49,3 @@ services:
 # Definición del volumen nombrado para la persistencia de datos.
 volumes:
   aurora-nova-db-data:
-  aurora-nova-test-db-data:
