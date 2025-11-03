@@ -1,24 +1,102 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Aurora Nova
+
+Este es un proyecto [Next.js](https://nextjs.org) para Aurora Nova, un sistema de gestión de usuarios con control de acceso basado en roles (RBAC).
+
+## Acerca de este proyecto
+
+Aurora Nova es una aplicación web moderna construida con Next.js, TypeScript y PostgreSQL. Proporciona un sistema seguro y flexible para la gestión de usuarios, roles y permisos.
+
+### Características
+
+*   **Gestión de Usuarios**: Crea, lee, actualiza y elimina usuarios.
+*   **Control de Acceso Basado en Roles (RBAC)**: Define roles y asigna permisos a los mismos.
+*   **Autenticación Segura**: Utiliza `next-auth` para una autenticación segura.
+*   **Interfaz de Usuario Moderna**: Construida con `shadcn/ui` para una interfaz de usuario limpia y responsiva.
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+*   [Node.js](https://nodejs.org) (v20.x or later)
+*   [npm](https://www.npmjs.com) (v9.x or later)
+*   [Docker](https://www.docker.com) and [Docker Compose](https://docs.docker.com/compose/)
+
+### 1. Clone the repository
+
+```bash
+git clone <URL_DEL_REPOSITORIO>
+cd aurora-nova/app
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Set up the database
+
+This project uses Docker to run a PostgreSQL database. Start the database container with:
+
+```bash
+docker-compose up -d
+```
+
+### 4. Set up environment variables
+
+Copy the `.env.example` file to `.env.local` and fill in the required environment variables.
+
+```bash
+cp .env.example .env.local
+```
+
+### 5. Run database migrations and seed
+
+```bash
+npm run db:deploy
+npm run db:seed
+```
+
+### 6. Run the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Building and Running with Docker
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This project includes a `Dockerfile` to build and run the application in a container.
+
+### Build the Docker image
+
+To build the Docker image, run the following command in the `app` directory:
+
+```bash
+docker build -t aurora-nova .
+```
+
+### Run the Docker container
+
+Once the image is built, you can run it in a container:
+
+```bash
+docker run -p 3000:3000 aurora-nova
+```
+
+This will start the application on `http://localhost:3000`.
+
+**Note:** For the application to connect to the database, you need to provide the necessary environment variables to the container. You can do this using the `-e` flag in the `docker run` command, or by using an `--env-file`.
+
+For example:
+```bash
+docker run -p 3000:3000 \
+  -e DATABASE_URL="postgresql://<user>:<password>@<host>:<port>/<database_name>" \
+  -e NEXTAUTH_SECRET="your_super_secret" \
+  -e NEXTAUTH_URL="http://localhost:3000" \
+  aurora-nova
+```
 
 ## Learn More
 
