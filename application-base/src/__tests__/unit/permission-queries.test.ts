@@ -32,7 +32,7 @@ describe('permission-queries', () => {
       ]
 
       prismaMock.rolePermission.findMany.mockResolvedValue(
-        mockPermissions as any
+        mockPermissions
       )
 
       const result = await getUserPermissions(userId)
@@ -186,7 +186,7 @@ describe('permission-queries', () => {
         { permissionId: 'user:create' },
         { permissionId: 'user:read' },
         { permissionId: 'user:update' },
-      ] as any)
+      ])
 
       const result = await userHasAllPermissions(userId, permissionIds)
 
@@ -203,7 +203,7 @@ describe('permission-queries', () => {
       // Usuario solo tiene user:create
       prismaMock.rolePermission.findMany.mockResolvedValue([
         { permissionId: 'user:create' },
-      ] as any)
+      ])
 
       const result = await userHasAllPermissions(userId, permissionIds)
 
@@ -258,7 +258,7 @@ describe('permission-queries', () => {
       ]
 
       prismaMock.rolePermission.findMany.mockResolvedValue(
-        mockDetailedPermissions as any
+        mockDetailedPermissions
       )
 
       const result = await getUserPermissionsDetailed(userId)
@@ -335,7 +335,7 @@ describe('permission-queries', () => {
         ],
       }
 
-      prismaMock.user.findUnique.mockResolvedValue(mockUserWithRoles as any)
+      prismaMock.user.findUnique.mockResolvedValue(mockUserWithRoles)
 
       const result = await getUserRolesWithPermissions(userId)
 
@@ -388,7 +388,7 @@ describe('permission-queries', () => {
     it('debe retornar array vacío si el usuario no tiene roles', async () => {
       prismaMock.user.findUnique.mockResolvedValue({
         userRoles: [],
-      } as any)
+      })
 
       const result = await getUserRolesWithPermissions('user-no-roles')
 
@@ -407,7 +407,7 @@ describe('permission-queries', () => {
         { id: 'user:create', module: 'user', description: 'Crear usuarios' },
         { id: 'user:read', module: 'user', description: 'Leer usuarios' },
       ]
-      prismaMock.permission.findMany.mockResolvedValue(mockPermissions as any)
+      prismaMock.permission.findMany.mockResolvedValue(mockPermissions)
 
       const result = await getAllPermissions()
 
@@ -436,7 +436,7 @@ describe('permission-queries', () => {
         { id: 'user:create', module: 'user', description: 'Crear usuarios' },
         { id: 'user:read', module: 'user', description: 'Leer usuarios' },
       ]
-      prismaMock.permission.findMany.mockResolvedValue(mockPermissions as any)
+      prismaMock.permission.findMany.mockResolvedValue(mockPermissions)
 
       const result = await getPermissionsByModule(moduleName)
 

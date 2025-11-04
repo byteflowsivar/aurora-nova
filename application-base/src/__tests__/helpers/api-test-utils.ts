@@ -5,6 +5,7 @@
 
 import { NextRequest } from 'next/server'
 import { vi } from 'vitest'
+import type { Session } from '@auth/core'
 
 /**
  * Crea un NextRequest mock para testing
@@ -13,7 +14,7 @@ export function createMockRequest(
   url: string,
   options: {
     method?: string
-    body?: any
+    body?: unknown
     headers?: Record<string, string>
   } = {}
 ): NextRequest {
@@ -66,7 +67,7 @@ export const mockAdminUser = {
 /**
  * Mock de auth() que retorna usuario autenticado
  */
-export function mockAuthSession(session: any = mockAuthenticatedUser) {
+export function mockAuthSession(session: Session | null = mockAuthenticatedUser) {
   return vi.fn().mockResolvedValue(session)
 }
 

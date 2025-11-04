@@ -44,7 +44,7 @@ export function useUserPermissions(): string[] | undefined {
 
     // Los permisos se cargan en la sesión via callback
     // Ver src/lib/auth.ts para la implementación
-    return (session as any).user?.permissions || []
+    return session?.user?.permissions || []
   }, [session])
 }
 

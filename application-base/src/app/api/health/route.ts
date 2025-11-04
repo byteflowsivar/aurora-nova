@@ -8,11 +8,11 @@ export async function GET() {
       status: 'ok',
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       {
         status: 'error',
-        error: error.message || 'Health check failed',
+        error: error instanceof Error ? error.message : 'Health check failed',
       },
       { status: 503 }
     );

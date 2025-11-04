@@ -7,6 +7,7 @@ import type { UserRole } from '@/lib/types/auth'
 
 declare module "@auth/core" {
   interface Session {
+    sessionToken?: string
     user: {
       id: string
       name?: string | null
@@ -28,6 +29,8 @@ declare module "@auth/core" {
     firstName?: string | null
     lastName?: string | null
     emailVerified?: Date | null
+    ipAddress?: string
+    userAgent?: string
   }
 }
 

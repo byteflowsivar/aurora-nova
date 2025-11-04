@@ -41,7 +41,7 @@ export async function getCurrentUserSessions(): Promise<SessionDetails[]> {
     }
 
     const userId = session.user.id
-    const currentSessionToken = (session as any).sessionToken as string | undefined
+    const currentSessionToken = session.sessionToken
 
     // Obtener sesiones activas (no expiradas)
     const sessions = await getUserSessions(userId, false)
@@ -117,7 +117,7 @@ export async function invalidateSession(
       }
     }
 
-    const currentSessionToken = (session as any).sessionToken as string | undefined
+    const currentSessionToken = session.sessionToken
 
     // Prevenir que el usuario cierre su propia sesión actual
     if (sessionToken === currentSessionToken) {
@@ -180,7 +180,7 @@ export async function closeAllOtherSessions(): Promise<SessionOperationResult> {
     }
 
     const userId = session.user.id
-    const currentSessionToken = (session as any).sessionToken as string | undefined
+    const currentSessionToken = session.sessionToken
 
     if (!currentSessionToken) {
       return {

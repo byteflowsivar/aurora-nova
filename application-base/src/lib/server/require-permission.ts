@@ -285,7 +285,7 @@ interface WithPermissionOptions {
  * )
  * ```
  */
-export function withPermission<TArgs extends any[], TReturn>(
+export function withPermission<TArgs extends unknown[], TReturn>(
   permissions: string[],
   action: (...args: TArgs) => Promise<TReturn>,
   options: WithPermissionOptions = {}
@@ -321,7 +321,7 @@ export function withPermission<TArgs extends any[], TReturn>(
  * })
  * ```
  */
-export function withAuth<TArgs extends any[], TReturn>(
+export function withAuth<TArgs extends unknown[], TReturn>(
   action: (...args: TArgs) => Promise<TReturn>
 ): (...args: TArgs) => Promise<TReturn> {
   return async (...args: TArgs): Promise<TReturn> => {
@@ -346,7 +346,7 @@ export function withAuth<TArgs extends any[], TReturn>(
  * })
  * ```
  */
-export function withAdmin<TArgs extends any[], TReturn>(
+export function withAdmin<TArgs extends unknown[], TReturn>(
   action: (...args: TArgs) => Promise<TReturn>
 ): (...args: TArgs) => Promise<TReturn> {
   return withPermission(["system:admin"], action)

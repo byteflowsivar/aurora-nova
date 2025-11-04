@@ -21,7 +21,7 @@ describe('session-queries', () => {
         expires: new Date('2024-12-31'),
         ipAddress: '192.168.1.1',
         userAgent: 'Mozilla/5.0...',
-      }
+        }
 
       const expectedSession = {
         id: 'session-id-123',
@@ -29,7 +29,7 @@ describe('session-queries', () => {
         createdAt: new Date('2024-01-01'),
       }
 
-      prismaMock.session.create.mockResolvedValue(expectedSession as any)
+      prismaMock.session.create.mockResolvedValue(expectedSession)
 
       const result = await createSession(sessionData)
 
@@ -63,7 +63,7 @@ describe('session-queries', () => {
         createdAt: new Date('2024-01-01'),
       }
 
-      prismaMock.session.create.mockResolvedValue(expectedSession as any)
+      prismaMock.session.create.mockResolvedValue(expectedSession)
 
       const result = await createSession(sessionData)
 
@@ -104,7 +104,7 @@ describe('session-queries', () => {
 
       prismaMock.session.findUnique.mockResolvedValue({
         expires: futureDate,
-      } as any)
+      })
 
       const result = await isSessionValid('valid-token')
 
@@ -121,7 +121,7 @@ describe('session-queries', () => {
 
       prismaMock.session.findUnique.mockResolvedValue({
         expires: pastDate,
-      } as any)
+      })
 
       const result = await isSessionValid('expired-token')
 

@@ -248,8 +248,8 @@ export async function logoutUser(): Promise<ActionResponse<void>> {
     const session = await auth()
 
     // 2. Si existe sessionToken, eliminar de BD (sistema híbrido)
-    if (session && (session as any).sessionToken) {
-      const sessionToken = (session as any).sessionToken as string
+    if (session && session.sessionToken) {
+      const sessionToken = session.sessionToken
 
       try {
         const deleted = await deleteSession(sessionToken)

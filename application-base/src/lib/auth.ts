@@ -22,6 +22,7 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma/connection"
 import { getUserByEmail, getUserWithCredentials } from "@/lib/prisma/queries"
 import { createSession } from "@/lib/prisma/session-queries"
+import { getUserPermissions } from "@/lib/prisma/permission-queries"
 import { generateSessionToken, getSessionExpiry } from "@/lib/utils/session-utils"
 import bcrypt from "bcryptjs"
 import logger from "@/lib/logger";
@@ -121,8 +122,8 @@ export const {
             sessionToken,
             userId: user.id,
             expires,
-            ipAddress: (user as any).ipAddress,
-            userAgent: (user as any).userAgent,
+            ipAddress: user.ipAddress,
+            userAgent: user.userAgent,
           })
 
           // 4. Guardar sessionToken en el JWT para validaciones futuras
@@ -137,9 +138,9 @@ export const {
         token.id = user.id
         token.email = user.email
         token.name = user.name
-        token.firstName = (user as any).firstName
-        token.lastName = (user as any).lastName
-        token.emailVerified = (user as any).emailVerified
+        token.firstName = user.firstName
+        token.lastName = user.lastName
+        token.emailVerified = user.emailVerified
       }
       return token
     },
@@ -149,11 +150,14 @@ export const {
         session.user.id = token.id as string
         session.user.email = token.email as string
         session.user.name = token.name as string
-        ;(session.user as any).firstName = token.firstName as string | null
-        ;(session.user as any).lastName = token.lastName as string | null
-        ;(session.user as any).emailVerified = token.emailVerified as Date | null
+        session.user.firstName = token.firstName
+        session.user.lastName = token.lastName
+        session.user.emailVerified = token.emailVerified
         // Incluir sessionToken para poder invalidar sesión desde logout
-        ;(session as any).sessionToken = token.sessionToken
+        session.sessionToken = token.sessionToken
+
+        const permissions = await getUserPermissions(token.id as string)
+        session.user.permissions = permissions
       }
       return session
     }

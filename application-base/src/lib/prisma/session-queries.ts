@@ -8,6 +8,7 @@
 
 import { prisma } from "./connection"
 import type { CreateSessionData, SessionInfo } from "@/lib/types/session"
+import type { Prisma } from "@prisma/client"
 
 /**
  * Crea una nueva sesión en la base de datos
@@ -98,7 +99,7 @@ export async function getUserSessions(
   userId: string,
   includeExpired: boolean = false
 ): Promise<SessionInfo[]> {
-  const where: any = { userId }
+  const where: Prisma.SessionWhereInput = { userId }
 
   if (!includeExpired) {
     where.expires = {

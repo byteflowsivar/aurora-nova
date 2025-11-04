@@ -27,7 +27,7 @@ export function useAuth(): AuthContext {
             // Extraer los módulos de permisos de la estructura anidada
             const permissionModules: string[] = []
             if (data.permissions) {
-              Object.values(data.permissions).forEach((perms: any) => {
+              Object.values(data.permissions).forEach((perms: { module: string }[]) => {
                 if (Array.isArray(perms)) {
                   perms.forEach((perm) => {
                     if (perm.module) {
