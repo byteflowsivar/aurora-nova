@@ -95,11 +95,13 @@ export async function deleteSession(
  * @param includeExpired - Si incluir sesiones expiradas (default: false)
  * @returns Array de sesiones
  */
+type SessionWhereInput = Prisma.Args<typeof prisma.session, 'findMany'>['where']
+
 export async function getUserSessions(
   userId: string,
   includeExpired: boolean = false
 ): Promise<SessionInfo[]> {
-  const where: Prisma.SessionWhereInput = { userId }
+  const where: SessionWhereInput = { userId }
 
   if (!includeExpired) {
     where.expires = {

@@ -16,7 +16,7 @@
  */
 
 import NextAuth from "next-auth"
-import '@/lib/auth-types' // Importar tipos extendidos
+
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma/connection"
@@ -136,8 +136,8 @@ export const {
 
         // 5. Agregar datos del usuario al token JWT
         token.id = user.id
-        token.email = user.email
-        token.name = user.name
+        token.email = user.email ?? undefined
+        token.name = user.name ?? undefined
         token.firstName = user.firstName
         token.lastName = user.lastName
         token.emailVerified = user.emailVerified
@@ -152,9 +152,9 @@ export const {
         session.user.name = token.name as string
         session.user.firstName = token.firstName
         session.user.lastName = token.lastName
-        session.user.emailVerified = token.emailVerified
+        session.user.emailVerified = token.emailVerified ?? null
         // Incluir sessionToken para poder invalidar sesión desde logout
-        session.sessionToken = token.sessionToken
+        session.sessionToken = token.sessionToken as string
 
         const permissions = await getUserPermissions(token.id as string)
         session.user.permissions = permissions
