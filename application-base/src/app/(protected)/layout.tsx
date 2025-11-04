@@ -5,6 +5,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { Separator } from "@/components/ui/separator"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb"
 import { getMenuServer } from "@/lib/menu/get-menu-server"
+import { Toaster } from "@/components/ui/sonner"
 
 export default async function ProtectedLayout({
   children,
@@ -38,6 +39,7 @@ export default async function ProtectedLayout({
           {children}
         </div>
       </SidebarInset>
+      <Toaster />
     </SidebarProvider>
   )
 }

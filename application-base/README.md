@@ -342,7 +342,7 @@ docker buildx build \
 --build-arg AUTH_TRUST_HOST=true \
 --build-arg AUTH_URL="http://app:3000" \
 --build-arg APP_URL="http://app:3000" \
--t byteflowsivar/aurora-nova:0.01 .
+-t byteflowsivar/aurora-nova:0.0.3 .
 ```
 
 Alternativamente, para una construcción estándar:
