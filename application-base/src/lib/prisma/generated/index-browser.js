@@ -196,6 +196,19 @@ exports.Prisma.RolePermissionScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.MenuItemScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  href: 'href',
+  icon: 'icon',
+  order: 'order',
+  isActive: 'isActive',
+  permissionId: 'permissionId',
+  parentId: 'parentId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -221,7 +234,8 @@ exports.Prisma.ModelName = {
   Role: 'Role',
   Permission: 'Permission',
   UserRole: 'UserRole',
-  RolePermission: 'RolePermission'
+  RolePermission: 'RolePermission',
+  MenuItem: 'MenuItem'
 };
 
 /**

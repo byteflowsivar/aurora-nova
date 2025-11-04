@@ -126,6 +126,7 @@ model Permission {
 
   // Relations
   rolePermissions RolePermission[]
+  menuItems       MenuItem[]
 
   @@map("permission")
 }
@@ -160,4 +161,36 @@ model RolePermission {
   @@index([roleId], map: "idx_role_permission_role_id")
   @@index([permissionId], map: "idx_role_permission_permission_id")
   @@map("role_permission")
+}
+
+// ============================================================================
+// MENU SYSTEM - Dynamic navigation menu
+// ============================================================================
+
+model MenuItem {
+  id       String  @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  title    String  @db.VarChar(100)
+  href     String? @db.VarChar(255) // NULL for groups, path for direct links
+  icon     String? @db.VarChar(50) // Lucide icon name
+  order    Int     @default(0)
+  isActive Boolean @default(true) @map("is_active")
+
+  // Permission-based access control (optional)
+  permissionId String?     @map("permission_id") @db.VarChar(100)
+  permission   Permission? @relation(fields: [permissionId], references: [id], onDelete: SetNull)
+
+  // Hierarchical structure (self-referencing)
+  parentId String?    @map("parent_id") @db.Uuid
+  parent   MenuItem?  @relation("MenuHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children MenuItem[] @relation("MenuHierarchy")
+
+  // Audit fields
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([parentId], map: "idx_menu_item_parent_id")
+  @@index([order], map: "idx_menu_item_order")
+  @@index([isActive], map: "idx_menu_item_is_active")
+  @@index([permissionId], map: "idx_menu_item_permission_id")
+  @@map("menu_item")
 }

@@ -86,6 +86,9 @@ export const {
           }
 
           logger.info(`Authentication successful for user: ${user.id}`);
+          // Cargar permisos del usuario
+          const permissions = await getUserPermissions(user.id);
+
           // Retornar usuario en formato Auth.js + metadata para sistema híbrido
           return {
             id: user.id,
@@ -95,6 +98,7 @@ export const {
             emailVerified: user.emailVerified,
             firstName: user.firstName,
             lastName: user.lastName,
+            permissions: permissions, // Add permissions here
             // Metadata para crear sesión en BD (se usa en callback JWT)
             ipAddress: credentials.ipAddress as string | undefined,
             userAgent: credentials.userAgent as string | undefined,
@@ -141,6 +145,10 @@ export const {
         token.firstName = user.firstName
         token.lastName = user.lastName
         token.emailVerified = user.emailVerified
+
+        // 6. Cargar y agregar permisos al token
+        const permissions = await getUserPermissions(user.id)
+        token.permissions = permissions
       }
       return token
     },
@@ -156,8 +164,10 @@ export const {
         // Incluir sessionToken para poder invalidar sesión desde logout
         session.sessionToken = token.sessionToken as string
 
-        const permissions = await getUserPermissions(token.id as string)
-        session.user.permissions = permissions
+        // Asignar permisos desde el token a la sesión
+        session.user.permissions = (token.permissions as string[]) || []
+
+        console.log("Sesión creada con permisos:", session.user.permissions)
       }
       return session
     }

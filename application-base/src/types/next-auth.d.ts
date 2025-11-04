@@ -25,6 +25,7 @@ declare module "next-auth" {
     emailVerified?: Date | null;
     ipAddress?: string;
     userAgent?: string;
+    permissions?: string[]; // Add this
   }
 }
 
@@ -37,5 +38,6 @@ declare module "next-auth/jwt" {
     lastName?: string | null;
     emailVerified?: Date | null;
     sessionToken?: string;
+    permissions?: string[];
   }
 }

@@ -101,6 +101,22 @@ CREATE TABLE "role_permission" (
     CONSTRAINT "role_permission_pkey" PRIMARY KEY ("role_id","permission_id")
 );
 
+-- CreateTable
+CREATE TABLE "menu_item" (
+    "id" UUID NOT NULL DEFAULT uuidv7(),
+    "title" VARCHAR(100) NOT NULL,
+    "href" VARCHAR(255),
+    "icon" VARCHAR(50),
+    "order" INTEGER NOT NULL DEFAULT 0,
+    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "permission_id" VARCHAR(100),
+    "parent_id" UUID,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "menu_item_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "user_email_key" ON "user"("email");
 
@@ -137,6 +153,18 @@ CREATE INDEX "idx_role_permission_role_id" ON "role_permission"("role_id");
 -- CreateIndex
 CREATE INDEX "idx_role_permission_permission_id" ON "role_permission"("permission_id");
 
+-- CreateIndex
+CREATE INDEX "idx_menu_item_parent_id" ON "menu_item"("parent_id");
+
+-- CreateIndex
+CREATE INDEX "idx_menu_item_order" ON "menu_item"("order");
+
+-- CreateIndex
+CREATE INDEX "idx_menu_item_is_active" ON "menu_item"("is_active");
+
+-- CreateIndex
+CREATE INDEX "idx_menu_item_permission_id" ON "menu_item"("permission_id");
+
 -- AddForeignKey
 ALTER TABLE "account" ADD CONSTRAINT "account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -160,3 +188,9 @@ ALTER TABLE "role_permission" ADD CONSTRAINT "role_permission_role_id_fkey" FORE
 
 -- AddForeignKey
 ALTER TABLE "role_permission" ADD CONSTRAINT "role_permission_permission_id_fkey" FOREIGN KEY ("permission_id") REFERENCES "permission"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "menu_item" ADD CONSTRAINT "menu_item_permission_id_fkey" FOREIGN KEY ("permission_id") REFERENCES "permission"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "menu_item" ADD CONSTRAINT "menu_item_parent_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "menu_item"("id") ON DELETE CASCADE ON UPDATE CASCADE;

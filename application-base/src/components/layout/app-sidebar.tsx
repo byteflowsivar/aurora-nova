@@ -3,17 +3,15 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useRouter } from "next/navigation"
 import {
-  LayoutDashboard,
-  Users,
-  Shield,
-  Key,
   ChevronDown,
   LogOut,
   User,
+  Shield
 } from "lucide-react"
 
-import { useAuth } from "@/hooks/use-auth"
+import { logoutUser } from "@/actions/auth"
 import {
   Sidebar,
   SidebarContent,
@@ -26,6 +24,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 import {
   DropdownMenu,
@@ -36,44 +37,64 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { signOut } from "next-auth/react"
+import type { MenuItem as MenuItemType } from "@/lib/types/menu"
+import { getIcon } from "@/lib/utils/icon-mapper"
+import { useAuth } from "@/hooks/use-auth" // Keep for user info in footer
 
-const mainNavItems = [
-  {
-    title: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-    permission: null, // Accesible para todos los autenticados
-  },
-  {
-    title: "Usuarios",
-    href: "/users",
-    icon: Users,
-    permission: "user:list",
-  },
-  {
-    title: "Roles",
-    href: "/roles",
-    icon: Shield,
-    permission: "role:list",
-  },
-  {
-    title: "Permisos",
-    href: "/permissions",
-    icon: Key,
-    permission: "permission:list",
-  },
-]
+// Component to render a single menu item or a group
+function SidebarItem({ item, pathname }: { item: MenuItemType; pathname: string }) {
+  const Icon = getIcon(item.icon);
 
-export function AppSidebar() {
+  // If it's a group with children
+  if (item.children && item.children.length > 0) {
+    const isChildActive = item.children.some(child => child.href && pathname.startsWith(child.href));
+
+    return (
+      <SidebarMenuItem> {/* The group itself is a menu item */}
+        <SidebarMenuButton asChild isActive={isChildActive}>
+          <div>
+            {Icon && <Icon />}
+            <span>{item.title}</span>
+          </div>
+        </SidebarMenuButton>
+        <SidebarMenuSub> {/* This is the sub-menu container */}
+          {item.children.map((child) => (
+            <SidebarMenuSubItem key={child.id}> {/* Each child is a sub-menu item */}
+              <SidebarMenuSubButton asChild isActive={pathname === child.href}>
+                <Link href={child.href!}>
+                  <span>{child.title}</span>
+                </Link>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+          ))}
+        </SidebarMenuSub>
+      </SidebarMenuItem>
+    );
+  }
+
+  // If it's a direct link
+  if (item.href) {
+    const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+          <Link href={item.href}>
+            {Icon && <Icon />}
+            <span>{item.title}</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  }
+
+  return null;
+}
+
+
+export function AppSidebar({ menuItems }: { menuItems: MenuItemType[] }) {
   const pathname = usePathname()
-  const { user, hasPermission } = useAuth()
-
-  // Filtrar items según permisos
-  const visibleNavItems = mainNavItems.filter((item) => {
-    if (!item.permission) return true
-    return hasPermission(item.permission)
-  })
+  const router = useRouter()
+  const { user } = useAuth() // Only for user info in footer
 
   // Obtener iniciales del usuario
   const getUserInitials = () => {
@@ -101,7 +122,19 @@ export function AppSidebar() {
   }
 
   const handleLogout = async () => {
-    await signOut({ callbackUrl: "/auth/signin" })
+    try {
+      const result = await logoutUser()
+      if (result.success) {
+        router.push("/auth/signin")
+        router.refresh()
+      } else {
+        console.error("Error al cerrar sesión:", result.error)
+        alert("Error al cerrar sesión. Por favor intenta de nuevo.")
+      }
+    } catch (error) {
+      console.error("Error inesperado al cerrar sesión:", error)
+      alert("Error inesperado al cerrar sesión")
+    }
   }
 
   return (
@@ -129,19 +162,9 @@ export function AppSidebar() {
           <SidebarGroupLabel>Navegación</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {visibleNavItems.map((item) => {
-                const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                      <Link href={item.href}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
+              {menuItems.map((item) => (
+                <SidebarItem key={item.id} item={item} pathname={pathname} />
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

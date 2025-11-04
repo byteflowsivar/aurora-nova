@@ -9,6 +9,7 @@ import * as dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
 import { prisma } from '../src/lib/prisma/connection';
+import { seedMenuItems } from '../prisma/seeds/menu-items';
 
 // Datos de permisos base
 const permissions = [
@@ -33,6 +34,9 @@ const permissions = [
   { id: 'permission:update', module: 'Permissions', description: 'Actualizar información de permisos' },
   { id: 'permission:delete', module: 'Permissions', description: 'Eliminar permisos' },
   { id: 'permission:list', module: 'Permissions', description: 'Listar todos los permisos' },
+
+  // Permisos de menú
+  { id: 'menu:manage', module: 'Menu', description: 'Gestionar items del menú' },
 ];
 
 // Datos de roles base
@@ -56,6 +60,7 @@ const adminPermissions = [
   'user:read', 'user:list', 'user:update',
   'role:read', 'role:list',
   'permission:read', 'permission:list',
+  'menu:manage',
 ];
 
 const userPermissions = [
@@ -152,9 +157,14 @@ async function seedDatabase() {
       }
     }
 
-    // 6. Verificar datos insertados
+    // 6. Seed Menu Items
+    console.log('\n🍔 Seeding menu items...');
+    await seedMenuItems();
+
+    // 7. Verificar datos insertados
     const permCount = await prisma.permission.count();
     const roleCount = await prisma.role.count();
+    const menuItemCount = await prisma.menuItem.count();
     const superAdminPermCount = await prisma.rolePermission.count({
       where: {
         role: {
@@ -163,9 +173,10 @@ async function seedDatabase() {
       }
     });
 
-    console.log('📊 Datos iniciales creados:');
+    console.log('\n📊 Datos iniciales creados:');
     console.log(`   - Permisos: ${permCount}`);
     console.log(`   - Roles: ${roleCount}`);
+    console.log(`   - Items del menú: ${menuItemCount}`);
     console.log(`   - Permisos de Super Administrador: ${superAdminPermCount}`);
 
     if (superAdminPermCount === permissions.length) {
@@ -174,7 +185,7 @@ async function seedDatabase() {
       console.warn('⚠️  Super Administrador no tiene todos los permisos');
     }
 
-    console.log('🎉 Seeding completado exitosamente!');
+    console.log('\n🎉 Seeding completado exitosamente!');
 
   } catch (error) {
     console.error('❌ Error durante el seeding:', error);

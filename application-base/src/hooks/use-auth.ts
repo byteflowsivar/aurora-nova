@@ -5,61 +5,42 @@
 
 'use client'
 
+import * as React from 'react'
 import { useSession } from 'next-auth/react'
-import { useState, useEffect } from 'react'
 import type { AuthContext, UserWithRolesAndPermissions, UserRole } from '@/lib/types/auth'
 
 export function useAuth(): AuthContext {
   const { data: session, status } = useSession()
-  const [userPermissions, setUserPermissions] = useState<string[]>([])
-  const [userRoles, setUserRoles] = useState<string[]>([])
-  const [isLoading, setIsLoading] = useState(true)
 
-  // Cargar permisos y roles del usuario cuando la sesión esté disponible
-  useEffect(() => {
-    async function loadUserData() {
-      if (session?.user?.id) {
-        try {
-          // Cargar permisos del usuario
-          const permissionsResponse = await fetch(`/api/users/${session.user.id}/permissions`)
-          if (permissionsResponse.ok) {
-            type Permission = { module: string };
-            type PermissionsResponse = { permissions: Record<string, Permission[]> };
+  // Extraer permisos directamente de la sesión (ya están cargados en el JWT)
+  const userPermissions = React.useMemo(() => {
+    console.log("[useAuth] Estado de sesión:", {
+      status,
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      sessionData: session
+    })
 
-            const data: PermissionsResponse = await permissionsResponse.json()
-            // Extraer los módulos de permisos de la estructura anidada
-            const permissionModules: string[] = []
-            if (data.permissions) {
-              Object.values(data.permissions).forEach((perms) => {
-                if (Array.isArray(perms)) {
-                  perms.forEach((perm) => {
-                    if (perm.module) {
-                      permissionModules.push(perm.module)
-                    }
-                  })
-                }
-              })
-            }
-            setUserPermissions(permissionModules)
-          }
-
-          // Cargar roles del usuario
-          const rolesResponse = await fetch(`/api/users/${session.user.id}/roles`)
-          if (rolesResponse.ok) {
-            const roles = await rolesResponse.json()
-            setUserRoles(roles.map((role: { name: string }) => role.name))
-          }
-        } catch (error) {
-          console.error('Error loading user data:', error)
-        }
-      }
-      setIsLoading(false)
+    if (!session?.user) {
+      console.log("[useAuth] No hay sesión/usuario, retornando permisos vacíos")
+      return []
     }
 
-    if (status !== 'loading') {
-      loadUserData()
-    }
+    // Los permisos están disponibles en session.user.permissions
+    const permissions = (session.user as { permissions?: string[] }).permissions || []
+    console.log("[useAuth] Permisos cargados desde la sesión:", permissions)
+    return permissions
   }, [session, status])
+
+  // En el futuro, los roles también deberían estar en la sesión
+  // Por ahora, devolvemos un array vacío
+  const userRoles = React.useMemo(() => {
+    if (!session?.user) return []
+
+    // Los roles podrían estar en session.user.roles si se agregan al JWT
+    const roles = (session.user as { roles?: { name: string }[] }).roles || []
+    return roles.map(role => role.name)
+  }, [session])
 
   // Función para verificar si el usuario tiene un permiso específico
   const hasPermission = (permission: string): boolean => {
@@ -93,7 +74,7 @@ export function useAuth(): AuthContext {
     isAuthenticated: !!session?.user,
     hasPermission,
     hasRole,
-    isLoading: status === 'loading' || isLoading,
+    isLoading: status === 'loading',
   }
 }
 
