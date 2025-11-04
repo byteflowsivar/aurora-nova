@@ -4,7 +4,7 @@
 
 Aurora Nova es una aplicación web construida con Next.js, TypeScript y PostgreSQL. Proporciona un sistema seguro y flexible para gestionar usuarios, roles y permisos, utilizando un modelo de Control de Acceso Basado en Roles (RBAC). La aplicación utiliza `next-auth` para la autenticación, Prisma como ORM y `shadcn/ui` para la interfaz de usuario.
 
-El proyecto está estructurado como un monorepo con la aplicación principal en el directorio `app`. El directorio `database` contiene scripts para la gestión de la base de datos, y el directorio `docs` contiene la documentación del proyecto.
+El proyecto está estructurado como un monorepo con la aplicación principal en el directorio `application-base`. El directorio `database` contiene scripts para la gestión de la base de datos, y el directorio `docs` contiene la documentación del proyecto.
 
 ## Construcción y Ejecución
 
