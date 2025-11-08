@@ -4,14 +4,10 @@ Bienvenido a la documentación centralizada del proyecto Aurora Nova. Esta carpe
 
 ## Estructura de la Documentación
 
-La documentación se organiza en dos niveles principales:
+La documentación está organizada por propósito para facilitar la navegación y la escalabilidad.
 
-- **[00_global_architecture/](./00_global_architecture/)**: Contiene las decisiones de arquitectura que aplican a **todo** el proyecto.
+- **[adr/](./adr/)**: Contiene las Decisiones de Arquitectura (Architectural Decision Records - ADRs) que documentan las elecciones técnicas importantes y transversales del proyecto.
 
-- **[01_modules/](./01_modules/)**: Contiene la documentación detallada de cada módulo funcional de la aplicación.
-    - **[01_auth_and_authz/](./01_modules/01_auth_and_authz/)**: Módulo de Autenticación y Autorización.
+- **[development/](./development/)**: Documentación específica para desarrolladores que trabajan en el proyecto. Incluye guías de configuración, convenciones de código y procedimientos de despliegue.
 
-## Cómo Contribuir
-
-- Las nuevas decisiones de arquitectura **globales** deben añadirse como un ADR en la carpeta `00_global_architecture`.
-- La documentación para nuevas **funcionalidades** debe organizarse dentro de un nuevo módulo en la carpeta `01_modules/`.
+- **[modules/](./modules/)**: Contiene la documentación detallada de cada módulo funcional de la aplicación (ej. autenticación, facturación, etc.). Esta es la sección principal para entender las características del sistema.
