@@ -273,3 +273,39 @@ export async function logoutUser(): Promise<ActionResponse<void>> {
     return errorResponse("Error al cerrar sesión")
   }
 }
+
+// ============================================================================
+// VALIDACIÓN DE TOKEN DE REINICIO DE CONTRASEÑA
+// ============================================================================
+
+/**
+ * Valida un token de reinicio de contraseña.
+ * @param token - El token proporcionado por el usuario desde la URL.
+ * @returns {Promise<boolean>} - `true` si el token es válido, `false` en caso contrario.
+ */
+export async function validatePasswordResetToken(token: string): Promise<boolean> {
+  try {
+    // Usar la API web estándar para hashear, que es compatible con Edge y Node.js
+    const hashed = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+    const hashedToken = Buffer.from(hashed).toString('hex');
+
+    const dbToken = await prisma.passwordResetToken.findUnique({
+      where: { token: hashedToken },
+    });
+
+    if (!dbToken) {
+      return false;
+    }
+
+    // Comprobar si el token ha expirado
+    if (new Date() > dbToken.expiresAt) {
+      await prisma.passwordResetToken.delete({ where: { id: dbToken.id } });
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error al validar el token de reinicio de contraseña:', error);
+    return false;
+  }
+}

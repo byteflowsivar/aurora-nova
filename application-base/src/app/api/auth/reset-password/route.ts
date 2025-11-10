@@ -1,7 +1,7 @@
 // /application-base/src/app/api/auth/reset-password/route.ts
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import prisma from '@/lib/prisma';
+import { prisma } from "@/lib/prisma/connection"
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 
@@ -21,7 +21,9 @@ export async function POST(request: Request) {
 
     const { token, password } = validation.data;
 
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    // Usar la API web estándar para hashear
+    const hashed = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+    const hashedToken = Buffer.from(hashed).toString('hex');
 
     const passwordResetToken = await prisma.passwordResetToken.findUnique({
       where: { token: hashedToken },
@@ -49,7 +51,7 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Usar una transacción para asegurar la atomicidad de las operaciones
-    const transaction = await prisma.$transaction([
+    await prisma.$transaction([
       // 1. Actualizar la contraseña del usuario
       prisma.userCredentials.update({
         where: { userId: user.id },

@@ -24,6 +24,8 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
   console.log(html);
   console.log('--- EMAIL SENT (to console) ---');
 
+  // TODO: Implementar el envio por medio de Gmail
+
   // Ejemplo de cómo se integraría un proveedor real (ej. Resend)
   /*
   try {

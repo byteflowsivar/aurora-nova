@@ -27,6 +27,7 @@ const publicRoutes = [
   "/auth/signin",
   "/auth/signup",
   "/auth/error",
+  "/auth/forgot-password",
   "/auth/reset-password",
 ]
 

@@ -1,7 +1,7 @@
 // /application-base/src/app/api/auth/request-password-reset/route.ts
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
-import prisma from '@/lib/prisma';
+import { prisma } from "@/lib/prisma/connection"
 import { sendPasswordResetEmail } from '@/lib/email';
 import crypto from 'crypto';
 import { rateLimiter } from '@/lib/rate-limiter';
@@ -38,7 +38,10 @@ export async function POST(request: NextRequest) {
     if (user) {
       // Generar un token seguro
       const token = crypto.randomBytes(32).toString('hex');
-      const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+      
+      // Usar la API web estándar para hashear
+      const hashed = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+      const hashedToken = Buffer.from(hashed).toString('hex');
 
       // Establecer una fecha de expiración (ej. 30 minutos)
       const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
