@@ -15,6 +15,10 @@ declare namespace NodeJS {
     // Logging
     LOG_LEVEL?: 'debug' | 'info' | 'warn' | 'error';
 
+    // Email (para Gmail)
+    GMAIL_USER?: string;
+    GMAIL_APP_PASSWORD?: string;
+
     // Email (opcional - para futuras funcionalidades)
     SMTP_HOST?: string;
     SMTP_PORT?: string;
