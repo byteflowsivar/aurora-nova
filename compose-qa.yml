@@ -45,6 +45,12 @@ services:
       APP_URL: "http://app:3000"
       # Configuración de logging
       LOG_LEVEL: "debug"
+      # Configuración de SMTP para envío de correos
+      SMTP_HOST: "smtp.example.com" # Reemplazar con tu host SMTP
+      SMTP_USER: "your_smtp_user@example.com" # Reemplazar con tu usuario SMTP
+      SMTP_PASS: "your_smtp_password" # Reemplazar con tu contraseña SMTP
+      SMTP_PORT: "465" # Puerto SMTP (ej. 465 para SSL/TLS, 587 para STARTTLS)
+      FROM_EMAIL: "no-reply@aurora.nova.local" # Email de origen para los correos
 
 # Definición del volumen nombrado para la persistencia de datos.
 volumes:
