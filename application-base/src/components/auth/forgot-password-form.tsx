@@ -1,7 +1,7 @@
 // /application-base/src/components/auth/forgot-password-form.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from 'sonner';
+import { requestPasswordReset } from '@/actions/auth'; // Importar la Server Action
 
 const ForgotPasswordSchema = z.object({
   email: z.string().email({ message: 'Por favor, introduce un email válido.' }),
@@ -17,7 +18,7 @@ const ForgotPasswordSchema = z.object({
 type ForgotPasswordFormValues = z.infer<typeof ForgotPasswordSchema>;
 
 export function ForgotPasswordForm() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const form = useForm<ForgotPasswordFormValues>({
@@ -27,27 +28,22 @@ export function ForgotPasswordForm() {
     },
   });
 
-  const onSubmit = async (data: ForgotPasswordFormValues) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/auth/request-password-reset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+  const onSubmit = (data: ForgotPasswordFormValues) => {
+    startTransition(async () => {
+      try {
+        const result = await requestPasswordReset(data);
 
-      if (!response.ok) {
-        throw new Error('Algo salió mal. Por favor, inténtalo de nuevo.');
+        if (!result.success) {
+          throw new Error(result.error || 'Algo salió mal.');
+        }
+        
+        // Mostramos el mensaje de éxito
+        setIsSubmitted(true);
+
+      } catch (error) {
+        toast.error((error as Error).message || 'Ocurrió un error inesperado.');
       }
-      
-      // Mostramos el mensaje de éxito independientemente de si el email existe o no
-      setIsSubmitted(true);
-
-    } catch (error) {
-      toast.error((error as Error).message || 'Ocurrió un error inesperado.');
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   if (isSubmitted) {
@@ -75,15 +71,15 @@ export function ForgotPasswordForm() {
                   type="email"
                   placeholder="tu@email.com"
                   {...field}
-                  disabled={isLoading}
+                  disabled={isPending}
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? 'Enviando...' : 'Enviar enlace de reinicio'}
+        <Button type="submit" className="w-full" disabled={isPending}>
+          {isPending ? 'Enviando...' : 'Enviar enlace de reinicio'}
         </Button>
       </form>
     </Form>

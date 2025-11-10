@@ -275,6 +275,70 @@ export async function logoutUser(): Promise<ActionResponse<void>> {
 }
 
 // ============================================================================
+// SOLICITUD DE REINICIO DE CONTRASEÑA (SERVER ACTION)
+// ============================================================================
+import Mustache from 'mustache';
+import fs from 'fs/promises';
+import path from 'path';
+import { sendEmail } from '@/lib/email';
+
+const RequestResetSchema = z.object({
+  email: z.string().email({ message: 'Por favor, introduce un email válido.' }),
+});
+
+export async function requestPasswordReset(
+  values: z.infer<typeof RequestResetSchema>
+): Promise<ActionResponse<null>> {
+  try {
+    const validatedFields = RequestResetSchema.safeParse(values);
+    if (!validatedFields.success) {
+      return errorResponse('Email inválido.');
+    }
+    const { email } = validatedFields.data;
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (user) {
+      // Generar un token seguro usando crypto.getRandomValues
+      const randomBytes = new Uint8Array(32);
+      crypto.getRandomValues(randomBytes);
+      const token = Buffer.from(randomBytes).toString('hex');
+      
+      const hashed = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+      const hashedToken = Buffer.from(hashed).toString('hex');
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+
+      await prisma.passwordResetToken.create({
+        data: { userId: user.id, token: hashedToken, expiresAt },
+      });
+
+      const resetLink = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${token}`;
+      
+      // Leer la plantilla Mustache
+      const templatePath = path.join(process.cwd(), 'src/lib/email/templates', 'password-reset.mustache');
+      const template = await fs.readFile(templatePath, 'utf8');
+      
+      // Renderizar la plantilla con Mustache
+      const emailHtml = Mustache.render(template, { resetLink });
+
+      await sendEmail({
+        to: email,
+        subject: 'Restablece tu contraseña en Aurora Nova',
+        html: emailHtml,
+      });
+    }
+
+    // Anti-Enumeration: Siempre devolvemos éxito
+    return successResponse(null, 'Si tu cuenta existe, recibirás un correo con instrucciones.');
+
+  } catch (error) {
+    console.error('Error en requestPasswordReset:', error);
+    return errorResponse('Ocurrió un error en el servidor.');
+  }
+}
+
+
+// ============================================================================
 // VALIDACIÓN DE TOKEN DE REINICIO DE CONTRASEÑA
 // ============================================================================
 

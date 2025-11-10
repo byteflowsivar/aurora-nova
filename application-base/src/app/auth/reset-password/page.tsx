@@ -29,6 +29,7 @@ function ResetPasswordContent() {
         const data = await response.json();
         setIsTokenValid(data.valid);
       } catch (error) {
+        console.log('Error al validar el token:', error);
         setIsTokenValid(false);
       } finally {
         setIsValidating(false);
