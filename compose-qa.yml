@@ -26,7 +26,7 @@ services:
       - aurora-nova-db-data:/var/lib/postgresql/data
 
   app:
-    image: docker.io/byteflowsivar/aurora-nova:0.0.3
+    image: docker.io/byteflowsivar/aurora-nova:0.0.4
     container_name: aurora-nova-app
     restart: unless-stopped
     ports:
@@ -46,10 +46,10 @@ services:
       # Configuración de logging
       LOG_LEVEL: "debug"
       # Configuración de SMTP para envío de correos
-      SMTP_HOST: "smtp.example.com" # Reemplazar con tu host SMTP
-      SMTP_USER: "your_smtp_user@example.com" # Reemplazar con tu usuario SMTP
-      SMTP_PASS: "your_smtp_password" # Reemplazar con tu contraseña SMTP
-      SMTP_PORT: "465" # Puerto SMTP (ej. 465 para SSL/TLS, 587 para STARTTLS)
+      SMTP_HOST: "10.196.107.254" # Reemplazar con tu host SMTP
+      SMTP_USER: "test" # Reemplazar con tu usuario SMTP
+      SMTP_PASS: "999999999" # Reemplazar con tu contraseña SMTP
+      SMTP_PORT: "1025" # Puerto SMTP (ej. 465 para SSL/TLS, 587 para STARTTLS)
       FROM_EMAIL: "no-reply@aurora.nova.local" # Email de origen para los correos
 
 # Definición del volumen nombrado para la persistencia de datos.

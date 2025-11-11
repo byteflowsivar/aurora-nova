@@ -52,6 +52,29 @@ LOG_LEVEL="info"
     ```
     Se recomienda usar un gestor de procesos como **PM2** para mantener la aplicación en ejecución.
 
+### 3.1. Construcción de la Imagen de Docker (Alternativa de Despliegue)
+
+Si prefieres desplegar la aplicación como un contenedor de Docker, sigue estos pasos para construir la imagen.
+
+1.  **Navega a la carpeta de la aplicación:**
+    ```bash
+    cd aurora-nova/application-base
+    ```
+
+2.  **Ejecuta el comando de construcción:**
+    Este comando utiliza `docker buildx` para construir la imagen, pasando las variables de entorno necesarias durante la compilación como argumentos (`--build-arg`).
+
+    ```bash
+    docker buildx build \
+    --build-arg NEXTAUTH_URL="http://app:3000" \
+    --build-arg AUTH_TRUST_HOST=true \
+    --build-arg AUTH_URL="http://app:3000" \
+    --build-arg APP_URL="http://app:3000" \
+    -t byteflowsivar/aurora-nova:latest .
+    ```
+    - **`-t byteflowsivar/aurora-nova:latest`**: Asigna un nombre y etiqueta a tu imagen.
+    - **`.`**: Indica que el contexto de la construcción es el directorio actual (`application-base`).
+
 ## 4. Procedimientos Operativos
 
 ### Creación del Primer Super Administrador

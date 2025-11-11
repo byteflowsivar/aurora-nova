@@ -84,6 +84,29 @@ Sigue estos pasos para tener una instancia de Aurora Nova funcionando en tu máq
 
 ¡La aplicación estará disponible en [http://localhost:3000](http://localhost:3000)!
 
+## 🐳 Construcción de la Imagen de Docker
+
+Para crear una imagen de Docker para producción, es necesario pasar ciertas variables de entorno durante el proceso de construcción.
+
+1.  **Navega a la carpeta de la aplicación:**
+    ```bash
+    cd application-base
+    ```
+
+2.  **Ejecuta el comando de construcción:**
+    El siguiente comando utiliza `docker buildx` para construir la imagen, pasando las variables necesarias como argumentos (`--build-arg`).
+
+    ```bash
+    docker buildx build \
+    --build-arg NEXTAUTH_URL="http://app:3000" \
+    --build-arg AUTH_TRUST_HOST=true \
+    --build-arg AUTH_URL="http://app:3000" \
+    --build-arg APP_URL="http://app:3000" \
+    -t byteflowsivar/aurora-nova:latest .
+    ```
+    - **`-t byteflowsivar/aurora-nova:latest`**: Asigna un nombre y etiqueta a tu imagen. Cambia `latest` por una versión específica si lo necesitas (ej. `0.0.4`).
+    - **`.`**: Indica que el contexto de la construcción es el directorio actual (`application-base`).
+
 ## 📚 Documentación
 
 -   Para una guía detallada sobre la arquitectura, los módulos y las decisiones de diseño, consulta nuestra **[documentación completa](./docs/README.md)**.
