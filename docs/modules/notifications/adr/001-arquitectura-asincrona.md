@@ -15,11 +15,16 @@ La aplicación necesita enviar notificaciones (ej. correos de bienvenida, reinic
 Se ha decidido implementar una **arquitectura asíncrona orientada a eventos** para gestionar todas las notificaciones.
 
 1.  **Cola de Eventos en Base de Datos:** Se creará una tabla `notification_events` que actuará como una cola de mensajes persistente.
-2.  **Publicación de Eventos:** En lugar de enviar una notificación directamente, los servicios de la aplicación (ej. la acción `requestPasswordReset`) "publicarán" un evento en la tabla `notification_events`. Este evento contendrá toda la información necesaria (ej. `evento: 'user.password_reset.requested'`, `userId`, `datos: { token: '...' }`).
-3.  **Proceso "Worker" Asíncrono:** Se creará un proceso de larga duración separado (un "worker") que se ejecutará en segundo plano. Su única responsabilidad será:
-    a. Sondear (poll) la tabla `notification_events` en busca de eventos pendientes.
-    b. Procesar cada evento: buscar la plantilla correspondiente, renderizarla con los datos del evento y enviarla usando el servicio de correo.
-    c. Marcar el evento como procesado o fallido.
+2.  **Publicación de Eventos:** En lugar de enviar una notificación directamente, los servicios de la aplicación "publicarán" un evento en la tabla `notification_events`. Este evento contendrá una estructura clara para definir el trabajo a realizar:
+    *   `event_name`: El nombre del suceso de negocio (ej. `user.password_reset.requested`).
+    *   `channel`: El canal de entrega (`EMAIL`, `SMS`, etc.).
+    *   `payload`: Un objeto JSON con los datos necesarios para la notificación (ej. `{ "userId": "...", "data": { "token": "..." } }`).
+3.  **Proceso "Worker" Despachador (Dispatcher):** Se creará un proceso de larga duración separado (un "worker") que actuará como un despachador:
+    a. Sondeará la tabla `notification_events` en busca de eventos pendientes.
+    b. Leerá el campo `channel` de cada evento.
+    c. Invocará al manejador (handler) correspondiente a ese canal (ej. `emailNotificationHandler`).
+    d. El manejador específico se encargará de buscar la plantilla, renderizarla y enviarla.
+    e. Finalmente, el worker actualizará el estado del evento (procesado, fallido, etc.).
 
 ## 3. Consecuencias
 

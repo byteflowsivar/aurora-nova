@@ -12,11 +12,11 @@
 ## Requerimientos
 
 ### Funcionales (FR)
-*   **FR-01:** El sistema debe permitir almacenar plantillas de correo en la base de datos.
-*   **FR-02:** Las plantillas deben tener un identificador único, un asunto y un cuerpo.
+*   **FR-01:** El sistema debe permitir almacenar plantillas de notificación en la base de datos.
+*   **FR-02:** Las plantillas (`NotificationTemplate`) deben tener un `name` (identificador de negocio, ej. `password-reset-v1`), un `type` (canal, ej. `EMAIL`), un `subject` y un `body`.
 *   **FR-03:** El cuerpo de las plantillas debe soportar variables usando la sintaxis de Mustache (ej. `{{userName}}`).
-*   **FR-04:** El sistema debe proveer una tabla en la base de datos que funcione como cola de eventos de notificación.
-*   **FR-05:** Un evento en la cola debe contener, como mínimo, el tipo de evento, el ID del destinatario y los datos para la plantilla.
+*   **FR-04:** El sistema debe proveer una tabla `notification_events` que funcione como cola de eventos.
+*   **FR-05:** Un evento en la cola (`NotificationEvent`) debe contener, como mínimo, `event_name` (el suceso de negocio), `channel` (el canal de entrega como `EMAIL` o `SMS`) y `payload` (los datos para la plantilla).
 *   **FR-06:** Debe existir un proceso "worker" que lea eventos pendientes de la cola.
 *   **FR-07:** El worker debe poder marcar eventos como `procesados`, `fallidos` o `pendientes`.
 

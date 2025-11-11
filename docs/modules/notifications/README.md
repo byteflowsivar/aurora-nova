@@ -12,5 +12,5 @@ Está diseñado con una **arquitectura asíncrona y orientada a eventos** para d
 
 *   **Asincronía:** Las notificaciones se procesan en segundo plano, mejorando la experiencia de usuario.
 *   **Gestión de Plantillas:** El contenido de las notificaciones se gestiona desde la base de datos, permitiendo cambios sin necesidad de un nuevo despliegue.
-*   **Extensibilidad:** La arquitectura permite añadir fácilmente nuevos tipos de notificaciones (ej. SMS, Push Notifications) en el futuro.
+*   **Extensibilidad Multi-Canal:** La arquitectura está diseñada para soportar múltiples canales de notificación (ej. `EMAIL`, `SMS`, `PUSH`). Un worker central actúa como despachador (dispatcher), facilitando la adición de nuevos canales en el futuro.
 *   **Resiliencia:** Los fallos en el envío de un correo no afectan la operación que lo originó y pueden ser reintentados.
