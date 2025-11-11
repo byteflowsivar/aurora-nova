@@ -1,10 +1,13 @@
 # Plan de Implementación: Módulo de Notificaciones
 
+| ID | Tarea | Descripción | Dependencias | Estado |
+| :--- | :--- | :--- | :--- | :--- |
+| **Fase 1: Infraestructura de Base de Datos** |
 | T01 | Diseñar y Crear Tabla de Plantillas | Añadir el modelo `NotificationTemplate` a `prisma/schema.prisma` con campos para `id`, `name` (ej. `password-reset-v1`), `type` (ej. `EMAIL`), `subject`, y `body`. | - | 🟡 Pendiente |
 | T02 | Diseñar y Crear Tabla de Eventos | Añadir el modelo `NotificationEvent` a `prisma/schema.prisma`. Debe incluir `id`, `event_name` (ej. `user.password_reset.requested`), `channel` (ej. `EMAIL`), `payload` (JSON), `status`, `attempts`. | - | 🟡 Pendiente |
 | T03 | Crear Migración de BD | Generar y aplicar la migración para crear las nuevas tablas. | T01, T02 | 🟡 Pendiente |
 | **Fase 2: Lógica de Publicación de Eventos** |
-| T04 | Crear Acción para Publicar Eventos | Crear una Server Action `publishNotificationEvent(eventName, channel, payload)` que inserte un nuevo registro en la tabla `NotificationEvent`. | T02 | 🟡 Pendiente |
+| T04 | Crear Acción para Publicar Eventos | Crear una Server Action `publishNotificationEvent(eventName, channel, payload)` que inserte un nuevo registro en la tabla `NotificationEvent` con estado 'PENDING'. | T02 | 🟡 Pendiente |
 | T05 | Refactorizar Flujo de Contraseña | Modificar la Server Action `requestPasswordReset` para que llame a `publishNotificationEvent('user.password_reset.requested', 'EMAIL', payload)`. | T04 | 🟡 Pendiente |
 | **Fase 3: Implementación del Worker** |
 | T06 | Crear Script del Worker | Crear un nuevo archivo `scripts/notification-worker.ts` que contendrá la lógica del proceso en segundo plano. | - | 🟡 Pendiente |
