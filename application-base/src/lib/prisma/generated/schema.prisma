@@ -209,3 +209,35 @@ model MenuItem {
   @@index([permissionId], map: "idx_menu_item_permission_id")
   @@map("menu_item")
 }
+
+// ============================================================================
+// NOTIFICATION SYSTEM - Templates and Events
+// ============================================================================
+
+model NotificationTemplate {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name      String   @unique @db.VarChar(100) // "password-reset-v1"
+  type      String   @db.VarChar(20) // "EMAIL", "SMS", "PUSH"
+  subject   String?  @db.VarChar(255) // Para EMAIL
+  body      String // Template Mustache
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("notification_template")
+}
+
+model NotificationEvent {
+  id        String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  eventName String    @map("event_name") @db.VarChar(100)
+  channel   String    @db.VarChar(20) // "EMAIL", "SMS", "PUSH"
+  payload   Json // Datos para la plantilla
+  status    String    @default("PENDING") // PENDING, SENT, FAILED
+  attempts  Int       @default(0)
+  sentAt    DateTime? @map("sent_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([status])
+  @@index([eventName])
+  @@index([createdAt])
+  @@map("notification_event")
+}

@@ -36,7 +36,7 @@ El worker ejecuta `node dist/index.js` como proceso long-running que consume job
 | **Fase 1: Infraestructura de Base de Datos** |
 | T01 | Diseñar y Crear Tabla de Plantillas | Añadir el modelo `NotificationTemplate` a `prisma/schema.prisma` con campos para `id`, `name` (ej. `password-reset-v1`), `type` (ej. `EMAIL`), `subject`, y `body`. | - | ✅ Completada |
 | T02 | Diseñar y Crear Tabla de Eventos | Añadir el modelo `NotificationEvent` a `prisma/schema.prisma`. Debe incluir `id`, `event_name` (ej. `user.password_reset.requested`), `channel` (ej. `EMAIL`), `payload` (JSON), `status`, `attempts`. | - | ✅ Completada |
-| T03 | Crear Migración de BD | Generar y aplicar la migración para crear las nuevas tablas. | T01, T02 | 🟡 Pendiente |
+| T03 | Crear Migración de BD | Generar y aplicar la migración para crear las nuevas tablas. | T01, T02 | ✅ Completada |
 | **Fase 2: Lógica de Publicación de Eventos** |
 | T04.1 | Configurar pg-boss en application-base | Crear servicio/módulo `NotificationPublisher` que inicialice pg-boss y exponga métodos para publicar eventos. Configurar schema `public` con prefijo `pgboss_`. | T00.2, T03 | 🟡 Pendiente |
 | T04.2 | Crear Servicio de Publicación | Implementar método `publishNotificationEvent(eventName, channel, payload)` que: 1) Inserta en `notification_events` (auditoría), 2) Publica job en pg-boss. | T04.1 | 🟡 Pendiente |
