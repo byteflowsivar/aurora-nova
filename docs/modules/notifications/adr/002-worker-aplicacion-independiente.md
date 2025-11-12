@@ -12,6 +12,13 @@ El Módulo de Notificaciones requiere un proceso worker de larga duración para 
 *   Ser escalable horizontalmente si el volumen de notificaciones crece
 *   No interferir con los deployments de la aplicación web Next.js
 
+**Naturaleza del Worker:**
+El worker es un **proceso Node.js standalone** (no un servidor web). No necesita framework web (ni Express.js ni Next.js) porque:
+- No expone endpoints HTTP
+- No sirve contenido estático
+- Solo consume jobs de pg-boss y ejecuta handlers
+- La comunicación es unidireccional: lee de la cola, procesa, actualiza BD
+
 ### Opciones Evaluadas
 
 **Opción A: Worker dentro del contenedor de Next.js (Monolito)**
@@ -57,64 +64,81 @@ Se ha decidido implementar el worker como una **aplicación independiente** ejec
 ### Arquitectura de Despliegue
 
 ```
-┌─────────────────────────────────┐
-│  Container: aurora-nova-web     │
-│                                 │
-│  ┌─────────────────────┐       │
-│  │  Next.js App        │       │
-│  │  (Port 3000)        │       │
-│  └─────────────────────┘       │
-│                                 │
-│  • Publica eventos en pg-boss  │
-│  • Inserta en notification_     │
-│    events                       │
-└─────────────────────────────────┘
+┌──────────────────────────────────────┐
+│  Container: application-base (web)   │
+│                                      │
+│  ┌────────────────────────┐         │
+│  │  Next.js App           │         │
+│  │  HTTP Server (Port 3000)         │
+│  └────────────────────────┘         │
+│                                      │
+│  • Sirve UI y API routes            │
+│  • Publica eventos en pg-boss       │
+│  • Inserta en notification_events   │
+└──────────────────────────────────────┘
+         │
+         ↓ (via PostgreSQL/pg-boss)
+┌──────────────────────────────────────┐
+│  Container: notification-worker      │
+│  (Node.js Standalone - Sin HTTP)     │
+│                                      │
+│  ┌────────────────────────┐         │
+│  │  node dist/index.js    │         │
+│  │  - pg-boss.start()     │         │
+│  │  - boss.work(handlers) │         │
+│  │  - Proceso long-running│         │
+│  └────────────────────────┘         │
+│                                      │
+│  • NO expone puertos HTTP           │
+│  • Consume jobs de pg-boss          │
+│  • Envía notificaciones             │
+│  • Actualiza notification_events    │
+└──────────────────────────────────────┘
          │
          ↓
-┌─────────────────────────────────┐
-│  Container: aurora-nova-worker  │
-│                                 │
-│  ┌─────────────────────┐       │
-│  │  Notification       │       │
-│  │  Worker (pg-boss)   │       │
-│  └─────────────────────┘       │
-│                                 │
-│  • Consume jobs de pg-boss     │
-│  • Envía notificaciones        │
-│  • Actualiza notification_      │
-│    events                       │
-└─────────────────────────────────┘
-         │
-         ↓
-┌─────────────────────────────────┐
-│  Container: PostgreSQL          │
-│                                 │
-│  • Tablas de negocio            │
-│  • notification_events          │
-│  • notification_templates       │
-│  • Tablas de pg-boss (pgboss_*) │
-└─────────────────────────────────┘
+┌──────────────────────────────────────┐
+│  Container: PostgreSQL               │
+│                                      │
+│  • Tablas de negocio                │
+│  • notification_events              │
+│  • notification_templates           │
+│  • Tablas de pg-boss (pgboss_*)     │
+└──────────────────────────────────────┘
 ```
 
 ### Estructura de Proyecto
 
 ```
 aurora-nova/
-├── application-base/          # Aplicación web Next.js
+├── application-base/                # Aplicación web Next.js
 │   ├── src/
 │   ├── Dockerfile
-│   └── package.json
+│   └── package.json                 # Incluye: next, react, pg-boss (publisher)
 │
-├── notification-worker/       # Worker standalone
+├── notification-worker/             # Worker standalone (Node.js puro)
 │   ├── src/
-│   │   ├── index.ts          # Entry point del worker
-│   │   ├── handlers/         # Handlers por canal (email, sms, etc.)
-│   │   └── config/           # Configuración de pg-boss
-│   ├── Dockerfile
-│   └── package.json
+│   │   ├── index.ts                # Entry point - Inicializa pg-boss
+│   │   ├── config/
+│   │   │   └── pgboss.ts           # Configuración de reintentos, etc.
+│   │   ├── handlers/
+│   │   │   ├── email.ts            # Handler de canal EMAIL
+│   │   │   ├── sms.ts              # Handler de canal SMS (futuro)
+│   │   │   └── index.ts            # Exporta handlers
+│   │   ├── services/
+│   │   │   ├── template.ts         # Fetch y renderizado
+│   │   │   └── mailer.ts           # Wrapper de nodemailer
+│   │   └── utils/
+│   │       └── logger.ts           # Configuración de pino
+│   ├── scripts/
+│   │   └── health-check.ts         # Health check (sin HTTP)
+│   ├── Dockerfile                  # Multi-stage build
+│   └── package.json                # Solo: pg-boss, prisma, nodemailer, pino
+│                                   # SIN: express, next, frameworks web
 │
-└── docker-compose.yml         # Orquestación completa
+└── docker-compose.yml              # Orquestación completa
 ```
+
+**Nota crítica:** El worker NO incluye frameworks web en sus dependencias. Es un proceso long-running que ejecuta `node dist/index.js` y permanece activo consumiendo jobs.
 
 ## 3. Consecuencias
 

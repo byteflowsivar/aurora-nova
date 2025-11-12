@@ -4,8 +4,26 @@
 
 Este plan de implementación describe las fases para desarrollar el Módulo de Notificaciones usando:
 - **pg-boss** como motor de cola asíncrono
-- **Worker independiente** como aplicación separada en Docker
+- **Worker independiente** como aplicación Node.js standalone (sin frameworks web)
 - **Arquitectura híbrida** con `notification_events` para auditoría y tablas de pg-boss para procesamiento
+
+### Stack del Worker
+
+El `notification-worker` es un **proceso Node.js puro** que NO usa frameworks web:
+
+**Dependencias del worker:**
+- ✅ `pg-boss` - Motor de cola
+- ✅ `@prisma/client` - ORM para acceso a BD
+- ✅ `nodemailer` - Envío de emails
+- ✅ `mustache` - Renderizado de plantillas
+- ✅ `pino` - Logging estructurado
+
+**NO incluye:**
+- ❌ `express` - No necesita servidor HTTP
+- ❌ `next` - No es aplicación web
+- ❌ Ningún framework web
+
+El worker ejecuta `node dist/index.js` como proceso long-running que consume jobs vía pg-boss.
 
 ## Fases de Implementación
 
@@ -25,7 +43,8 @@ Este plan de implementación describe las fases para desarrollar el Módulo de N
 | T04.3 | Crear tipos TypeScript compartidos | Definir interfaces de eventos (`NotificationEventPayload`, `EmailPayload`, etc.) en un módulo compartido entre web y worker. | T04.2 | 🟡 Pendiente |
 | T05 | Refactorizar Flujo de Contraseña | Modificar la Server Action `requestPasswordReset` para que llame a `publishNotificationEvent('user.password_reset.requested', 'EMAIL', payload)`. | T04.2 | 🟡 Pendiente |
 | **Fase 3: Implementación del Worker Independiente** |
-| T06 | Crear Entry Point del Worker | Crear archivo `notification-worker/src/index.ts` que inicialice pg-boss y registre los handlers. | T00.1, T00.2 | 🟡 Pendiente |
+| | **Nota:** El worker es un proceso Node.js standalone (NO usa Express, Next.js ni framework web). Solo ejecuta pg-boss con handlers. |
+| T06 | Crear Entry Point del Worker | Crear archivo `notification-worker/src/index.ts` que inicialice pg-boss y registre los handlers. Es un proceso long-running sin servidor HTTP. | T00.1, T00.2 | 🟡 Pendiente |
 | T07 | Configurar pg-boss en Worker | Inicializar pg-boss con opciones: schema público, configuración de reintentos (exponential backoff, max 5 intentos), dead letter queue. | T06 | 🟡 Pendiente |
 | T08.1 | Implementar Handler de Email | Crear `notification-worker/src/handlers/emailHandler.ts` que: 1) Busque plantilla en BD, 2) Renderice con Mustache, 3) Envíe vía nodemailer, 4) Actualice `notification_events`. | T01, T07 | 🟡 Pendiente |
 | T08.2 | Registrar Handlers en pg-boss | Registrar workers con `boss.work('notification.EMAIL', emailHandler)`. Preparar estructura para futuros canales (SMS, PUSH). | T08.1 | 🟡 Pendiente |
@@ -41,9 +60,9 @@ Este plan de implementación describe las fases para desarrollar el Módulo de N
 | T13.4 | Testing de Deployment Local | Ejecutar `docker-compose up` y verificar: 1) Worker inicia correctamente, 2) Procesa eventos publicados desde web, 3) Actualiza BD correctamente. | T13.2, T13.3 | 🟡 Pendiente |
 | T13.5 | Documentar Deployment en VPS | Crear guía de deployment: 1) Setup de docker-compose en VPS, 2) Configuración de Nginx reverse proxy, 3) SSL con Let's Encrypt, 4) Monitoreo de logs. | T13.4 | 🟡 Pendiente |
 | **Fase 6: Monitoreo y Observabilidad** |
-| T14.1 | Implementar Health Check del Worker | Crear script o endpoint de health check que verifique: 1) pg-boss está activo, 2) Conexión a BD funcional, 3) Último job procesado hace <5min. | T10 | 🟡 Pendiente |
+| T14.1 | Implementar Health Check del Worker | Crear script standalone `scripts/health-check.ts` (sin HTTP) que verifique: 1) pg-boss está activo, 2) Conexión a BD funcional, 3) Retorna exit code 0/1. Configurar Docker healthcheck. | T10 | 🟡 Pendiente |
 | T14.2 | Configurar Logging Estructurado | Implementar logging con pino en formato JSON: Logs de inicio/shutdown, jobs procesados/fallidos, errores con contexto completo. | T09 | 🟡 Pendiente |
-| T14.3 | Exponer Métricas de pg-boss | Crear endpoint o dashboard para métricas: Jobs en cola, jobs procesados/fallidos (últimas 24h), workers activos, latencia promedio. | T14.1 | 🟡 Pendiente |
+| T14.3 | Implementar Consulta de Métricas | Crear utilidades para consultar métricas de pg-boss vía código: `boss.getQueueSize()`, jobs procesados/fallidos. Opcionalmente exponer en application-base (web) para dashboard admin. El worker NO expone endpoints HTTP. | T14.1 | 🟡 Pendiente |
 | T14.4 | Configurar Alertas | Documentar configuración de alertas (vía log monitoring o servicio externo): Worker down >5min, tasa de fallos >10%, cola con >1000 jobs pendientes. | T14.3 | 🟡 Pendiente |
 | **Fase 7: Testing y Validación** |
 | T15.1 | Testing de Integración | Crear tests que: 1) Publiquen evento desde web, 2) Verifiquen procesamiento por worker, 3) Validen actualización de `notification_events`, 4) Confirmen envío de email. | T13.4 | 🟡 Pendiente |

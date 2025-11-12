@@ -25,13 +25,17 @@ Está diseñado con una **arquitectura asíncrona y orientada a eventos** para d
 
 | Componente | Tecnología | Propósito |
 |------------|------------|-----------|
+| **Aplicación Web** | Next.js 15 (application-base) | Interfaz de usuario y publicación de eventos |
+| **Worker** | **Node.js 20+ standalone** (sin framework web) | Proceso de larga duración que consume jobs |
 | **Motor de Cola** | pg-boss ^9.0.0 | Sistema de jobs asíncrono basado en PostgreSQL |
 | **Base de Datos** | PostgreSQL 16+ | Almacenamiento de plantillas, eventos y cola de jobs |
-| **Worker Runtime** | Node.js 20+ con TypeScript | Aplicación independiente que procesa notificaciones |
+| **ORM** | Prisma (compartido entre web y worker) | Acceso tipado a base de datos |
 | **Renderizado de Plantillas** | Mustache.js | Interpolación de variables en plantillas de email |
 | **Envío de Emails** | Nodemailer | Cliente SMTP para envío de correos |
 | **Logging** | Pino | Logging estructurado en formato JSON |
 | **Containerización** | Docker + docker-compose | Orquestación de servicios (web, worker, db) |
+
+**Nota Importante:** El worker es un **proceso Node.js puro** (standalone), NO usa Next.js ni Express.js. Solo ejecuta pg-boss con handlers para procesar jobs. No expone endpoints HTTP ni servidor web.
 
 ### Arquitectura de Componentes
 
@@ -51,12 +55,15 @@ Está diseñado con una **arquitectura asíncrona y orientada a eventos** para d
                                       │ pg-boss job queue
                                       ↓
 ┌──────────────────────────────────────────────────────────────────┐
-│                      NOTIFICATION-WORKER                          │
+│              NOTIFICATION-WORKER (Node.js Standalone)            │
+│                    NO WEB FRAMEWORK - Solo pg-boss                │
 │                                                                   │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │  pg-boss Consumer                                          │ │
+│  │  src/index.ts - Entry Point                                │ │
+│  │  - Inicializa pg-boss                                      │ │
 │  │  - boss.work('notification.EMAIL', emailHandler)           │ │
 │  │  - boss.work('notification.SMS', smsHandler)  [futuro]     │ │
+│  │  - Graceful shutdown (SIGTERM/SIGINT)                      │ │
 │  └────────────────────────────────────────────────────────────┘ │
 │                              │                                    │
 │                              ↓                                    │
@@ -130,6 +137,68 @@ Este diseño separa dos responsabilidades:
 - Locking distribuido para múltiples workers
 - Reintentos y dead letter queue
 - Jobs antiguos eliminados automáticamente según retención configurada
+
+### Estructura del Proyecto Worker
+
+```
+notification-worker/
+├── src/
+│   ├── index.ts                    # Entry point - Inicializa pg-boss y handlers
+│   ├── config/
+│   │   └── pgboss.ts               # Configuración de pg-boss (retries, etc.)
+│   ├── handlers/
+│   │   ├── email.ts                # Handler de notificaciones EMAIL
+│   │   ├── sms.ts                  # Handler de notificaciones SMS (futuro)
+│   │   └── index.ts                # Exporta todos los handlers
+│   ├── services/
+│   │   ├── template.ts             # Fetch y renderizado de plantillas
+│   │   └── mailer.ts               # Wrapper de nodemailer
+│   └── utils/
+│       └── logger.ts               # Configuración de pino
+├── scripts/
+│   └── health-check.ts             # Health check standalone (sin HTTP)
+├── Dockerfile                      # Multi-stage build
+├── package.json
+├── tsconfig.json
+└── .env.example
+```
+
+### Dependencias del Worker (package.json)
+
+```json
+{
+  "name": "notification-worker",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "health": "tsx scripts/health-check.ts"
+  },
+  "dependencies": {
+    "pg-boss": "^9.0.3",              // Motor de cola
+    "@prisma/client": "^6.18.0",      // ORM para BD
+    "nodemailer": "^7.0.10",          // Envío de emails
+    "mustache": "^4.2.0",             // Renderizado de plantillas
+    "pino": "^10.1.0"                 // Logging estructurado
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/nodemailer": "^7.0.3",
+    "@types/mustache": "^4.2.6",
+    "typescript": "^5",
+    "tsx": "^4.20.6",                 // Ejecutar TS en desarrollo
+    "prisma": "^6.18.0"
+  }
+}
+```
+
+**Sin Express, sin Next.js, sin frameworks web.** El worker es un proceso Node.js puro que:
+1. Inicializa pg-boss
+2. Registra handlers con `boss.work()`
+3. Espera jobs indefinidamente
+4. Maneja graceful shutdown
 
 ---
 
@@ -273,14 +342,55 @@ server {
 
 ### Health Checks
 
+**El worker NO expone endpoints HTTP.** Los health checks se hacen mediante scripts standalone:
+
 ```bash
 # Verificar salud del worker
-docker exec aurora-nova-worker node dist/scripts/health-check.js
+docker exec notification-worker npm run health
+
+# O directamente:
+docker exec notification-worker node dist/scripts/health-check.js
 
 # Salida esperada:
 # ✓ pg-boss is running
 # ✓ Database connection OK
 # ✓ Last job processed: 2 minutes ago
+```
+
+**Ejemplo de health-check.ts:**
+
+```typescript
+// scripts/health-check.ts
+import PgBoss from 'pg-boss';
+
+async function healthCheck() {
+  try {
+    const boss = new PgBoss(process.env.DATABASE_URL!);
+    await boss.start();
+
+    const isRunning = await boss.isRunning();
+    if (!isRunning) throw new Error('pg-boss not running');
+
+    console.log('✓ Worker is healthy');
+    process.exit(0);
+  } catch (error) {
+    console.error('✗ Worker is unhealthy:', error);
+    process.exit(1);
+  }
+}
+
+healthCheck();
+```
+
+**Docker health check (en docker-compose.yml):**
+
+```yaml
+worker:
+  healthcheck:
+    test: ["CMD", "node", "dist/scripts/health-check.js"]
+    interval: 30s
+    timeout: 5s
+    retries: 3
 ```
 
 ### Métricas de pg-boss
