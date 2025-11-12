@@ -34,8 +34,8 @@ El worker ejecuta `node dist/index.js` como proceso long-running que consume job
 | T00.2 | Instalar dependencias de pg-boss | Instalar `pg-boss` en ambos proyectos (application-base y notification-worker). Versión recomendada: ^9.0.0. | T00.1 | 🟡 Pendiente |
 | T00.3 | Configurar Docker para worker | Crear `Dockerfile` para el worker y actualizar `docker-compose.yml` para incluir servicios separados (web, worker, db). | T00.1 | 🟡 Pendiente |
 | **Fase 1: Infraestructura de Base de Datos** |
-| T01 | Diseñar y Crear Tabla de Plantillas | Añadir el modelo `NotificationTemplate` a `prisma/schema.prisma` con campos para `id`, `name` (ej. `password-reset-v1`), `type` (ej. `EMAIL`), `subject`, y `body`. | - | 🟡 Pendiente |
-| T02 | Diseñar y Crear Tabla de Eventos | Añadir el modelo `NotificationEvent` a `prisma/schema.prisma`. Debe incluir `id`, `event_name` (ej. `user.password_reset.requested`), `channel` (ej. `EMAIL`), `payload` (JSON), `status`, `attempts`. | - | 🟡 Pendiente |
+| T01 | Diseñar y Crear Tabla de Plantillas | Añadir el modelo `NotificationTemplate` a `prisma/schema.prisma` con campos para `id`, `name` (ej. `password-reset-v1`), `type` (ej. `EMAIL`), `subject`, y `body`. | - | ✅ Completada |
+| T02 | Diseñar y Crear Tabla de Eventos | Añadir el modelo `NotificationEvent` a `prisma/schema.prisma`. Debe incluir `id`, `event_name` (ej. `user.password_reset.requested`), `channel` (ej. `EMAIL`), `payload` (JSON), `status`, `attempts`. | - | ✅ Completada |
 | T03 | Crear Migración de BD | Generar y aplicar la migración para crear las nuevas tablas. | T01, T02 | 🟡 Pendiente |
 | **Fase 2: Lógica de Publicación de Eventos** |
 | T04.1 | Configurar pg-boss en application-base | Crear servicio/módulo `NotificationPublisher` que inicialice pg-boss y exponga métodos para publicar eventos. Configurar schema `public` con prefijo `pgboss_`. | T00.2, T03 | 🟡 Pendiente |

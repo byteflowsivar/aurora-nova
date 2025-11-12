@@ -226,3 +226,20 @@ model NotificationTemplate {
   @@map("notification_template")
 }
 
+model NotificationEvent {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  eventName String   @map("event_name") @db.VarChar(100)
+  channel   String   @db.VarChar(20)        // "EMAIL", "SMS", "PUSH"
+  payload   Json                            // Datos para la plantilla
+  status    String   @default("PENDING")    // PENDING, SENT, FAILED
+  attempts  Int      @default(0)
+  sentAt    DateTime? @map("sent_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("notification_event")
+  @@index([status])
+  @@index([eventName])
+  @@index([createdAt])
+}
+
+
