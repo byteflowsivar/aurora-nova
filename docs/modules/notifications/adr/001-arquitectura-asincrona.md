@@ -26,15 +26,67 @@ Se ha decidido implementar una **arquitectura asíncrona orientada a eventos** p
     d. El manejador específico se encargará de buscar la plantilla, renderizarla y enviarla.
     e. Finalmente, el worker actualizará el estado del evento (procesado, fallido, etc.).
 
-## 3. Consecuencias
+## 3. Implementación: pg-boss como Motor de Cola
+
+### 3.1. Elección de Tecnología
+
+Después de evaluar diferentes alternativas (polling manual, BullMQ + Redis, Vercel Cron), se ha decidido utilizar **pg-boss** como motor de procesamiento de la cola por las siguientes razones:
+
+*   **Sin Infraestructura Adicional:** pg-boss utiliza PostgreSQL como backend, aprovechando la base de datos existente sin necesidad de Redis u otros servicios.
+*   **Resiliencia Integrada:** Incluye locking distribuido, reintentos con exponential backoff, y dead letter queue de forma nativa.
+*   **Escalabilidad Horizontal:** Múltiples workers pueden procesar jobs en paralelo sin configuración adicional.
+*   **Volumen Inicial:** Para el volumen esperado inicial (~100 notificaciones/día), pg-boss está sobre-dimensionado, permitiendo crecimiento sin refactorización.
+*   **Schema Organizado:** Permite configurar un prefijo o schema dedicado para sus tablas (`pgboss_*`), manteniendo el esquema de base de datos limpio.
+
+### 3.2. Arquitectura Híbrida
+
+La implementación combina dos elementos complementarios:
+
+1.  **Tabla `notification_events` (Auditoría):** Registro histórico y de negocio de todas las notificaciones. Sirve como "source of truth" para queries, compliance y debugging.
+
+2.  **Tablas de pg-boss (Motor Transaccional):** Sistema de cola que gestiona el procesamiento, reintentos, y estados transitorios de los jobs.
+
+**Flujo de Procesamiento:**
+
+```
+[Server Action]
+    → INSERT en notification_events (status: PENDING)
+    → pg-boss.send('notification.EMAIL', payload)
+    → Worker consume job desde pg-boss
+    → Procesa y envía notificación
+    → UPDATE notification_events (status: SENT/FAILED)
+    → pg-boss marca job como completado/fallido
+```
+
+Esta arquitectura separa las responsabilidades:
+*   **notification_events:** Historial inmutable del negocio
+*   **pg-boss:** Motor efímero de procesamiento
+
+### 3.3. Configuración de pg-boss
+
+```javascript
+// Configuración en schema público con prefijo
+const boss = new PgBoss({
+  connectionString: process.env.DATABASE_URL,
+  schema: 'public',  // Usa el schema público
+  // Las tablas se crearán con prefijo: pgboss_job, pgboss_archive, etc.
+});
+```
+
+## 4. Consecuencias
 
 ### Positivas
 *   **Mejora Radical de la Experiencia de Usuario (UX):** Las respuestas a las acciones del usuario son instantáneas, ya que la notificación se procesa en segundo plano.
 *   **Alta Resiliencia:** Si el servicio de correo falla, el evento permanece en la cola y puede ser reintentado automáticamente por el worker, sin que la acción original del usuario se vea afectada.
 *   **Desacoplamiento:** La lógica de negocio solo necesita saber cómo publicar un evento, no cómo se envía un correo, qué plantilla se usa o qué servicio se emplea.
 *   **Escalabilidad:** Si el volumen de notificaciones crece, se pueden añadir más instancias del worker para procesar la cola en paralelo.
+*   **Reintentos Robustos:** pg-boss maneja reintentos con exponential backoff y dead letter queue automáticamente.
+*   **Sin Infraestructura Adicional:** No requiere Redis, colas externas, ni servicios de terceros.
+*   **Producción-Ready:** pg-boss es una librería madura, battle-tested y usada en producción por múltiples empresas.
 
 ### Negativas
 *   **Mayor Complejidad de Infraestructura:** Requiere la gestión de un proceso "worker" adicional, que debe ser monitorizado para asegurar que siempre esté en ejecución.
 *   **Consistencia Eventual:** La notificación no es instantánea. Habrá un pequeño retraso (de segundos a minutos, dependiendo de la carga) entre la acción del usuario y la recepción del correo. Esto es aceptable para la mayoría de los casos de uso de notificaciones.
-*   **Complejidad de Implementación:** Requiere lógica adicional para el sondeo de la cola, manejo de estados (pendiente, procesando, fallido) y prevención de que dos workers procesen el mismo evento simultáneamente (locking).
+*   **Tablas Adicionales:** pg-boss crea aproximadamente 5 tablas en la base de datos (`pgboss_*`), aunque están claramente namespaceadas.
+*   **Abstracción Extra:** Hay una capa adicional entre el código de negocio y la base de datos, lo que puede dificultar el debugging inicial.
+*   **Dependencia Externa:** Se añade pg-boss como dependencia crítica del sistema.
