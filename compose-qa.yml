@@ -46,11 +46,18 @@ services:
       # Configuración de logging
       LOG_LEVEL: "debug"
       # Configuración de SMTP para envío de correos
-      SMTP_HOST: "10.196.107.254" # Reemplazar con tu host SMTP
+      SMTP_HOST: server_email # Reemplazar con tu host SMTP
       SMTP_USER: "test" # Reemplazar con tu usuario SMTP
       SMTP_PASS: "999999999" # Reemplazar con tu contraseña SMTP
       SMTP_PORT: "1025" # Puerto SMTP (ej. 465 para SSL/TLS, 587 para STARTTLS)
       FROM_EMAIL: "no-reply@aurora.nova.local" # Email de origen para los correos
+  server_email:
+    image: mailhog/mailhog:v1.0.1
+    container_name: email-mock
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
 
 # Definición del volumen nombrado para la persistencia de datos.
 volumes:
