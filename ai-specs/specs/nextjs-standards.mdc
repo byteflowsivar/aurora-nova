@@ -1,0 +1,363 @@
+---
+description: Estándares de desarrollo, mejores prácticas y convenciones para aplicaciones Next.js, incluyendo arquitectura, patrones de componentes, rutas de API y testing.
+globs: ["src/**/*.{js,jsx,ts,tsx}", "prisma/**/*.prisma", "cypress/**/*.{ts,js}", "tsconfig.json", "package.json"]
+alwaysApply: true
+---
+
+# Estándares y Mejores Prácticas para Next.js
+
+## Tabla de Contenidos
+
+- [Visión General](#visión-general)
+- [Stack Tecnológico](#stack-tecnológico)
+- [Integración con MCP (Model Context Protocol)](#integración-con-mcp-model-context-protocol)
+- [Arquitectura Unificada](#arquitectura-unificada)
+  - [Regla de Comunicación Frontend-API](#regla-de-comunicación-frontend-api)
+- [Estructura del Proyecto (App Router)](#estructura-del-proyecto-app-router)
+- [Principios de Arquitectura y Diseño](#principios-de-arquitectura-y-diseño)
+  - [Arquitectura en Capas (Aplicando SRP)](#arquitectura-en-capas-aplicando-srp)
+  - [Patrón Repositorio](#patrón-repositorio)
+  - [Inversión de Dependencias (DIP) y Testing](#inversión-de-dependencias-dip-y-testing)
+  - [Principio DRY (Don't Repeat Yourself)](#principio-dry-dont-repeat-yourself)
+- [Estándares de Código](#estándares-de-código)
+  - [Convenciones de Nomenclatura](#convenciones-de-nomenclatura)
+  - [Componentes de React](#componentes-de-react)
+  - [Obtención de Datos (Data Fetching)](#obtención-de-datos-data-fetching)
+- [Rutas de API (Backend en Next.js)](#rutas-de-api-backend-en-nextjs)
+  - [Estructura y Lógica](#estructura-y-lógica)
+  - [Manejo de Errores en la API](#manejo-de-errores-en-la-api)
+- [Base de Datos con Prisma](#base-de-datos-con-prisma)
+- [Gestión de Estado](#gestión-de-estado)
+- [Estilos (Styling)](#estilos-styling)
+- [Estándares de Testing](#estándares-de-testing)
+  - [Testing Unitario y de Integración](#testing-unitario-y-de-integración)
+  - [Testing End-to-End (E2E)](#testing-end-to-end-e2e)
+- [Variables de Entorno](#variables-de-entorno)
+- [Flujo de Trabajo de Desarrollo](#flujo-de-trabajo-de-desarrollo)
+
+---
+
+## Visión General
+
+Este documento describe las mejores prácticas y estándares para aplicaciones construidas con **Next.js**, basadas en una arquitectura unificada. El objetivo es asegurar la consistencia, mantenibilidad y escalabilidad del código en cualquier proyecto Next.js.
+
+## Stack Tecnológico
+
+- **Framework Principal**: **Next.js 16+** (utilizando el App Router)
+- **Lenguaje**: **TypeScript** (modo estricto activado)
+- **ORM**: **Prisma** para la interacción con la base de datos **PostgreSQL**.
+- **UI y Estilos**:
+    - **React 18+**
+    - **Tailwind CSS** (recomendado) para utilidad de clases CSS.
+    - **shadcn/ui** o similar para componentes accesibles.
+- **Testing**:
+    - **Jest** y **React Testing Library** para tests unitarios y de integración.
+    - **Cypress** o **Playwright** para tests End-to-End.
+- **Herramientas de Desarrollo**:
+    - **ESLint** y **Prettier** para formateo y calidad de código.
+- **Desarrollo Asistido por IA**:
+    - **MCP (Model Context Protocol)** para integración con agentes de IA durante el desarrollo.
+
+## Integración con MCP (Model Context Protocol)
+
+Next.js 16+ incluye soporte nativo para MCP, un estándar abierto que permite a agentes de IA y asistentes de código interactuar con tu aplicación en tiempo real durante el desarrollo.
+
+### Beneficios de MCP
+
+- **Contexto en Tiempo Real**: Los agentes de IA pueden acceder al estado actual de la aplicación, errores, rutas y componentes.
+- **Sugerencias Contextuales**: Generación de código que sigue los patrones y estructura existentes del proyecto.
+- **Diagnóstico Automático**: Detección y análisis de errores de compilación, runtime y tipos en tiempo real.
+- **Desarrollo Más Eficiente**: Los asistentes pueden entender la arquitectura precisa del App Router y hacer sugerencias informadas.
+
+### Configuración de MCP
+
+1. **Requisitos**:
+   - Next.js 16 o superior
+   - Paquete `next-devtools-mcp`
+
+2. **Configuración**: Crear archivo `.mcp.json` en la raíz del proyecto:
+
+```json
+{
+  "mcpServers": {
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"]
+    }
+  }
+}
+```
+
+3. **Uso**:
+   - Iniciar el servidor de desarrollo: `npm run dev`
+   - El agente de IA se conecta automáticamente vía `next-devtools-mcp`
+   - Los agentes pueden consultar errores, logs, metadata de páginas y Server Actions
+
+### Herramientas MCP Disponibles
+
+- `get_errors`: Obtener errores de compilación, runtime y tipos
+- `get_logs`: Acceder a logs del servidor de desarrollo
+- `get_page_metadata`: Consultar rutas y metadata de páginas
+- `get_project_metadata`: Obtener estructura y configuración del proyecto
+- `get_server_action_by_id`: Buscar Server Actions por ID
+
+**Nota**: Para más detalles sobre la configuración y uso de MCP, consultar el documento [mcp-integration.mdc](./mcp-integration.mdc).
+
+## Arquitectura Unificada
+
+Este proyecto adopta una arquitectura unificada donde tanto el frontend como el backend (API) residen dentro de la misma aplicación Next.js.
+
+- El **Frontend** se construye con componentes de React que se renderizan en el servidor o en el cliente.
+- El **Backend** se implementa como **Rutas de API** dentro del directorio `src/app/api/`.
+
+### Regla de Comunicación Frontend-API
+
+**Regla fundamental:** Todos los componentes del frontend que necesiten interactuar con la lógica de negocio o la base de datos **deben** hacerlo exclusivamente a través de las Rutas de API internas del proyecto (`/api/...`). Está prohibido que los componentes de frontend (especialmente los del lado del cliente) accedan directamente a la base de datos o a servicios externos.
+
+```
+[Componente Frontend (Cliente)] -> [Llamada HTTP a /api/recurso] -> [Ruta de API (Servidor)] -> [Lógica de Negocio/Prisma] -> [Base de Datos]
+```
+
+## Estructura del Proyecto (App Router)
+
+```
+mi-proyecto/
+├── prisma/
+│   ├── schema.prisma
+│   └── migrations/
+├── src/
+│   ├── app/
+│   │   ├── (pages)/
+│   │   │   ├── [recurso]/
+│   │   │   │   └── page.tsx   # -> /[recurso]
+│   │   │   └── layout.tsx
+│   │   ├── api/
+│   │   │   ├── [recurso]/
+│   │   │   │   └── route.ts   # -> /api/[recurso]
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components/
+│   │   ├── ui/                # Componentes genéricos (Button, Card, etc.)
+│   │   └── domain/            # Componentes de negocio específicos del proyecto
+│   ├── lib/
+│   │   ├── prisma.ts
+│   │   └── utils.ts
+│   ├── services/              # Lógica de negocio
+│   │   └── [recurso]-service.ts
+│   ├── repositories/          # Lógica de acceso a datos
+│   │   └── [recurso]-repository.ts
+│   └── styles/
+│       └── globals.css
+├── .env.local
+├── package.json
+└── tsconfig.json
+```
+
+## Principios de Arquitectura y Diseño
+
+Para asegurar un código mantenible y escalable, aplicaremos los siguientes principios de diseño.
+
+### Arquitectura en Capas (Aplicando SRP)
+
+El **Principio de Responsabilidad Única (SRP)** dicta que cada módulo o clase debe tener una única razón para cambiar. En nuestras API Routes, esto se logra separando las responsabilidades en capas:
+
+1.  **Capa de Ruta (Controlador):** El archivo `route.ts`. Su única responsabilidad es manejar la petición y respuesta HTTP. Valida la entrada y delega la acción a la capa de servicio. No contiene lógica de negocio.
+2.  **Capa de Servicio:** Contiene la lógica de negocio pura. Orquesta las operaciones llamando a uno o más repositorios. No sabe nada de HTTP.
+3.  **Capa de Repositorio:** Su única responsabilidad es comunicarse con la base de datos. Abstrae las consultas de Prisma.
+
+**Flujo:**
+`Route (Controller) -> Service -> Repository -> Prisma`
+
+```typescript
+// src/app/api/[recurso]/route.ts (Capa de Ruta)
+import { createResource } from '@/services/resource-service';
+import { NextResponse } from 'next/server';
+
+export async function POST(request: Request) {
+  try {
+    const data = await request.json();
+    // 1. Validación de datos (ej. con Zod)
+    // 2. Llamada al servicio
+    const newResource = await createResource(data);
+    return NextResponse.json(newResource, { status: 201 });
+  } catch (error) {
+    // ... manejo de errores
+  }
+}
+```
+
+### Patrón Repositorio
+
+Centraliza el acceso a datos para un modelo de Prisma, haciendo el código más limpio y fácil de mantener.
+
+```typescript
+// src/repositories/resource-repository.ts (Capa de Repositorio)
+import prisma from '@/lib/prisma';
+
+export const resourceRepository = {
+  async findById(id: number) {
+    return prisma.resource.findUnique({ where: { id } });
+  },
+
+  async create(data: ResourceCreateInput) {
+    return prisma.resource.create({ data });
+  },
+};
+```
+
+### Inversión de Dependencias (DIP) y Testing
+
+Los servicios no deben depender de implementaciones concretas (como `prisma`), sino de abstracciones. Esto facilita las pruebas unitarias.
+
+```typescript
+// src/services/resource-service.ts (Capa de Servicio)
+import { resourceRepository } from '@/repositories/resource-repository';
+
+// El servicio depende del repositorio, no directamente de Prisma.
+export async function createResource(data: ResourceCreateInput) {
+  const existing = await resourceRepository.findByUniqueField(data.uniqueField);
+  if (existing) {
+    throw new Error('El recurso ya existe');
+  }
+  // Lógica adicional (ej. enviar notificación, validaciones complejas)
+  return resourceRepository.create(data);
+}
+```
+
+Esto permite testear el servicio con un "mock" del repositorio, sin necesidad de una base de datos real:
+
+```typescript
+// resource-service.test.ts
+jest.mock('@/repositories/resource-repository'); // Mock del repositorio
+
+it('should create a resource', async () => {
+  // Arrange: Configuramos el mock para que devuelva lo que queremos
+  (resourceRepository.create as jest.Mock).mockResolvedValue(mockResource);
+
+  // Act
+  const result = await createResource(resourceData);
+
+  // Assert
+  expect(resourceRepository.create).toHaveBeenCalledWith(resourceData);
+  expect(result).toEqual(mockResource);
+});
+```
+
+### Principio DRY (Don't Repeat Yourself)
+
+Evita la duplicación de código a través de abstracciones.
+
+-   **Frontend:**
+    -   **Hooks Personalizados:** Encapsular lógica con estado. Ej: `useForm`, `useDebounce`.
+    -   **Componentes Reutilizables:** Crear componentes genéricos en `src/components/ui/` (ej. `<Button>`, `<Card>`).
+-   **Backend:**
+    -   **Funciones de Utilidad:** Crear funciones compartidas en `src/lib/utils.ts`.
+    -   **Esquemas de Validación (Zod):** Definir esquemas de Zod que puedan ser reutilizados para creación y actualización.
+
+## Estándares de Código
+
+### Convenciones de Nomenclatura
+
+- **Archivos y Carpetas**: `kebab-case` (ej: `user-form/`, `product-card/`).
+- **Componentes React**: `PascalCase` (ej: `UserCard.tsx`, `ProductList.tsx`).
+- **Variables y Funciones**: `camelCase` (ej: `fetchUsers`, `calculateTotal`).
+- **Tipos e Interfaces**: `PascalCase` (ej: `UserData`, `ProductInfo`).
+
+### Componentes de React
+
+- **Server Components por Defecto**: La mayoría de los componentes que solo muestran datos deben ser Server Components (el comportamiento por defecto en el App Router). No necesitan el `use client`.
+- **Client Components para Interactividad**: Usar la directiva `"use client"` al inicio del archivo solo cuando el componente necesite interactividad (hooks como `useState`, `useEffect`, o manejadores de eventos).
+- **Extraer Lógica**: La lógica de obtención de datos no debe estar en el componente, sino en funciones separadas (ej. en `src/lib/data.ts`) que son llamadas desde el componente de servidor.
+
+### Obtención de Datos (Data Fetching)
+
+- **En Server Components**: Usar `fetch` o llamar directamente a funciones que acceden a la base de datos (a través de Prisma). Next.js gestiona el cacheo de datos.
+
+  ```typescript
+  // app/[recurso]/page.tsx
+  import { getResources } from '@/lib/data'; // Función que usa Prisma
+
+  export default async function ResourcePage() {
+    const resources = await getResources();
+    return (
+      // JSX para mostrar los recursos
+    );
+  }
+  ```
+- **En Client Components**: Usar librerías como **SWR** o **React Query** para obtener datos, lo que proporciona cacheo, revalidación y manejo de estado de carga/error.
+
+  ```typescript
+  // components/domain/resource-list.tsx
+  "use client";
+  import useSWR from 'swr';
+
+  const fetcher = (url: string) => fetch(url).then(res => res.json());
+
+  export function ResourceList() {
+    const { data, error, isLoading } = useSWR('/api/recursos', fetcher);
+
+    if (isLoading) return <div>Cargando...</div>;
+    // ...
+  }
+  ```
+
+## Rutas de API (Backend en Next.js)
+
+Las rutas de API en `src/app/api/` manejan las peticiones HTTP y aplican la arquitectura en capas.
+
+### Estructura y Lógica
+
+- **Archivos `route.ts`**: Cada ruta se define en un archivo `route.ts`.
+- **Funciones por Verbo HTTP**: Exportar funciones `async` nombradas según el verbo HTTP (`GET`, `POST`, `PUT`, `DELETE`).
+- **Validación de Datos**: Usar librerías como **Zod** para validar la entrada de las peticiones.
+- **Separación de Lógica**: Las rutas delegan toda la lógica de negocio a la capa de servicio.
+
+### Manejo de Errores en la API
+
+- Usar bloques `try...catch` en todas las rutas de API.
+- Devolver respuestas de error consistentes usando `NextResponse.json()` con los códigos de estado HTTP apropiados (400, 404, 500, etc.).
+
+## Base de Datos con Prisma
+
+- **Schema como Fuente de Verdad**: `prisma/schema.prisma` es la única fuente de verdad para el modelo de datos.
+- **Migraciones**: Todos los cambios en el esquema se deben gestionar a través de migraciones de Prisma (`npx prisma migrate dev`).
+- **Cliente Singleton**: Usar una única instancia de `PrismaClient` compartida en toda la aplicación (ver `src/lib/prisma.ts`).
+
+## Gestión de Estado
+
+- **Estado Local**: `useState` para el estado de componentes individuales.
+- **Estado Cruzado (Simple)**: `Context API` para compartir estado entre pocos componentes anidados.
+- **Estado Global (Complejo)**: Para estados complejos que afectan a toda la aplicación (ej. sesión de usuario), considerar **Zustand** o **Jotai** por su simplicidad y rendimiento en comparación con Redux.
+
+## Estilos (Styling)
+
+- **Recomendación Principal: Tailwind CSS**: Es la opción preferida por su enfoque de "utility-first", que agiliza el desarrollo de UI responsivas y personalizadas.
+- **CSS Modules**: Para estilos específicos de un componente que no encajan en el modelo de Tailwind, usar archivos `[componente].module.css`.
+
+## Estándares de Testing
+
+### Testing Unitario y de Integración
+- **Jest** y **React Testing Library** son el estándar.
+- **Qué testear**:
+    - **Componentes**: Testear que renderizan correctamente según las props y que la interacción del usuario funciona.
+    - **Funciones de Utilidad**: Testear la lógica pura en `src/lib/`.
+    - **Capa de Servicio**: La lógica de negocio debe ser testeada de forma aislada, usando mocks para los repositorios.
+
+### Testing End-to-End (E2E)
+- **Cypress** o **Playwright**.
+- Testear flujos de usuario completos, como "crear un nuevo recurso", "actualizar datos", "proceso de checkout", etc.
+- Usar atributos `data-testid` en los elementos HTML para seleccionarlos de forma robusta en los tests.
+
+## Variables de Entorno
+
+- Usar el archivo `.env.local` para todas las variables de entorno (keys de API, URL de la base de datos).
+- Este archivo **nunca** debe ser subido al control de versiones (incluirlo en `.gitignore`).
+- Acceder a las variables en el servidor con `process.env.MI_VARIABLE`.
+- Para exponer variables al cliente, deben tener el prefijo `NEXT_PUBLIC_` (ej. `NEXT_PUBLIC_MI_VARIABLE_PUBLICA`).
+
+## Flujo de Trabajo de Desarrollo
+
+- **Ramas de Funcionalidad**: Desarrollar funcionalidades en ramas separadas.
+- **Commits Descriptivos**: Escribir mensajes de commit claros y concisos.
+- **Calidad de Código**: Ejecutar `lint` y `prettier` antes de hacer commit.
+- **Pruebas**: Asegurarse de que todos los tests pasen antes de solicitar una revisión de código.

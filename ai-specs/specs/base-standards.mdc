@@ -1,0 +1,53 @@
+---
+description: Este documento contiene todas las reglas y directrices de desarrollo para este proyecto, aplicables a todos los agentes de IA (Claude, Cursor, Codex, Gemini, etc.).
+alwaysApply: true
+---
+
+## 1. Principios Fundamentales
+
+- **Tareas pequeñas, una a la vez**: Trabajar siempre en pasos pequeños e incrementales.
+- **Desarrollo Dirigido por Pruebas (TDD)**: Comenzar con pruebas fallidas para cualquier nueva funcionalidad.
+- **Seguridad de Tipos**: Todo el código TypeScript debe estar completamente tipado y en modo estricto.
+- **Nomenclatura Clara**: Usar nombres claros y descriptivos para todas las variables, funciones y componentes.
+- **Cambios Incrementales**: Preferir cambios enfocados sobre modificaciones grandes y complejas.
+- **Cuestionar Suposiciones**: No asumir la existencia de librerías o configuraciones; siempre verificar.
+- **Detección de Patrones**: Identificar y abstraer patrones de código repetidos.
+
+## 2. Estándares de Lenguaje
+
+- **Idioma Principal: Español**: Por decisión del usuario, el idioma principal para la documentación, comentarios y discusiones es el Español.
+- **Idioma en el Código**: Para mantener la compatibilidad con el ecosistema de JavaScript/TypeScript y las librerías externas, los artefactos de código deben usar **Inglés**. Esto incluye:
+    - Nombres de variables, funciones, clases y componentes.
+    - Nombres de archivos y carpetas (`kebab-case` o `PascalCase` según corresponda).
+    - Mensajes de commit de Git.
+- **Excepción**: Los textos visibles para el usuario final en la UI deben estar en Español.
+
+## 3. Estándares Core (Obligatorios)
+
+Estos estándares aplican a **todos los proyectos** Next.js:
+
+- **[Estándares de Next.js](./nextjs-standards.mdc)**: Arquitectura básica de la aplicación, comunicación API, patrones de componentes, obtención de datos, testing y mejores prácticas para Next.js 16+.
+- **[Integración MCP](./mcp-integration.mdc)**: Guía completa para configurar y usar MCP (Model Context Protocol) con agentes de IA en Next.js 16+.
+- **[Estándares de Documentación](./documentation-standards.mdc)**: Estructura, formato y directrices para mantener la documentación técnica y las especificaciones de IA.
+
+## 3.1. Arquitecturas Avanzadas (Opcionales)
+
+Estos patrones son **opcionales** y deben aplicarse solo cuando la complejidad del proyecto lo justifique:
+
+- **[Arquitecturas Avanzadas](./advanced-architecture.mdc)**: Domain-Driven Design (DDD), Event-Driven Architecture, arquitectura modular por feature modules, y gestión de features (feature flags). Incluye cuándo aplicar cada patrón, implementaciones prácticas y trade-offs.
+
+## 4. Plantillas de Documentación del Proyecto
+
+Las siguientes plantillas deben ser personalizadas para cada proyecto específico:
+
+- **[Plantilla de Modelo de Datos](./data-model.template.md)**: Plantilla para documentar las entidades de la base de datos, relaciones y reglas de negocio.
+- **[Plantilla de Especificación de API](./api-spec.template.yml)**: Plantilla OpenAPI 3.0 para documentar el contrato de la API REST del proyecto.
+- **[Guía de Desarrollo](./development_guide.md)**: Plantilla de guía para configurar el entorno de desarrollo y ejecutar el proyecto.
+
+**Nota**: Estas plantillas contienen placeholders que deben reemplazarse con la información específica de tu proyecto.
+
+## 5. Ejemplos de Referencia
+
+Para ver ejemplos completos de cómo usar estas especificaciones en un proyecto real:
+
+- **[Ejemplo: Sistema LTI ATS](../examples/lti-ats/)**: Ejemplo completo de un sistema de seguimiento de candidatos construido con estas especificaciones.
