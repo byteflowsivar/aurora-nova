@@ -8,6 +8,7 @@ import { auth } from '@/lib/auth';
 import { changeUserPassword } from '@/lib/prisma/user-queries';
 import { changePasswordSchema } from '@/lib/validations/profile-schema';
 import { z } from 'zod';
+import { eventBus, SystemEvent } from "@/lib/events"
 
 /**
  * POST /api/user/change-password
@@ -40,6 +41,17 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // Dispatch login event
+    await eventBus.dispatch(
+      SystemEvent.PASSWORD_CHANGED,
+      {
+        userId: session?.user.id || '',
+        email: session?.user.email!,
+        changedBy: 'self'
+      },
+      { userId: session?.user.id }
+    );
 
     return NextResponse.json({
       success: true,

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuevo inicio de sesión detectado</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      text-align: center;
+      border-bottom: 2px solid #3b82f6;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      color: #3b82f6;
+      margin: 0;
+      font-size: 24px;
+    }
+    .content {
+      margin-bottom: 30px;
+    }
+    .info-box {
+      background-color: #f8fafc;
+      border-left: 4px solid #3b82f6;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .info-box strong {
+      color: #1e40af;
+    }
+    .warning {
+      background-color: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .footer {
+      text-align: center;
+      color: #6b7280;
+      font-size: 14px;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 20px;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔐 {{appName}}</h1>
+    </div>
+
+    <div class="content">
+      <h2>Nuevo inicio de sesión detectado</h2>
+
+      <p>Hola,</p>
+
+      <p>Hemos detectado un nuevo inicio de sesión en tu cuenta.</p>
+
+      <div class="info-box">
+        <p><strong>Fecha y hora:</strong> {{timestamp}}</p>
+        <p><strong>Dirección IP:</strong> {{ipAddress}}</p>
+        <p><strong>Navegador:</strong> {{userAgent}}</p>
+      </div>
+
+      <div class="warning">
+        <p><strong>⚠️ ¿No fuiste tú?</strong></p>
+        <p>Si no reconoces esta actividad, te recomendamos cambiar tu contraseña inmediatamente y revisar la actividad reciente de tu cuenta.</p>
+      </div>
+
+      <p>Si tienes alguna pregunta o inquietud, no dudes en contactarnos.</p>
+    </div>
+
+    <div class="footer">
+      <p>Este es un mensaje automático de seguridad de {{appName}}</p>
+      <p><a href="{{appUrl}}">{{appUrl}}</a></p>
+    </div>
+  </div>
+</body>
+</html>

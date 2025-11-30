@@ -18,18 +18,28 @@ import { EventEmitter } from 'events';
 import { structuredLogger } from '../logger/structured-logger';
 import type { SystemEvent, BaseEvent, EventPayload, EventListener } from './types';
 
+// Usamos un Símbolo global para asegurar que la instancia sea verdaderamente un singleton
+// a través de las recargas de módulos en entornos de desarrollo.
+// const EVENT_BUS_INSTANCE = Symbol.for('aurora.eventbus'); // Not needed if using string key
+
+const GLOBAL_EVENT_BUS_KEY = '__AURORA_EVENT_BUS_INSTANCE__'; // Usar una clave de string única
+
+// Aumentamos el ámbito global para añadir nuestra instancia singleton
+declare global {
+  // eslint-disable-next-line no-var
+  var __AURORA_EVENT_BUS_INSTANCE__: EventBus | undefined;
+}
+
 /**
- * Event Bus Singleton
+ * Singleton de Event Bus
  *
  * Gestiona la emisión y suscripción de eventos del sistema.
  * Utiliza EventEmitter de Node.js como base.
  */
 class EventBus extends EventEmitter {
-  private static instance: EventBus;
-
   /**
-   * Map para mantener referencia de listeners originales a listeners envueltos
-   * Necesario para poder hacer unsubscribe correctamente
+   * Mapa para mantener una referencia de los listeners originales a sus contrapartes envueltas.
+   * Esto es necesario para permitir una desuscripción correcta.
    */
   private listenerMap = new Map<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,46 +55,28 @@ class EventBus extends EventEmitter {
   }
 
   /**
-   * Obtener instancia singleton del event bus
+   * Obtiene la instancia singleton del bus de eventos.
    */
   static getInstance(): EventBus {
-    if (!EventBus.instance) {
-      EventBus.instance = new EventBus();
+    if (!global[GLOBAL_EVENT_BUS_KEY]) {
+      global[GLOBAL_EVENT_BUS_KEY] = new EventBus();
       structuredLogger.info('Event bus initialized', {
         module: 'events',
         action: 'init',
       });
     }
-    return EventBus.instance;
+    return global[GLOBAL_EVENT_BUS_KEY];
   }
 
   /**
-   * Emitir un evento
+   * Despacha un evento.
    *
-   * El evento se dispara de forma asíncrona. Los listeners se ejecutan
-   * en paralelo y sus errores se capturan individualmente.
+   * El evento se dispara de forma asíncrona. Los listeners se ejecutan en paralelo,
+   * y sus errores son capturados individualmente.
    *
-   * @param event - Tipo de evento a emitir
-   * @param payload - Datos del evento
-   * @param metadata - Metadata opcional (requestId, userId)
-   *
-   * @example
-   * ```typescript
-   * await eventBus.dispatch(
-   *   SystemEvent.USER_LOGGED_IN,
-   *   {
-   *     userId: 'user-123',
-   *     email: 'user@example.com',
-   *     sessionId: 'session-456',
-   *     ipAddress: '192.168.1.1',
-   *     userAgent: 'Mozilla/5.0...',
-   *   },
-   *   {
-   *     requestId: 'req-789',
-   *     userId: 'user-123',
-   *   }
-   * );
-   * ```
+   * @param event - El tipo de evento a despachar.
+   * @param payload - Los datos del evento.
+   * @param metadata - Metadatos opcionales (por ejemplo, requestId, userId).
    */
   async dispatch<T extends SystemEvent>(
     event: T,

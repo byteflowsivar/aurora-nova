@@ -40,6 +40,7 @@ export const env = {
   SMTP_USER: getOptionalEnvVar('SMTP_USER'),
   SMTP_PASS: getOptionalEnvVar('SMTP_PASS'),
   FROM_EMAIL: getOptionalEnvVar('FROM_EMAIL'),
+  SUPPORT_EMAIL: getOptionalEnvVar('SUPPORT_EMAIL'),
 } as const;
 
 // Validación adicional para desarrollo

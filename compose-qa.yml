@@ -26,7 +26,7 @@ services:
       - aurora-nova-db-data:/var/lib/postgresql/data
 
   app:
-    image: docker.io/byteflowsivar/aurora-nova:0.0.5
+    image: docker.io/byteflowsivar/aurora-nova:0.0.6
     container_name: aurora-nova-app
     restart: unless-stopped
     ports:
@@ -42,6 +42,7 @@ services:
       AUTH_TRUST_HOST: true
       # Configuración de la aplicación
       APP_NAME: "Aurora Nova"
+      # Solo se usa cuando se quiere hacer referencia a la aplicacion desde dentro del contenedor.
       APP_URL: "http://app:3000"
       # Configuración de logging
       LOG_LEVEL: "debug"

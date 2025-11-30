@@ -26,6 +26,7 @@ import { getUserPermissions } from "@/lib/prisma/permission-queries"
 import { generateSessionToken, getSessionExpiry } from "@/lib/utils/session-utils"
 import bcrypt from "bcryptjs"
 import logger from "@/lib/logger";
+import { eventBus, SystemEvent } from "@/lib/events";
 
 // Configuración del adapter Prisma para Auth.js
 const authAdapter = PrismaAdapter(prisma)
@@ -129,6 +130,19 @@ export const {
             ipAddress: user.ipAddress,
             userAgent: user.userAgent,
           })
+
+          // Dispatch login event
+          await eventBus.dispatch(
+            SystemEvent.USER_LOGGED_IN,
+            {
+              userId: user.id,
+              email: user.email!,
+              sessionId: sessionToken,
+              ipAddress: user.ipAddress as string,
+              userAgent: user.userAgent as string,
+            },
+            { userId: user.id }
+          );
 
           // 4. Guardar sessionToken en el JWT para validaciones futuras
           token.sessionToken = sessionToken

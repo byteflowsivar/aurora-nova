@@ -4,6 +4,13 @@ import "./globals.css";
 import { SessionProvider } from "@/components/providers/session-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { auth } from "@/lib/auth"
+import { initializeEventListeners } from "@/lib/events";
+
+// Inicializar todos los listeners de eventos en el arranque de la aplicación
+// Esto es idempotente y solo se ejecutará una vez
+if (process.env.NODE_ENV !== 'test') {
+  initializeEventListeners();
+}
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

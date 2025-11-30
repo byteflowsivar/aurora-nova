@@ -20,11 +20,12 @@ import {
 import type { ActionResponse } from "@/types/action-response"
 import { successResponse, errorResponse } from "@/types/action-response"
 import { AuthError } from "next-auth"
-import { z } from "zod"
 import { headers } from "next/headers"
 import { hash } from "bcryptjs"
 import { structuredLogger } from "@/lib/logger/structured-logger"
 import { getLogContext, enrichContext } from "@/lib/logger/helpers"
+import { eventBus, SystemEvent } from "@/lib/events"
+import { z } from "zod";
 
 // ============================================================================
 // TIPOS
@@ -122,6 +123,21 @@ export async function registerUser(
       })
     );
 
+    // Dispatch event for welcome email, etc.
+    await eventBus.dispatch(
+      SystemEvent.USER_REGISTERED,
+      {
+        userId: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+      {
+        requestId: context.requestId,
+        userId: user.id,
+      }
+    );
+
     return {
       success: true,
       data: {
@@ -184,8 +200,8 @@ export async function loginUser(
     // Obtener información del request para el sistema híbrido
     const headersList = await headers()
     const ipAddress = headersList.get("x-forwarded-for") ||
-                     headersList.get("x-real-ip") ||
-                     "unknown"
+      headersList.get("x-real-ip") ||
+      "unknown"
     const userAgent = headersList.get("user-agent") || "unknown"
 
     // Intentar login con Auth.js + metadata para sistema híbrido
@@ -301,18 +317,43 @@ export async function logoutUser(): Promise<ActionResponse<void>> {
 
     // 2. Si existe sessionToken, eliminar de BD (sistema híbrido)
     if (session && session.sessionToken) {
-      const sessionToken = session.sessionToken
+      const sessionToken = session.sessionToken;
+      const userId = session.user?.id;
+
+      if (userId) {
+        // Dispatch logout event for auditing, notifications, etc.
+        await eventBus.dispatch(
+          SystemEvent.USER_LOGGED_OUT,
+          {
+            userId,
+            sessionId: sessionToken,
+          },
+          { userId }
+        );
+      }
 
       try {
-        const deleted = await deleteSession(sessionToken)
+        const deleted = await deleteSession(sessionToken);
         if (deleted) {
-          console.log(`Sesión ${sessionToken} eliminada de BD`)
+          structuredLogger.info(`Session ${sessionToken} deleted from DB`, {
+            module: 'auth',
+            action: 'logout',
+            userId: userId,
+          });
         } else {
-          console.warn(`Sesión ${sessionToken} no encontrada en BD`)
+          structuredLogger.warn(`Session ${sessionToken} not found in DB`, {
+            module: 'auth',
+            action: 'logout',
+            userId: userId,
+          });
         }
       } catch (dbError) {
-        // Si falla la eliminación en BD, solo logear pero continuar con logout
-        console.error("Error al eliminar sesión de BD:", dbError)
+        // If it fails, log but continue with JWT logout
+        structuredLogger.error('Error deleting session from DB', dbError as Error, {
+          module: 'auth',
+          action: 'logout',
+          userId: userId,
+        });
       }
     }
 
@@ -329,10 +370,7 @@ export async function logoutUser(): Promise<ActionResponse<void>> {
 // ============================================================================
 // SOLICITUD DE REINICIO DE CONTRASEÑA (SERVER ACTION)
 // ============================================================================
-import Mustache from 'mustache';
-import fs from 'fs/promises';
-import path from 'path';
-import { sendEmail } from '@/lib/email';
+
 
 const RequestResetSchema = z.object({
   email: z.string().email({ message: 'Por favor, introduce un email válido.' }),
@@ -341,6 +379,9 @@ const RequestResetSchema = z.object({
 export async function requestPasswordReset(
   values: z.infer<typeof RequestResetSchema>
 ): Promise<ActionResponse<null>> {
+  const context = await getLogContext('auth', 'requestPasswordReset');
+  structuredLogger.info('Password reset requested', context);
+
   try {
     const validatedFields = RequestResetSchema.safeParse(values);
     if (!validatedFields.success) {
@@ -355,7 +396,7 @@ export async function requestPasswordReset(
       const randomBytes = new Uint8Array(32);
       crypto.getRandomValues(randomBytes);
       const token = Buffer.from(randomBytes).toString('hex');
-      
+
       const hashed = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
       const hashedToken = Buffer.from(hashed).toString('hex');
       const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
@@ -364,27 +405,27 @@ export async function requestPasswordReset(
         data: { userId: user.id, token: hashedToken, expiresAt },
       });
 
-      const resetLink = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${token}`;
-      
-      // Leer la plantilla Mustache
-      const templatePath = path.join(process.cwd(), 'src/lib/email/templates', 'password-reset.mustache');
-      const template = await fs.readFile(templatePath, 'utf8');
-      
-      // Renderizar la plantilla con Mustache
-      const emailHtml = Mustache.render(template, { resetLink });
-
-      await sendEmail({
-        to: email,
-        subject: 'Restablece tu contraseña en Aurora Nova',
-        html: emailHtml,
-      });
+      // Dispatch event to send password reset email
+      await eventBus.dispatch(
+        SystemEvent.PASSWORD_RESET_REQUESTED,
+        {
+          userId: user.id,
+          email: user.email,
+          token,
+          expiresAt,
+        },
+        {
+          requestId: context.requestId,
+          userId: user.id,
+        }
+      );
     }
 
     // Anti-Enumeration: Siempre devolvemos éxito
     return successResponse(null, 'Si tu cuenta existe, recibirás un correo con instrucciones.');
 
   } catch (error) {
-    console.error('Error en requestPasswordReset:', error);
+    structuredLogger.error('Error in requestPasswordReset', error as Error, context);
     return errorResponse('Ocurrió un error en el servidor.');
   }
 }

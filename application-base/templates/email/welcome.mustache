@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bienvenido a Aurora Nova</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      text-align: center;
+      border-bottom: 2px solid #8b5cf6;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      color: #8b5cf6;
+      margin: 0;
+      font-size: 28px;
+    }
+    .welcome-icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+    .content {
+      margin-bottom: 30px;
+    }
+    .button {
+      display: inline-block;
+      padding: 12px 30px;
+      background-color: #8b5cf6;
+      color: #ffffff !important;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 600;
+      margin: 20px 0;
+      text-align: center;
+    }
+    .button:hover {
+      background-color: #7c3aed;
+    }
+    .center {
+      text-align: center;
+    }
+    .features {
+      background-color: #f8fafc;
+      border-radius: 6px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .features ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .features li {
+      padding: 8px 0;
+      padding-left: 30px;
+      position: relative;
+    }
+    .features li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #10b981;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .footer {
+      text-align: center;
+      color: #6b7280;
+      font-size: 14px;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 20px;
+      margin-top: 30px;
+    }
+    .footer a {
+      color: #8b5cf6;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="welcome-icon">🎉</div>
+      <h1>¡Bienvenido a {{appName}}!</h1>
+    </div>
+
+    <div class="content">
+      {{#hasFirstName}}
+      <h2>Hola, {{firstName}} 👋</h2>
+      {{/hasFirstName}}
+      {{^hasFirstName}}
+      <h2>Hola 👋</h2>
+      {{/hasFirstName}}
+
+      <p>Estamos emocionados de tenerte con nosotros. Tu cuenta ha sido creada exitosamente y ya puedes comenzar a usar todas las funcionalidades de nuestra plataforma.</p>
+
+      <div class="features">
+        <h3>¿Qué puedes hacer ahora?</h3>
+        <ul>
+          <li>Acceder a tu panel de control personalizado</li>
+          <li>Configurar tu perfil y preferencias</li>
+          <li>Explorar todas las funcionalidades disponibles</li>
+          <li>Gestionar usuarios y permisos (si tienes acceso)</li>
+        </ul>
+      </div>
+
+      <div class="center">
+        <a href="{{appUrl}}/dashboard" class="button">Ir al Dashboard</a>
+      </div>
+
+      <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos en <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>. Estamos aquí para ayudarte.</p>
+
+      <p>¡Gracias por unirte a nosotros!</p>
+
+      <p style="margin-top: 30px;">
+        Saludos,<br>
+        <strong>El equipo de {{appName}}</strong>
+      </p>
+    </div>
+
+    <div class="footer">
+      <p>Este es un mensaje automático de {{appName}}</p>
+      <p><a href="{{appUrl}}">Visitar {{appName}}</a></p>
+    </div>
+  </div>
+</body>
+</html>
