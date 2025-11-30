@@ -1,5 +1,7 @@
 // /application-base/src/lib/email/email-service.ts
 import nodemailer from 'nodemailer';
+import { structuredLogger } from '@/lib/logger/structured-logger';
+import { createLogContext } from '@/lib/logger/helpers';
 
 // --- 1. Interfaz del Servicio de Email ---
 export interface EmailServiceOptions {
@@ -15,11 +17,13 @@ export interface IEmailService {
 // --- 2. Implementación para la Consola (Desarrollo) ---
 class ConsoleEmailService implements IEmailService {
   async send({ to, subject, html }: EmailServiceOptions): Promise<void> {
-    console.log('--- SENDING EMAIL (CONSOLE) ---');
-    console.log(`To: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log('Body (HTML):', html.substring(0, 300) + '...'); // Truncado para legibilidad
-    console.log('--- EMAIL SENT (to console) ---');
+    structuredLogger.info('Sending email (console mode)',
+      createLogContext('email', 'send_console', {
+        to,
+        subject,
+        bodyPreview: html.substring(0, 100) + '...',
+      })
+    );
     return Promise.resolve();
   }
 }
@@ -48,9 +52,20 @@ class GmailService implements IEmailService {
         subject,
         html,
       });
-      console.log(`Email sent to ${to} via Gmail.`);
+      structuredLogger.info('Email sent successfully',
+        createLogContext('email', 'send_gmail', {
+          to,
+          subject,
+          provider: 'Gmail',
+        })
+      );
     } catch (error) {
-      console.error('Error sending email via Gmail:', error);
+      structuredLogger.error('Failed to send email via Gmail', error as Error,
+        createLogContext('email', 'send_gmail', {
+          to,
+          subject,
+        })
+      );
       throw new Error('Could not send email via Gmail.');
     }
   }
@@ -83,9 +98,20 @@ class SmtpService implements IEmailService {
         subject,
         html,
       });
-      console.log(`Email sent to ${to} via generic SMTP.`);
+      structuredLogger.info('Email sent successfully',
+        createLogContext('email', 'send_smtp', {
+          to,
+          subject,
+          provider: 'SMTP',
+        })
+      );
     } catch (error) {
-      console.error('Error sending email via generic SMTP:', error);
+      structuredLogger.error('Failed to send email via SMTP', error as Error,
+        createLogContext('email', 'send_smtp', {
+          to,
+          subject,
+        })
+      );
       throw new Error('Could not send email via generic SMTP.');
     }
   }

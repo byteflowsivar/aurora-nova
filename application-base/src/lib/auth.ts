@@ -132,10 +132,10 @@ export const {
 
           // 4. Guardar sessionToken en el JWT para validaciones futuras
           token.sessionToken = sessionToken
-        } catch (error) {
-          console.error("Error creating session in database:", error)
+        } catch {
           // Continuamos con el login aunque falle el tracking
           // El JWT seguirá funcionando, solo no habrá registro en BD
+          // El error ya se loggea en createSession
         }
 
         // 5. Agregar datos del usuario al token JWT
@@ -166,8 +166,6 @@ export const {
 
         // Asignar permisos desde el token a la sesión
         session.user.permissions = (token.permissions as string[]) || []
-
-        console.log("Sesión creada con permisos:", session.user.permissions)
       }
       return session
     }

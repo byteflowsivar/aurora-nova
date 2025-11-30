@@ -22,8 +22,9 @@ import { successResponse, errorResponse } from "@/types/action-response"
 import { AuthError } from "next-auth"
 import { z } from "zod"
 import { headers } from "next/headers"
-import logger from "@/lib/logger";
-import { hash } from "bcryptjs";
+import { hash } from "bcryptjs"
+import { structuredLogger } from "@/lib/logger/structured-logger"
+import { getLogContext, enrichContext } from "@/lib/logger/helpers"
 
 // ============================================================================
 // TIPOS
@@ -62,11 +63,19 @@ type LoginResponse = {
 export async function registerUser(
   values: z.infer<typeof registerSchema>
 ): Promise<ActionResponse<{ userId: string; firstName: string | null; lastName: string | null; email: string; }>> {
-  logger.info('Starting user registration');
+  const context = await getLogContext('auth', 'register');
+
+  structuredLogger.info('Starting user registration', context);
+
   const validatedFields = registerSchema.safeParse(values);
 
   if (!validatedFields.success) {
-    logger.error('Invalid registration fields');
+    structuredLogger.warn('Invalid registration fields', {
+      ...context,
+      metadata: {
+        errors: validatedFields.error.issues.map(i => i.message),
+      },
+    });
     return {
       success: false,
       error: "Campos inválidos",
@@ -81,7 +90,9 @@ export async function registerUser(
     });
 
     if (existingUser) {
-      logger.warn(`Registration attempt for existing email: ${email}`);
+      structuredLogger.warn('Registration attempt for existing email',
+        enrichContext(context, { email })
+      );
       return {
         success: false,
         error: "El correo electrónico ya está en uso",
@@ -104,7 +115,13 @@ export async function registerUser(
       },
     });
 
-    logger.info(`User registered successfully: ${user.id}`);
+    structuredLogger.info('User registered successfully',
+      enrichContext(context, {
+        userId: user.id,
+        email: user.email,
+      })
+    );
+
     return {
       success: true,
       data: {
@@ -115,7 +132,7 @@ export async function registerUser(
       },
     };
   } catch (error) {
-    logger.error(error, 'Error during user registration');
+    structuredLogger.error('Error during user registration', error as Error, context);
     return {
       success: false,
       error: "Ocurrió un error al registrar el usuario",
@@ -154,6 +171,12 @@ export async function registerUser(
 export async function loginUser(
   input: LoginInput
 ): Promise<ActionResponse<LoginResponse>> {
+  const context = await getLogContext('auth', 'login');
+
+  structuredLogger.info('Login attempt started',
+    enrichContext(context, { email: input.email })
+  );
+
   try {
     // Validar datos de entrada
     const validatedData = loginSchema.parse(input)
@@ -168,16 +191,31 @@ export async function loginUser(
     // Intentar login con Auth.js + metadata para sistema híbrido
     // Los campos ipAddress y userAgent se pasan al authorize callback
     // que los incluye en el user object, y el JWT callback los usa para crear la sesión
-    await signIn("credentials", {
-      email: validatedData.email,
-      password: validatedData.password,
-      ipAddress,
-      userAgent,
-      redirect: false,
-    })
+    await structuredLogger.measure(
+      async () => {
+        await signIn("credentials", {
+          email: validatedData.email,
+          password: validatedData.password,
+          ipAddress,
+          userAgent,
+          redirect: false,
+        });
+      },
+      enrichContext(context, {
+        email: validatedData.email,
+        ipAddress,
+      })
+    );
 
     // El signIn de Auth.js lanza una excepción si falla
     // Si llegamos aquí, el login fue exitoso y la sesión fue creada en BD (ver auth.ts callback)
+    structuredLogger.info('Login successful',
+      enrichContext(context, {
+        email: validatedData.email,
+        ipAddress,
+      })
+    );
+
     return successResponse(
       {
         success: true,
@@ -188,6 +226,13 @@ export async function loginUser(
   } catch (error) {
     // Errores de validación de Zod
     if (error instanceof z.ZodError) {
+      structuredLogger.warn('Login validation failed',
+        enrichContext(context, {
+          email: input.email,
+          errors: error.issues.map(i => i.message),
+        })
+      );
+
       const fieldErrors: Record<string, string[]> = {}
 
       error.issues.forEach((err) => {
@@ -203,11 +248,18 @@ export async function loginUser(
 
     // Errores de Auth.js
     if (error instanceof AuthError) {
+      structuredLogger.warn('Login authentication failed',
+        enrichContext(context, {
+          email: input.email,
+          errorType: error.type,
+        })
+      );
+
       switch (error.type) {
         case "CredentialsSignin":
           return errorResponse("Email o contraseña incorrectos")
         default:
-          console.error("AuthError en loginUser:", error)
+          structuredLogger.error("AuthError en loginUser", error, context);
           return errorResponse("Error al iniciar sesión")
       }
     }

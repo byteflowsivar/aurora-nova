@@ -8,9 +8,16 @@ afterEach(() => {
 })
 
 // Mock environment variables
-process.env.DATABASE_URL = 'postgresql://test:test@localhost:5433/test_db'
-process.env.NEXTAUTH_SECRET = 'test-secret-key-for-testing-only'
-process.env.NEXTAUTH_URL = 'http://localhost:3000'
+Object.assign(process.env, {
+  NODE_ENV: 'test',
+  DATABASE_URL: 'postgresql://test:test@localhost:5433/test_db',
+  NEXTAUTH_SECRET: 'test-secret-key-for-testing-only',
+  AUTH_SECRET: 'test-secret-key-for-testing-only',
+  NEXTAUTH_URL: 'http://localhost:3000',
+  APP_URL: 'http://localhost:3000',
+  APP_NAME: 'Aurora Nova Test',
+  LOG_LEVEL: 'info',
+})
 
 // Mock Next.js modules
 vi.mock('next/navigation', () => ({

@@ -13,6 +13,8 @@ import {
 } from "@/lib/prisma/queries"
 import type { User } from "@/lib/prisma/types"
 import bcrypt from "bcryptjs"
+import { structuredLogger } from "@/lib/logger/structured-logger"
+import { createLogContext } from "@/lib/logger/helpers"
 
 // ============================================================================
 // GESTIÓN DE USUARIOS
@@ -65,7 +67,9 @@ export async function verifyUserCredentials(
 
     return isValid ? user : null
   } catch (error) {
-    console.error("Error verifying credentials:", error)
+    structuredLogger.error("Error verifying credentials", error as Error,
+      createLogContext('auth', 'verify_credentials', { email })
+    );
     return null
   }
 }
@@ -87,7 +91,9 @@ export async function updateUserPassword(
 
     return true
   } catch (error) {
-    console.error("Error updating password:", error)
+    structuredLogger.error("Error updating password", error as Error,
+      createLogContext('auth', 'update_password', { userId })
+    );
     return false
   }
 }
@@ -104,7 +110,9 @@ export async function verifyUserEmail(userId: string): Promise<boolean> {
 
     return true
   } catch (error) {
-    console.error("Error verifying email:", error)
+    structuredLogger.error("Error verifying email", error as Error,
+      createLogContext('auth', 'verify_email', { userId })
+    );
     return false
   }
 }
@@ -152,7 +160,9 @@ export async function getUserRoles(userId: string) {
       description: ur.role.description
     })) || []
   } catch (error) {
-    console.error("Error getting user roles:", error)
+    structuredLogger.error("Error getting user roles", error as Error,
+      createLogContext('auth', 'get_user_roles', { userId })
+    );
     return []
   }
 }
@@ -169,7 +179,9 @@ export async function assignRoleToUser(
     await assignRole(userId, roleId, createdBy)
     return true
   } catch (error) {
-    console.error("Error assigning role:", error)
+    structuredLogger.error("Error assigning role", error as Error,
+      createLogContext('auth', 'assign_role', { userId, roleId })
+    );
     return false
   }
 }
@@ -185,7 +197,9 @@ export async function removeRoleFromUser(
     await removeRole(userId, roleId)
     return true
   } catch (error) {
-    console.error("Error removing role:", error)
+    structuredLogger.error("Error removing role", error as Error,
+      createLogContext('auth', 'remove_role', { userId, roleId })
+    );
     return false
   }
 }

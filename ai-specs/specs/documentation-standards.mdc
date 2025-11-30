@@ -12,7 +12,7 @@ Las **especificaciones de IA** son los documentos que guían a los agentes de IA
 
 ## Reglas de Lenguaje
 De acuerdo con los estándares base, el idioma del proyecto se define así:
-- **Español para Documentación**: Toda la documentación, descripciones, comentarios en el código y discusiones se realizarán en español.
+- **Español para Documentación**: Toda la documentación, descripciones, mensajes para commit, comentarios en el código y discusiones se realizarán en español.
 - **Inglés para Código**: Los artefactos de código (nombres de variables, funciones, clases, etc.) deben estar en inglés para mantener la compatibilidad con el ecosistema de software.
 
 ## Proceso de Actualización de la Documentación Técnica
