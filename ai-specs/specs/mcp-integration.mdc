@@ -1,0 +1,457 @@
+---
+description: Guía completa para la integración y uso de MCP (Model Context Protocol) en proyectos Next.js 16+, incluyendo configuración, herramientas disponibles, mejores prácticas y flujos de trabajo con agentes de IA.
+globs: [".mcp.json", "src/**/*.{js,jsx,ts,tsx}", "package.json"]
+alwaysApply: true
+---
+
+# Integración con MCP (Model Context Protocol)
+
+## Tabla de Contenidos
+
+- [¿Qué es MCP?](#qué-es-mcp)
+- [Beneficios para el Desarrollo](#beneficios-para-el-desarrollo)
+- [Requisitos Previos](#requisitos-previos)
+- [Configuración Inicial](#configuración-inicial)
+- [Herramientas MCP Disponibles](#herramientas-mcp-disponibles)
+- [Flujo de Trabajo de Desarrollo con MCP](#flujo-de-trabajo-de-desarrollo-con-mcp)
+- [Casos de Uso Comunes](#casos-de-uso-comunes)
+- [Mejores Prácticas](#mejores-prácticas)
+- [Solución de Problemas](#solución-de-problemas)
+- [Limitaciones y Consideraciones](#limitaciones-y-consideraciones)
+
+---
+
+## ¿Qué es MCP?
+
+**MCP (Model Context Protocol)** es un estándar abierto que permite a agentes de IA y asistentes de código interactuar con aplicaciones Next.js a través de una interfaz estandarizada. A partir de Next.js 16, este protocolo viene integrado nativamente en el servidor de desarrollo.
+
+### Características Principales
+
+- **Acceso en Tiempo Real**: Conecta agentes de IA directamente con el servidor de desarrollo de Next.js
+- **Interfaz Estandarizada**: Protocolo abierto compatible con múltiples agentes de IA (Claude, Cursor, Codex, etc.)
+- **Contexto Completo**: Proporciona visibilidad total del estado de la aplicación, errores y estructura
+- **Zero Configuration**: Descubrimiento automático de instancias de Next.js en diferentes puertos
+
+## Beneficios para el Desarrollo
+
+### 1. Comprensión Contextual Profunda
+
+Los agentes de IA pueden:
+- Entender la arquitectura exacta del proyecto App Router
+- Analizar la estructura de componentes y sus relaciones
+- Identificar patrones de código existentes
+- Comprender el estado actual de la aplicación
+
+### 2. Diagnóstico Inteligente
+
+- **Errores de Compilación**: Detecta y analiza errores de build en tiempo real
+- **Errores de Runtime**: Captura errores que ocurren durante la ejecución
+- **Errores de Tipos**: Identifica problemas de TypeScript
+- **Análisis de Logs**: Acceso a logs del servidor de desarrollo
+
+### 3. Generación de Código Informada
+
+- Sugerencias basadas en la estructura existente del proyecto
+- Código que sigue las convenciones y patrones del proyecto
+- Implementaciones que respetan las dependencias actuales
+- Evita conflictos con código existente
+
+### 4. Productividad Mejorada
+
+- Respuestas más rápidas y precisas de los agentes de IA
+- Menos iteraciones necesarias para obtener el código correcto
+- Debugging asistido con contexto completo
+- Recomendaciones de refactoring basadas en el código real
+
+## Requisitos Previos
+
+### Versiones Requeridas
+
+- **Next.js**: Versión 16 o superior
+- **Node.js**: Versión 18 o superior (recomendado 20+)
+- **npm/pnpm/yarn**: Gestor de paquetes actualizado
+
+### Instalación del Paquete
+
+```bash
+npm install -D next-devtools-mcp@latest
+# o
+pnpm add -D next-devtools-mcp@latest
+# o
+yarn add -D next-devtools-mcp@latest
+```
+
+## Configuración Inicial
+
+### 1. Crear Archivo de Configuración MCP
+
+Crear el archivo `.mcp.json` en la raíz del proyecto:
+
+```json
+{
+  "mcpServers": {
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"]
+    }
+  }
+}
+```
+
+### 2. Configuración Avanzada (Opcional)
+
+Para proyectos con múltiples instancias de Next.js:
+
+```json
+{
+  "mcpServers": {
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"],
+      "env": {
+        "NODE_ENV": "development"
+      }
+    }
+  }
+}
+```
+
+### 3. Verificar la Configuración
+
+1. Iniciar el servidor de desarrollo:
+   ```bash
+   npm run dev
+   ```
+
+2. El servidor MCP se iniciará automáticamente en el endpoint `/_next/mcp`
+
+3. Verificar en la consola que no hay errores relacionados con MCP
+
+## Herramientas MCP Disponibles
+
+### `get_errors`
+
+**Propósito**: Obtener todos los errores de compilación, runtime y tipos del proyecto.
+
+**Casos de Uso**:
+- Debugging inicial de problemas
+- Revisión de estado de salud del proyecto
+- Identificación de problemas antes de despliegue
+
+**Ejemplo de Respuesta**:
+```json
+{
+  "buildErrors": [
+    {
+      "message": "Module not found: Can't resolve '@/components/Button'",
+      "file": "src/app/page.tsx",
+      "line": 5
+    }
+  ],
+  "runtimeErrors": [],
+  "typeErrors": [
+    {
+      "message": "Property 'onClick' does not exist on type 'ButtonProps'",
+      "file": "src/components/Button.tsx",
+      "line": 12
+    }
+  ]
+}
+```
+
+### `get_logs`
+
+**Propósito**: Acceder a la ruta del archivo de logs del servidor de desarrollo.
+
+**Casos de Uso**:
+- Análisis de comportamiento de la aplicación
+- Debugging de problemas intermitentes
+- Monitoreo de rendimiento
+
+### `get_page_metadata`
+
+**Propósito**: Consultar información sobre rutas de páginas, componentes y rendering.
+
+**Casos de Uso**:
+- Entender la estructura de rutas del proyecto
+- Verificar configuración de Server/Client Components
+- Analizar jerarquía de layouts y pages
+
+**Información Proporcionada**:
+- Rutas disponibles en el App Router
+- Tipo de componente (Server/Client)
+- Layouts asociados
+- Metadata de páginas
+
+### `get_project_metadata`
+
+**Propósito**: Obtener información sobre la estructura y configuración del proyecto.
+
+**Casos de Uso**:
+- Análisis inicial del proyecto
+- Verificación de configuración
+- Documentación automática
+
+**Información Proporcionada**:
+- Estructura de directorios
+- Configuración de Next.js
+- Dependencias instaladas
+- Variables de entorno (sin valores sensibles)
+
+### `get_server_action_by_id`
+
+**Propósito**: Buscar y analizar Server Actions específicas por ID.
+
+**Casos de Uso**:
+- Debugging de Server Actions
+- Análisis de flujos de datos
+- Optimización de operaciones del servidor
+
+## Flujo de Trabajo de Desarrollo con MCP
+
+### Flujo Típico de Desarrollo
+
+```
+1. Iniciar servidor de desarrollo
+   ↓
+2. Agente de IA se conecta automáticamente vía MCP
+   ↓
+3. Desarrollador solicita cambios o información
+   ↓
+4. Agente consulta estado actual vía herramientas MCP
+   ↓
+5. Agente genera código basado en contexto real
+   ↓
+6. Desarrollador revisa y aplica cambios
+   ↓
+7. MCP detecta nuevos errores/cambios en tiempo real
+   ↓
+8. Ciclo continúa
+```
+
+### Ejemplo de Interacción
+
+**Desarrollador**: "Hay errores en mi aplicación, ¿puedes ayudarme a resolverlos?"
+
+**Agente con MCP**:
+1. Ejecuta `get_errors` para obtener errores actuales
+2. Analiza errores en contexto del proyecto
+3. Ejecuta `get_page_metadata` para entender estructura
+4. Proporciona soluciones específicas con ejemplos de código
+5. Verifica que las soluciones sean compatibles con el proyecto
+
+**Agente sin MCP**:
+1. Pide al desarrollador que copie los errores
+2. Hace suposiciones sobre la estructura del proyecto
+3. Proporciona soluciones genéricas
+4. Requiere múltiples iteraciones para ajustar el código
+
+## Casos de Uso Comunes
+
+### 1. Debugging de Errores
+
+```
+Desarrollador: "Tengo un error de tipo en mi componente Button"
+
+Agente con MCP:
+1. get_errors() -> Obtiene el error exacto
+2. get_page_metadata() -> Verifica uso del componente
+3. Propone solución específica con el contexto completo
+```
+
+### 2. Refactoring de Código
+
+```
+Desarrollador: "Quiero convertir este Client Component en Server Component"
+
+Agente con MCP:
+1. get_page_metadata() -> Verifica si el componente puede ser Server Component
+2. Analiza dependencias y hooks utilizados
+3. Sugiere cambios necesarios con ejemplos específicos
+```
+
+### 3. Optimización de Performance
+
+```
+Desarrollador: "Mi página carga lento, ¿qué puedo optimizar?"
+
+Agente con MCP:
+1. get_page_metadata() -> Analiza estructura de la página
+2. get_logs() -> Revisa tiempos de renderizado
+3. Identifica componentes pesados o re-renders innecesarios
+4. Sugiere optimizaciones específicas (memo, lazy loading, etc.)
+```
+
+### 4. Generación de Nuevas Features
+
+```
+Desarrollador: "Necesito agregar autenticación al proyecto"
+
+Agente con MCP:
+1. get_project_metadata() -> Analiza estructura y dependencias
+2. get_page_metadata() -> Identifica rutas protegidas
+3. Genera código que sigue los patrones existentes
+4. Sugiere ubicación adecuada para nuevos archivos
+```
+
+## Mejores Prácticas
+
+### 1. Mantener el Servidor de Desarrollo Activo
+
+- MCP solo funciona cuando el servidor de desarrollo está corriendo
+- Reiniciar el servidor si los cambios de configuración no se reflejan
+- Monitorear logs del servidor para detectar problemas de MCP
+
+### 2. Configuración de .gitignore
+
+Asegurar que `.mcp.json` esté versionado pero configuraciones sensibles no:
+
+```gitignore
+# No ignorar .mcp.json (es parte de la configuración del proyecto)
+# .mcp.json
+
+# Ignorar logs de MCP si se generan
+.mcp-logs/
+```
+
+### 3. Uso en Proyectos Multi-Instancia
+
+Si trabajas con múltiples instancias de Next.js (ej: frontend + admin):
+
+```json
+{
+  "mcpServers": {
+    "next-devtools-main": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"],
+      "env": {
+        "PORT": "3000"
+      }
+    },
+    "next-devtools-admin": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"],
+      "env": {
+        "PORT": "3001"
+      }
+    }
+  }
+}
+```
+
+### 4. Seguridad y Privacidad
+
+- MCP solo está disponible en modo desarrollo
+- No expone credenciales ni información sensible
+- Las variables de entorno se listan pero no sus valores
+- Deshabilitar MCP en entornos de producción (automático)
+
+### 5. Integración con CI/CD
+
+MCP es solo para desarrollo local. En CI/CD:
+
+```json
+// package.json
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  }
+}
+```
+
+El comando `build` no activa MCP, solo `dev`.
+
+## Solución de Problemas
+
+### El Agente No Se Conecta a MCP
+
+**Síntomas**: El agente de IA no puede acceder a la información del proyecto.
+
+**Soluciones**:
+1. Verificar que el servidor de desarrollo esté corriendo
+2. Revisar que `.mcp.json` esté en la raíz del proyecto
+3. Comprobar versión de Next.js (debe ser 16+)
+4. Reiniciar el servidor de desarrollo
+5. Verificar logs del servidor para errores de MCP
+
+### Errores de Configuración
+
+**Síntomas**: Mensajes de error al iniciar el servidor.
+
+**Soluciones**:
+1. Validar sintaxis JSON en `.mcp.json`
+2. Verificar que `next-devtools-mcp` esté instalado
+3. Revisar permisos de ejecución de npx
+4. Limpiar caché: `rm -rf .next && npm run dev`
+
+### Información Desactualizada
+
+**Síntomas**: MCP devuelve información antigua o incorrecta.
+
+**Soluciones**:
+1. Reiniciar el servidor de desarrollo
+2. Limpiar caché de Next.js: `rm -rf .next`
+3. Verificar que los archivos estén guardados
+4. Comprobar que no haya errores de compilación
+
+### Performance del Servidor de Desarrollo
+
+**Síntomas**: El servidor está lento con MCP habilitado.
+
+**Soluciones**:
+1. Revisar recursos del sistema
+2. Cerrar instancias duplicadas del servidor
+3. Optimizar configuración de Next.js
+4. Considerar aumentar recursos disponibles
+
+## Limitaciones y Consideraciones
+
+### Limitaciones Técnicas
+
+1. **Solo Modo Desarrollo**: MCP no está disponible en producción
+2. **Requiere Servidor Activo**: No funciona con builds estáticos
+3. **Compatibilidad**: Requiere Next.js 16+ específicamente
+4. **Networking Local**: Diseñado para desarrollo local
+
+### Consideraciones de Seguridad
+
+1. **Información Expuesta**: MCP expone estructura del proyecto a agentes conectados
+2. **Red Local**: Solo escucha en localhost por defecto
+3. **No Para Producción**: Nunca habilitar en entornos de producción
+4. **Datos Sensibles**: No expone valores de variables de entorno
+
+### Roadmap y Futuras Capacidades
+
+Según el roadmap de Vercel, futuras versiones de MCP podrían incluir:
+
+- **Integración con Playwright MCP**: Testing automatizado asistido por IA
+- **Análisis de Bundle**: Información sobre tamaño y optimización de bundles
+- **Cache Insights**: Visibilidad sobre el comportamiento del cache
+- **Network Analysis**: Análisis de peticiones y responses
+- **Performance Metrics**: Métricas detalladas de rendimiento
+
+### Compatibilidad con Otros Tools
+
+MCP es compatible con:
+
+- **Claude Code**: Soporte nativo completo
+- **Cursor**: Integración disponible
+- **GitHub Copilot**: Soporte en desarrollo
+- **VS Code Extensions**: APIs disponibles para extensiones
+
+---
+
+## Referencias
+
+- [Documentación Oficial de Next.js MCP](https://nextjs.org/docs/app/guides/mcp)
+- [Repositorio next-devtools-mcp](https://github.com/vercel/next-devtools-mcp)
+- [Especificación del Model Context Protocol](https://modelcontextprotocol.org)
+- [Next.js Standards](./nextjs-standards.mdc)
+
+---
+
+**Última Actualización**: 2025-11-29
+**Versión de Next.js**: 16+
+**Estado**: Activo

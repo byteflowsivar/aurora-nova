@@ -1,0 +1,531 @@
+# Plantilla de Especificación de API OpenAPI 3.0
+#
+# INSTRUCCIONES DE USO:
+# 1. Copia este archivo y renómbralo a `api-spec.yml` en tu proyecto
+# 2. Reemplaza todos los placeholders entre corchetes [...]
+# 3. Elimina los endpoints de ejemplo y agrega los tuyos
+# 4. Actualiza los schemas/componentes según tu modelo de datos
+# 5. Mantén sincronizado con tus API Routes en src/app/api/
+#
+# Para ver un ejemplo completo, consulta: examples/lti-ats/api-spec.yml
+
+openapi: 3.0.0
+
+info:
+  title: [Nombre de tu API]
+  version: [x.x.x]
+  description: |
+    [Descripción breve de tu API]
+
+    ## Características principales:
+    - [Característica 1]
+    - [Característica 2]
+    - [Característica 3]
+
+  contact:
+    name: [Nombre del equipo o persona]
+    email: [email@ejemplo.com]
+  license:
+    name: [MIT / Apache 2.0 / Proprietary]
+    url: [URL de la licencia]
+
+servers:
+  - url: http://localhost:3000/api
+    description: Servidor de desarrollo local
+  - url: https://[tu-dominio].com/api
+    description: Servidor de producción
+  # - url: https://staging.[tu-dominio].com/api
+  #   description: Servidor de staging (opcional)
+
+tags:
+  - name: [Recurso1]
+    description: Operaciones relacionadas con [Recurso1]
+  - name: [Recurso2]
+    description: Operaciones relacionadas con [Recurso2]
+  # Agrega más tags según tus módulos/recursos
+
+paths:
+  # ===========================================
+  # [RECURSO 1] - CRUD Básico
+  # ===========================================
+
+  /[recurso1]:
+    get:
+      summary: Obtener lista de [recurso1]
+      description: Retorna una lista paginada de todos los [recurso1]
+      tags:
+        - [Recurso1]
+      parameters:
+        - name: page
+          in: query
+          description: Número de página (comienza en 1)
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: Cantidad de elementos por página
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+        - name: search
+          in: query
+          description: Término de búsqueda (opcional)
+          schema:
+            type: string
+        - name: sortBy
+          in: query
+          description: Campo para ordenar resultados
+          schema:
+            type: string
+            enum: [createdAt, updatedAt, name]
+        - name: order
+          in: query
+          description: Orden ascendente o descendente
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Lista obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/[Recurso1]'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationInfo'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Crear nuevo [recurso1]
+      description: Crea un nuevo registro de [recurso1]
+      tags:
+        - [Recurso1]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/[Recurso1]Create'
+      responses:
+        '201':
+          description: [Recurso1] creado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/[Recurso1]'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /[recurso1]/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: ID único del [recurso1]
+        schema:
+          type: [integer/string]
+
+    get:
+      summary: Obtener [recurso1] por ID
+      description: Retorna un [recurso1] específico por su ID
+      tags:
+        - [Recurso1]
+      responses:
+        '200':
+          description: [Recurso1] encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/[Recurso1]'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      summary: Actualizar [recurso1]
+      description: Actualiza completamente un [recurso1] existente
+      tags:
+        - [Recurso1]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/[Recurso1]Update'
+      responses:
+        '200':
+          description: [Recurso1] actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/[Recurso1]'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      summary: Actualizar parcialmente [recurso1]
+      description: Actualiza uno o más campos de un [recurso1]
+      tags:
+        - [Recurso1]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/[Recurso1]Patch'
+      responses:
+        '200':
+          description: [Recurso1] actualizado parcialmente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/[Recurso1]'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      summary: Eliminar [recurso1]
+      description: Elimina permanentemente un [recurso1]
+      tags:
+        - [Recurso1]
+      responses:
+        '204':
+          description: [Recurso1] eliminado exitosamente
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+# ===========================================
+# COMPONENTES REUTILIZABLES
+# ===========================================
+
+components:
+  schemas:
+    # -----------------------------------
+    # Schemas de tus entidades
+    # -----------------------------------
+
+    [Recurso1]:
+      type: object
+      required:
+        - id
+        - [campo_obligatorio1]
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: [integer/string]
+          description: Identificador único
+          example: [1 / "uuid-ejemplo"]
+        [campo1]:
+          type: [string/number/boolean/array/object]
+          description: [Descripción del campo]
+          example: [valor de ejemplo]
+        [campo2]:
+          type: [string/number/boolean]
+          description: [Descripción del campo]
+          example: [valor de ejemplo]
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha de creación
+          example: "2024-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Fecha de última actualización
+          example: "2024-01-15T14:45:00Z"
+
+    [Recurso1]Create:
+      type: object
+      required:
+        - [campo_obligatorio1]
+      properties:
+        [campo1]:
+          type: [tipo]
+          description: [Descripción]
+          example: [ejemplo]
+        [campo2]:
+          type: [tipo]
+          description: [Descripción]
+          example: [ejemplo]
+
+    [Recurso1]Update:
+      type: object
+      required:
+        - [campo_obligatorio1]
+      properties:
+        [campo1]:
+          type: [tipo]
+          description: [Descripción]
+          example: [ejemplo]
+        [campo2]:
+          type: [tipo]
+          description: [Descripción]
+          example: [ejemplo]
+
+    [Recurso1]Patch:
+      type: object
+      description: Todos los campos son opcionales para PATCH
+      properties:
+        [campo1]:
+          type: [tipo]
+          description: [Descripción]
+          example: [ejemplo]
+        [campo2]:
+          type: [tipo]
+          description: [Descripción]
+          example: [ejemplo]
+
+    # -----------------------------------
+    # Schemas de respuestas comunes
+    # -----------------------------------
+
+    PaginationInfo:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 10
+        totalItems:
+          type: integer
+          example: 95
+        itemsPerPage:
+          type: integer
+          example: 10
+        hasNextPage:
+          type: boolean
+          example: true
+        hasPreviousPage:
+          type: boolean
+          example: false
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Código o tipo de error
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: Mensaje descriptivo del error
+          example: "Los datos proporcionados no son válidos"
+        details:
+          type: array
+          description: Detalles adicionales del error (opcional)
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "email"
+              message:
+                type: string
+                example: "El formato del email no es válido"
+
+    ValidationError:
+      type: object
+      required:
+        - error
+        - message
+        - errors
+      properties:
+        error:
+          type: string
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          example: "Error de validación en los datos enviados"
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Campo que falló la validación
+                example: "email"
+              message:
+                type: string
+                description: Mensaje de error para ese campo
+                example: "El email es obligatorio"
+              value:
+                description: Valor que se intentó enviar (opcional)
+                example: ""
+
+  # -----------------------------------
+  # Respuestas reutilizables
+  # -----------------------------------
+
+  responses:
+    BadRequest:
+      description: Solicitud incorrecta - parámetros inválidos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "BAD_REQUEST"
+            message: "Los parámetros de la solicitud son incorrectos"
+
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "NOT_FOUND"
+            message: "El recurso solicitado no existe"
+
+    ValidationError:
+      description: Error de validación de datos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+
+    InternalServerError:
+      description: Error interno del servidor
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "INTERNAL_SERVER_ERROR"
+            message: "Ha ocurrido un error inesperado en el servidor"
+
+    Unauthorized:
+      description: No autorizado - autenticación requerida
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "UNAUTHORIZED"
+            message: "Se requiere autenticación para acceder a este recurso"
+
+    Forbidden:
+      description: Prohibido - sin permisos suficientes
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "FORBIDDEN"
+            message: "No tienes permisos para realizar esta acción"
+
+  # -----------------------------------
+  # Parámetros reutilizables
+  # -----------------------------------
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Número de página
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+
+    LimitParam:
+      name: limit
+      in: query
+      description: Elementos por página
+      schema:
+        type: integer
+        default: 10
+        minimum: 1
+        maximum: 100
+
+    SearchParam:
+      name: search
+      in: query
+      description: Término de búsqueda
+      schema:
+        type: string
+
+    SortByParam:
+      name: sortBy
+      in: query
+      description: Campo para ordenar
+      schema:
+        type: string
+
+    OrderParam:
+      name: order
+      in: query
+      description: Orden de resultados
+      schema:
+        type: string
+        enum: [asc, desc]
+        default: desc
+
+  # -----------------------------------
+  # Esquemas de seguridad (opcional)
+  # -----------------------------------
+
+  # securitySchemes:
+  #   BearerAuth:
+  #     type: http
+  #     scheme: bearer
+  #     bearerFormat: JWT
+  #   ApiKeyAuth:
+  #     type: apiKey
+  #     in: header
+  #     name: X-API-Key
+
+# Si usas autenticación, descomenta y configura:
+# security:
+#   - BearerAuth: []

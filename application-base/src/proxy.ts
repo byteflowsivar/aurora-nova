@@ -1,17 +1,14 @@
 /**
- * Middleware de Next.js para Aurora Nova
+ * Proxy de Next.js para Aurora Nova
  * Maneja la protección de rutas basada en la autenticación.
  *
- * Este middleware verifica si el usuario tiene una sesión activa (JWT)
+ * Este proxy verifica si el usuario tiene una sesión activa (JWT)
  * para las rutas protegidas. La autorización detallada (permisos) se debe
  * manejar a nivel de página o layout en Server Components.
  *
- * IMPORTANTE: Este middleware usa Node.js runtime (no Edge Runtime)
- * para poder acceder a Prisma y otras funcionalidades de Node.js.
+ * NOTA: En Next.js 16+, el proxy SIEMPRE usa Node.js runtime por defecto.
+ * No es necesario (ni permitido) configurar 'export const runtime'.
  */
-
-// Forzar uso de Node.js runtime en lugar de Edge Runtime
-export const runtime = 'nodejs'
 
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
@@ -34,14 +31,14 @@ const publicRoutes = [
 // Rutas de la API de autenticación que deben ser accesibles
 const authApiRoutes = ["/api/auth"]
 
-// Prefijos de rutas que deben ser ignorados por el middleware
+// Prefijos de rutas que deben ser ignorados por el proxy
 const ignoredPrefixes = ["/_next/static", "/_next/image", "/favicon.ico", "/public"]
 
 // ============================================================================
-// MIDDLEWARE
+// PROXY
 // ============================================================================
 
-export default async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Ignorar archivos estáticos, de imágenes y rutas de la API de auth

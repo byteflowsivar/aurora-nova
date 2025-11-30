@@ -1,0 +1,738 @@
+---
+description: Patrones arquitectónicos avanzados opcionales para aplicaciones Next.js, incluyendo DDD, Event-Driven Architecture, arquitectura modular y gestión de features.
+globs: ["src/**/*.{js,jsx,ts,tsx}", "src/modules/**/*", "src/shared/**/*"]
+alwaysApply: false
+---
+
+# Arquitecturas Avanzadas para Next.js
+
+## Tabla de Contenidos
+
+- [Introducción](#introducción)
+- [Cuándo Usar Arquitecturas Avanzadas](#cuándo-usar-arquitecturas-avanzadas)
+- [Domain-Driven Design (DDD)](#domain-driven-design-ddd)
+- [Event-Driven Architecture (EDA)](#event-driven-architecture-eda)
+- [Arquitectura Modular](#arquitectura-modular)
+- [Feature Management](#feature-management)
+- [Implementación en Next.js](#implementación-en-nextjs)
+- [Trade-offs y Consideraciones](#trade-offs-y-consideraciones)
+
+---
+
+## Introducción
+
+Este documento describe **patrones arquitectónicos avanzados opcionales** que puedes aplicar a tus proyectos Next.js cuando la complejidad lo justifique. Son complementarios a los estándares base definidos en `nextjs-standards.mdc`.
+
+**⚠️ Importante**: Estos patrones NO son obligatorios. Aplícalos solo cuando:
+- Tu proyecto tiene complejidad significativa
+- Necesitas desacoplamiento entre módulos
+- Planeas escalar el equipo o la aplicación
+- Requieres activar/desactivar funcionalidades dinámicamente
+
+---
+
+## Cuándo Usar Arquitecturas Avanzadas
+
+### ✅ Usar si:
+- Proyecto mediano a grande (>10 páginas, >5 entidades)
+- Múltiples desarrolladores trabajando en paralelo
+- Lógica de negocio compleja con múltiples workflows
+- Necesidad de despliegues graduales o A/B testing
+- Planes de escalar a microservicios en el futuro
+- Requisitos de auditoría completa de cambios
+
+### ❌ NO usar si:
+- MVP o prototipo rápido
+- Proyecto pequeño (<5 páginas)
+- Equipo sin experiencia en estos patrones
+- Deadline muy ajustado
+- Aplicación CRUD simple sin lógica compleja
+
+---
+
+## Domain-Driven Design (DDD)
+
+### Conceptos Fundamentales
+
+**DDD** es un enfoque de desarrollo que pone el dominio de negocio al centro del diseño.
+
+#### Building Blocks de DDD
+
+**1. Entidades (Entities)**
+```typescript
+// Objeto con identidad única que persiste en el tiempo
+class User {
+  constructor(
+    public readonly id: string,  // Identidad
+    public name: string,          // Mutable
+    public email: string
+  ) {}
+
+  changeName(newName: string) {
+    // Lógica de validación
+    if (newName.length < 2) throw new Error('Invalid name');
+    this.name = newName;
+  }
+}
+```
+
+**2. Value Objects**
+```typescript
+// Objeto sin identidad, definido por sus atributos
+class Email {
+  private constructor(private readonly value: string) {}
+
+  static create(email: string): Email {
+    if (!this.isValid(email)) {
+      throw new Error('Invalid email');
+    }
+    return new Email(email);
+  }
+
+  private static isValid(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  toString(): string {
+    return this.value;
+  }
+}
+```
+
+**3. Agregados (Aggregates)**
+```typescript
+// Grupo de entidades tratadas como una unidad
+class Order {  // Aggregate Root
+  private items: OrderItem[] = [];  // Entities dentro del agregado
+
+  addItem(product: Product, quantity: number) {
+    // Regla de negocio: validar inventario
+    if (!product.hasStock(quantity)) {
+      throw new Error('Insufficient stock');
+    }
+
+    this.items.push(new OrderItem(product, quantity));
+  }
+
+  // Invariantes del agregado se mantienen aquí
+  calculateTotal(): number {
+    return this.items.reduce((sum, item) => sum + item.getPrice(), 0);
+  }
+}
+```
+
+**4. Domain Events**
+```typescript
+// Eventos que ocurren en el dominio
+interface DomainEvent {
+  eventId: string;
+  occurredAt: Date;
+  aggregateId: string;
+}
+
+class OrderPlaced implements DomainEvent {
+  constructor(
+    public readonly eventId: string,
+    public readonly occurredAt: Date,
+    public readonly aggregateId: string,  // orderId
+    public readonly userId: string,
+    public readonly total: number
+  ) {}
+}
+```
+
+**5. Repositorios (Repositories)**
+```typescript
+// Abstracción de persistencia
+interface OrderRepository {
+  findById(id: string): Promise<Order | null>;
+  save(order: Order): Promise<void>;
+  findByUser(userId: string): Promise<Order[]>;
+}
+
+// Implementación con Prisma
+class PrismaOrderRepository implements OrderRepository {
+  async save(order: Order): Promise<void> {
+    await prisma.order.upsert({
+      where: { id: order.id },
+      create: { /* ... */ },
+      update: { /* ... */ }
+    });
+  }
+}
+```
+
+### Beneficios de DDD
+
+✅ **Lenguaje Ubicuo**: El código refleja el lenguaje del negocio
+✅ **Encapsulación**: Lógica de negocio protegida dentro de agregados
+✅ **Testabilidad**: Lógica de dominio aislada, fácil de testear
+✅ **Mantenibilidad**: Cambios localizados por dominio
+
+---
+
+## Event-Driven Architecture (EDA)
+
+### Conceptos Fundamentales
+
+**EDA** permite comunicación desacoplada entre componentes a través de eventos.
+
+#### Componentes de EDA
+
+**1. Event Bus (Publicador/Suscriptor)**
+```typescript
+// shared/infrastructure/events/event-bus.ts
+type EventHandler<T = any> = (event: T) => Promise<void> | void;
+
+class EventBus {
+  private handlers = new Map<string, EventHandler[]>();
+
+  subscribe<T>(eventType: string, handler: EventHandler<T>): void {
+    if (!this.handlers.has(eventType)) {
+      this.handlers.set(eventType, []);
+    }
+    this.handlers.get(eventType)!.push(handler);
+  }
+
+  async publish<T>(eventType: string, event: T): Promise<void> {
+    const handlers = this.handlers.get(eventType) || [];
+
+    await Promise.all(
+      handlers.map(handler =>
+        handler(event).catch(err => {
+          console.error(`Error in handler for ${eventType}:`, err);
+          // Aquí podrías implementar retry logic, dead letter queue, etc.
+        })
+      )
+    );
+  }
+}
+
+export const eventBus = new EventBus();
+```
+
+**2. Domain Events**
+```typescript
+// modules/orders/domain/events/order-placed.event.ts
+export interface OrderPlacedEvent {
+  eventId: string;
+  eventType: 'OrderPlaced';
+  timestamp: Date;
+  data: {
+    orderId: string;
+    userId: string;
+    total: number;
+    items: Array<{ productId: string; quantity: number }>;
+  };
+}
+```
+
+**3. Event Handlers (Subscribers)**
+```typescript
+// modules/notifications/application/handlers/order-placed.handler.ts
+import { eventBus } from '@/shared/infrastructure/events/event-bus';
+import { OrderPlacedEvent } from '@/modules/orders/domain/events';
+
+eventBus.subscribe<OrderPlacedEvent>('OrderPlaced', async (event) => {
+  // Enviar email de confirmación
+  await emailService.sendOrderConfirmation(
+    event.data.userId,
+    event.data.orderId
+  );
+});
+
+// modules/inventory/application/handlers/order-placed.handler.ts
+eventBus.subscribe<OrderPlacedEvent>('OrderPlaced', async (event) => {
+  // Reducir inventario
+  for (const item of event.data.items) {
+    await inventoryService.reduceStock(item.productId, item.quantity);
+  }
+});
+```
+
+**4. Publicación de Eventos**
+```typescript
+// modules/orders/application/services/order.service.ts
+export class OrderService {
+  async placeOrder(userId: string, items: CartItem[]): Promise<Order> {
+    // 1. Crear orden (lógica de negocio)
+    const order = await orderRepository.create({ userId, items });
+
+    // 2. Publicar evento
+    await eventBus.publish<OrderPlacedEvent>('OrderPlaced', {
+      eventId: generateUUID(),
+      eventType: 'OrderPlaced',
+      timestamp: new Date(),
+      data: {
+        orderId: order.id,
+        userId: order.userId,
+        total: order.total,
+        items: order.items.map(i => ({
+          productId: i.productId,
+          quantity: i.quantity
+        }))
+      }
+    });
+
+    return order;
+  }
+}
+```
+
+### Event Store (Opcional pero Recomendado)
+
+```typescript
+// shared/infrastructure/events/event-store.ts
+interface StoredEvent {
+  id: string;
+  type: string;
+  aggregateId: string;
+  data: any;
+  metadata?: any;
+  timestamp: Date;
+}
+
+class EventStore {
+  async save(event: StoredEvent): Promise<void> {
+    await prisma.eventStore.create({ data: event });
+  }
+
+  async getEventsForAggregate(aggregateId: string): Promise<StoredEvent[]> {
+    return prisma.eventStore.findMany({
+      where: { aggregateId },
+      orderBy: { timestamp: 'asc' }
+    });
+  }
+
+  async getAllEvents(filter?: {
+    type?: string;
+    from?: Date;
+    to?: Date;
+  }): Promise<StoredEvent[]> {
+    return prisma.eventStore.findMany({
+      where: {
+        type: filter?.type,
+        timestamp: {
+          gte: filter?.from,
+          lte: filter?.to
+        }
+      },
+      orderBy: { timestamp: 'asc' }
+    });
+  }
+}
+```
+
+### Beneficios de EDA
+
+✅ **Desacoplamiento**: Módulos no se conocen directamente
+✅ **Escalabilidad**: Procesamiento asíncrono
+✅ **Extensibilidad**: Agregar features sin modificar existentes
+✅ **Auditoría**: Historia completa de eventos
+✅ **Debugging**: Replay de eventos para reproducir bugs
+
+---
+
+## Arquitectura Modular
+
+### Organización por Feature Modules
+
+En lugar de organizar por tipo técnico, organiza por dominios de negocio:
+
+```
+src/modules/
+├── users/              # Módulo de Usuarios
+│   ├── domain/        # Lógica de dominio
+│   │   ├── entities/
+│   │   ├── events/
+│   │   └── value-objects/
+│   ├── application/   # Casos de uso
+│   │   ├── commands/
+│   │   ├── queries/
+│   │   └── services/
+│   ├── infrastructure/ # Acceso a datos
+│   │   └── repositories/
+│   ├── presentation/   # UI y API
+│   │   ├── api/
+│   │   ├── components/
+│   │   └── pages/
+│   └── module.config.ts
+│
+├── products/
+├── orders/
+└── notifications/     # Módulo opcional/desactivable
+```
+
+### Configuración de Módulos
+
+```typescript
+// shared/infrastructure/modules/module-registry.ts
+export interface ModuleConfig {
+  name: string;
+  enabled: boolean;
+  required: boolean;
+  dependencies?: string[];
+  eventSubscriptions?: string[];
+}
+
+export const moduleRegistry: Record<string, ModuleConfig> = {
+  users: {
+    name: 'users',
+    enabled: true,
+    required: true  // No se puede desactivar
+  },
+  products: {
+    name: 'products',
+    enabled: true,
+    required: true
+  },
+  orders: {
+    name: 'orders',
+    enabled: true,
+    required: true,
+    dependencies: ['users', 'products']
+  },
+  notifications: {
+    name: 'notifications',
+    enabled: process.env.ENABLE_NOTIFICATIONS === 'true',
+    required: false,
+    eventSubscriptions: ['OrderPlaced', 'UserRegistered']
+  },
+  analytics: {
+    name: 'analytics',
+    enabled: process.env.ENABLE_ANALYTICS === 'true',
+    required: false,
+    eventSubscriptions: ['OrderPlaced', 'ProductViewed']
+  }
+};
+```
+
+### Registro de Módulos
+
+```typescript
+// modules/notifications/index.ts
+import { eventBus } from '@/shared/infrastructure/events/event-bus';
+import { moduleRegistry } from '@/shared/infrastructure/modules/module-registry';
+
+export function registerNotificationsModule() {
+  if (!moduleRegistry.notifications.enabled) {
+    console.log('Notifications module is disabled');
+    return;
+  }
+
+  // Suscribir a eventos
+  eventBus.subscribe('OrderPlaced', async (event) => {
+    await notificationService.sendOrderConfirmation(event.data);
+  });
+
+  eventBus.subscribe('UserRegistered', async (event) => {
+    await notificationService.sendWelcomeEmail(event.data);
+  });
+
+  console.log('Notifications module registered');
+}
+
+// app/layout.tsx o archivo de inicialización
+if (moduleRegistry.notifications.enabled) {
+  registerNotificationsModule();
+}
+```
+
+### Beneficios de Módulos
+
+✅ **Alta Cohesión**: Todo relacionado a un dominio está junto
+✅ **Bajo Acoplamiento**: Comunicación vía eventos
+✅ **Fácil Testing**: Tests aislados por módulo
+✅ **Activación Dinámica**: Módulos opcionales según configuración
+✅ **Escalabilidad**: Módulos pueden extraerse a microservicios
+
+---
+
+## Feature Management
+
+### Feature Folders vs Feature Flags
+
+#### Feature Folders (Organización del Código)
+
+```
+❌ Organización por Tipo:
+src/
+├── controllers/
+├── services/
+└── repositories/
+
+✅ Organización por Features:
+src/modules/
+├── users/
+├── products/
+└── orders/
+```
+
+**Cuándo usar**: Siempre en proyectos medianos a grandes.
+
+#### Feature Flags (Toggles en Runtime)
+
+```typescript
+// shared/infrastructure/features/feature-flags.ts
+class FeatureFlags {
+  private flags = new Map<string, boolean>();
+
+  constructor() {
+    // Cargar desde variables de entorno
+    this.flags.set('ADVANCED_SEARCH', process.env.FEATURE_ADVANCED_SEARCH === 'true');
+    this.flags.set('AI_RECOMMENDATIONS', process.env.FEATURE_AI_RECOMMENDATIONS === 'true');
+    this.flags.set('DARK_MODE', process.env.FEATURE_DARK_MODE === 'true');
+  }
+
+  isEnabled(flagName: string): boolean {
+    return this.flags.get(flagName) ?? false;
+  }
+
+  // Para flags dinámicos (base de datos)
+  async isEnabledForUser(flagName: string, userId: string): Promise<boolean> {
+    const flag = await prisma.featureFlag.findFirst({
+      where: { name: flagName, userId }
+    });
+    return flag?.enabled ?? false;
+  }
+}
+
+export const featureFlags = new FeatureFlags();
+```
+
+**Uso en Componentes:**
+```typescript
+// app/products/page.tsx
+export default function ProductsPage() {
+  const showAIRecommendations = featureFlags.isEnabled('AI_RECOMMENDATIONS');
+
+  return (
+    <div>
+      <ProductList />
+      {showAIRecommendations && <AIRecommendations />}
+    </div>
+  );
+}
+```
+
+**Uso en API Routes:**
+```typescript
+// app/api/products/route.ts
+export async function GET(request: Request) {
+  const products = await productService.getAll();
+
+  if (featureFlags.isEnabled('ADVANCED_SEARCH')) {
+    // Aplicar búsqueda avanzada con IA
+    return NextResponse.json(await aiSearchService.enhance(products));
+  }
+
+  return NextResponse.json(products);
+}
+```
+
+**Cuándo usar Feature Flags**:
+- Despliegues graduales (canary releases)
+- A/B testing
+- Beta features para usuarios específicos
+- Desactivar funcionalidades con problemas sin re-deploy
+
+### Combinación Recomendada
+
+**Para módulos completos**: Feature Folders + Module Configuration
+**Para features pequeñas**: Feature Flags
+
+```typescript
+// Módulo completo
+if (moduleRegistry.analytics.enabled) {
+  registerAnalyticsModule();
+}
+
+// Feature pequeña dentro del módulo
+if (featureFlags.isEnabled('ADVANCED_ANALYTICS_CHARTS')) {
+  // Mostrar gráficos avanzados
+}
+```
+
+---
+
+## Implementación en Next.js
+
+### Estructura Completa Recomendada
+
+```
+src/
+├── modules/                    # Feature Modules
+│   ├── [domain]/
+│   │   ├── domain/            # DDD: Entities, VOs, Events
+│   │   ├── application/       # Use cases, Services
+│   │   ├── infrastructure/    # Repositories, External services
+│   │   ├── presentation/      # UI, API routes
+│   │   └── index.ts          # Public API del módulo
+│   │
+├── shared/                    # Código compartido
+│   ├── domain/
+│   │   ├── events/
+│   │   │   └── event-bus.interface.ts
+│   │   └── repositories/
+│   │       └── base.repository.ts
+│   ├── infrastructure/
+│   │   ├── events/
+│   │   │   ├── event-bus.impl.ts
+│   │   │   └── event-store.ts
+│   │   ├── modules/
+│   │   │   └── module-registry.ts
+│   │   ├── features/
+│   │   │   └── feature-flags.ts
+│   │   └── prisma/
+│   │       └── client.ts
+│   └── presentation/
+│       └── components/ui/
+│
+├── app/                       # Next.js routing (thin layer)
+│   ├── api/
+│   │   └── [resource]/route.ts
+│   └── [resource]/page.tsx
+│
+└── config/
+    ├── modules.config.ts
+    └── features.config.ts
+```
+
+### Flujo de Trabajo Típico
+
+```typescript
+// 1. Usuario hace una acción
+// app/api/orders/route.ts
+export async function POST(request: Request) {
+  const data = await request.json();
+
+  // 2. Delegar al servicio del módulo
+  const order = await orderService.placeOrder(data);
+
+  return NextResponse.json(order, { status: 201 });
+}
+
+// 3. Servicio ejecuta lógica de negocio
+// modules/orders/application/services/order.service.ts
+async placeOrder(data: CreateOrderInput): Promise<Order> {
+  // Crear orden
+  const order = await orderRepository.create(data);
+
+  // 4. Publicar evento de dominio
+  await eventBus.publish('OrderPlaced', {
+    eventId: uuid(),
+    timestamp: new Date(),
+    data: { orderId: order.id, /* ... */ }
+  });
+
+  return order;
+}
+
+// 5. Módulos interesados reaccionan
+// modules/notifications/handlers (si está activado)
+eventBus.subscribe('OrderPlaced', async (event) => {
+  await emailService.sendConfirmation(event.data);
+});
+
+// modules/inventory/handlers
+eventBus.subscribe('OrderPlaced', async (event) => {
+  await inventoryService.reduceStock(event.data.items);
+});
+
+// modules/analytics/handlers (si está activado)
+eventBus.subscribe('OrderPlaced', async (event) => {
+  await analyticsService.trackConversion(event.data);
+});
+```
+
+---
+
+## Trade-offs y Consideraciones
+
+### Ventajas
+
+✅ **Mantenibilidad**: Código organizado por dominio
+✅ **Escalabilidad**: Fácil dividir en microservicios
+✅ **Testabilidad**: Tests aislados por módulo
+✅ **Flexibilidad**: Activar/desactivar módulos
+✅ **Extensibilidad**: Agregar features sin romper existentes
+✅ **Auditoría**: Event Store completo
+
+### Desventajas
+
+⚠️ **Complejidad Inicial**: Más boilerplate
+⚠️ **Curva de Aprendizaje**: Requiere entender DDD/Events
+⚠️ **Eventual Consistency**: Eventos son asíncronos
+⚠️ **Debugging**: Flujos distribuidos más difíciles
+⚠️ **Over-engineering**: Puede ser excesivo para proyectos pequeños
+
+### Cuándo Aplicar
+
+| Tamaño Proyecto | Recomendación |
+|----------------|---------------|
+| Pequeño (<5 páginas) | ❌ No usar, stick to basics |
+| Mediano (5-20 páginas) | ⚠️ Considerar solo módulos |
+| Grande (>20 páginas) | ✅ Aplicar DDD + Events |
+| Multi-tenant / SaaS | ✅ Definitivamente aplicar |
+
+---
+
+## Migración Gradual
+
+No es necesario aplicar todo de una vez. Puedes migrar gradualmente:
+
+### Fase 1: Arquitectura en Capas (ya en nextjs-standards.mdc)
+```
+Route → Service → Repository
+```
+
+### Fase 2: Feature Modules
+```
+Reorganizar código en modules/ por dominio
+```
+
+### Fase 3: Domain Events
+```
+Agregar Event Bus básico
+Publicar eventos clave
+```
+
+### Fase 4: Event Store y Auditoría
+```
+Persistir eventos
+Implementar replay
+```
+
+### Fase 5: Feature Flags
+```
+Sistema de toggles
+A/B testing
+```
+
+---
+
+## Recursos y Referencias
+
+### Libros y Artículos
+- [Domain-Driven Design by Eric Evans](https://www.domainlanguage.com/ddd/)
+- [Implementing Domain-Driven Design by Vaughn Vernon](https://vaughnvernon.com/iddd/)
+- [Event-Driven Architecture](https://martinfowler.com/articles/201701-event-driven.html)
+- [Modular Monolith](https://www.kamilgrzybek.com/design/modular-monolith-primer/)
+
+### Ejemplos
+- **[Sistema LTI ATS](../examples/lti-ats/ARCHITECTURAL_DISCUSSION.md)**: Discusión detallada de DDD + Event-Driven aplicado a un ATS
+
+### Herramientas
+- **EventStore**: Para event sourcing completo
+- **MediatR (C#)** / **NestJS CQRS** (Node): Frameworks CQRS
+- **LaunchDarkly / Unleash**: Plataformas de Feature Flags
+
+---
+
+**Nota Final**: Estos patrones son **opcionales y avanzados**. Empieza con la arquitectura básica de `nextjs-standards.mdc` y adopta estos patrones cuando tu proyecto crezca en complejidad.
+
+---
+
+**Última Actualización**: 2025-11-29
+**Nivel**: Avanzado
+**Aplicabilidad**: Opcional, según complejidad del proyecto
