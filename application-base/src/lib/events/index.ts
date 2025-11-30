@@ -7,7 +7,7 @@
  */
 
 import { EmailEventListener } from './listeners/email-listener';
-// import { AuditEventListener } from './listeners/audit-listener'; // Fase 3
+import { AuditEventListener } from './listeners/audit-listener';
 import { structuredLogger } from '../logger/structured-logger';
 
 let listenersInitialized = false;
@@ -32,9 +32,9 @@ export function initializeEventListeners() {
   const emailListener = new EmailEventListener();
   emailListener.register();
 
-  // Audit listener (Fase 3)
-  // const auditListener = new AuditEventListener();
-  // auditListener.register();
+  // Audit listener
+  const auditListener = new AuditEventListener();
+  auditListener.register();
 
   structuredLogger.info('Event listeners initialized successfully', {
     module: 'events',
