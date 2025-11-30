@@ -9,6 +9,13 @@
 // Export service
 export { auditService, AuditService } from './audit-service';
 
+// Export helpers
+export {
+  getAuditContext,
+  auditOperation,
+  auditEntityChange,
+} from './helpers';
+
 // Export types
 export type {
   AuditLogInput,
@@ -16,3 +23,5 @@ export type {
   AuditLogResult,
   AuditLogWithUser,
 } from './types';
+
+export type { AuditContext, AuditOperationOptions } from './helpers';
