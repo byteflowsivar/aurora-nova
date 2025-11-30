@@ -12,11 +12,12 @@
 
 ## Arquitectura del Modelo de Datos
 
-El modelo de datos de Aurora Nova está organizado en **3 módulos principales**:
+El modelo de datos de Aurora Nova está organizado en **4 módulos principales**:
 
 1. **Auth.js Tables**: Tablas requeridas por Auth.js para autenticación
 2. **Authentication Tables**: Sistema RBAC personalizado (Roles y Permisos)
 3. **Menu System**: Sistema de menú dinámico con control de acceso
+4. **Audit System**: Sistema de auditoría y trazabilidad de acciones
 
 ---
 
@@ -51,6 +52,7 @@ El modelo de datos de Aurora Nova está organizado en **3 módulos principales**
 - `userRoles`: Relación uno-a-muchos con UserRole (roles asignados al usuario)
 - `createdRoles`: Relación uno-a-muchos con UserRole (roles que este usuario asignó a otros)
 - `passwordResetTokens`: Relación uno-a-muchos con PasswordResetToken (tokens de recuperación de contraseña)
+- `auditLogs`: Relación uno-a-muchos con AuditLog (acciones realizadas por el usuario)
 
 **Índices**:
 - `email`: Para búsquedas rápidas por email durante login y validaciones de unicidad
@@ -384,6 +386,93 @@ El modelo de datos de Aurora Nova está organizado en **3 módulos principales**
 
 ---
 
+### 4. Audit System
+
+#### AuditLog (Registro de Auditoría)
+
+**Descripción**: Registra todas las acciones significativas realizadas en el sistema para trazabilidad y compliance. Almacena información detallada sobre quién hizo qué, cuándo y desde dónde.
+
+**Campos**:
+- `id`: UUID v7 - Identificador único del registro de auditoría (Clave Primaria)
+- `userId`: UUID - ID del usuario que realizó la acción (Opcional, Clave Foránea)
+- `action`: String - Acción realizada (máx. 100 caracteres)
+  - Ejemplos: "create", "update", "delete", "login", "logout"
+- `module`: String - Módulo del sistema (máx. 50 caracteres)
+  - Ejemplos: "auth", "users", "roles", "permissions"
+- `entityType`: String - Tipo de entidad afectada (Opcional, máx. 50 caracteres)
+  - Ejemplos: "User", "Role", "Permission"
+- `entityId`: String - ID del registro afectado (Opcional, máx. 255 caracteres)
+- `oldValues`: JSON - Estado anterior de la entidad (Opcional)
+- `newValues`: JSON - Estado nuevo de la entidad (Opcional)
+- `ipAddress`: String - Dirección IP desde donde se realizó la acción (Opcional, máx. 45 caracteres)
+- `userAgent`: String - User Agent del navegador (Opcional, Texto)
+- `requestId`: UUID - ID de request para correlación de logs (Opcional)
+- `metadata`: JSON - Metadata adicional específica del contexto (Opcional)
+- `timestamp`: DateTime - Fecha y hora del evento (generada automáticamente)
+
+**Reglas de Validación**:
+- `action` y `module` son obligatorios
+- `userId` puede ser NULL para acciones del sistema
+- `entityType` y `entityId` son opcionales (no aplican para todas las acciones)
+- `oldValues` y `newValues` almacenan el diff de cambios en formato JSON
+
+**Relaciones**:
+- `user`: Relación muchos-a-uno con User (onDelete: SetNull)
+  - Si se elimina un usuario, sus registros de auditoría se mantienen pero userId = NULL
+
+**Índices**:
+- `userId`: Para listar acciones de un usuario específico
+- `action`: Para filtrar por tipo de acción
+- `module`: Para filtrar por módulo del sistema
+- `[entityType, entityId]`: Índice compuesto para buscar auditoría de una entidad específica
+- `timestamp`: Para búsquedas cronológicas y reportes
+- `requestId`: Para correlacionar múltiples acciones de un mismo request
+
+**Notas**:
+- **onDelete: SetNull** en userId: Los logs de auditoría se mantienen incluso si el usuario es eliminado
+- **Campos JSON**: Permiten flexibilidad para almacenar cambios de cualquier tipo de entidad
+- **Índices optimizados**: Diseñados para queries comunes de auditoría y reportes
+- **Retención**: Se recomienda implementar política de retención (ej: 1 año)
+- **Sensibilidad**: Los campos JSON NO deben contener contraseñas, tokens u otros secretos
+
+**Ejemplos de Uso**:
+```typescript
+// Login
+{
+  userId: "uuid-123",
+  action: "login",
+  module: "auth",
+  ipAddress: "192.168.1.1",
+  userAgent: "Mozilla/5.0...",
+  timestamp: "2025-11-30T10:00:00Z"
+}
+
+// Actualización de usuario
+{
+  userId: "uuid-admin",
+  action: "update",
+  module: "users",
+  entityType: "User",
+  entityId: "uuid-123",
+  oldValues: { email: "old@example.com", firstName: "John" },
+  newValues: { email: "new@example.com", firstName: "Jane" },
+  timestamp: "2025-11-30T10:05:00Z"
+}
+
+// Eliminación de rol
+{
+  userId: "uuid-admin",
+  action: "delete",
+  module: "roles",
+  entityType: "Role",
+  entityId: "uuid-role-456",
+  oldValues: { name: "Editor", description: "Can edit content" },
+  timestamp: "2025-11-30T10:10:00Z"
+}
+```
+
+---
+
 ## Tipos de Relaciones en Aurora Nova
 
 ### Uno a Uno (1:1)
@@ -400,6 +489,10 @@ El modelo de datos de Aurora Nova está organizado en **3 módulos principales**
 **User → PasswordResetTokens**
 - Un usuario puede tener múltiples tokens de reset (históricos)
 - Un token pertenece a un solo usuario
+
+**User → AuditLogs**
+- Un usuario puede tener múltiples registros de auditoría
+- Un registro de auditoría pertenece a un solo usuario (o NULL si el usuario fue eliminado)
 
 **MenuItem → MenuItems** (Auto-referencia)
 - Un item de menú puede tener múltiples hijos
@@ -515,6 +608,22 @@ erDiagram
         DateTime updatedAt
     }
 
+    AuditLog {
+        UUID id PK
+        UUID userId FK
+        String action
+        String module
+        String entityType
+        String entityId
+        JSON oldValues
+        JSON newValues
+        String ipAddress
+        String userAgent
+        UUID requestId
+        JSON metadata
+        DateTime timestamp
+    }
+
     %% Auth.js Relations
     User ||--o{ Account : "tiene"
     User ||--o{ Session : "tiene"
@@ -531,6 +640,9 @@ erDiagram
     %% Menu Relations
     Permission ||--o{ MenuItem : "protege"
     MenuItem ||--o{ MenuItem : "contiene (parentId)"
+
+    %% Audit Relations
+    User ||--o{ AuditLog : "realiza"
 ```
 
 ---
@@ -559,6 +671,7 @@ Todas las claves foráneas tienen estrategias `onDelete` y `onUpdate` definidas:
 | RolePermission → Permission | Cascade | Si se elimina permiso, eliminar asignaciones a roles |
 | MenuItem → Permission | SetNull | Si se elimina permiso, el item queda sin protección |
 | MenuItem → MenuItem | Cascade | Si se elimina padre, eliminar hijos |
+| AuditLog → User | SetNull | Si se elimina usuario, mantener logs pero con userId = NULL |
 
 ### 3. Auditoría
 
@@ -566,9 +679,17 @@ Todas las claves foráneas tienen estrategias `onDelete` y `onUpdate` definidas:
 - `createdAt`: Fecha de creación (todas las tablas)
 - `updatedAt`: Fecha de actualización (tablas modificables)
 
-**Auditoría Adicional**:
+**Auditoría Básica**:
 - `Session.ipAddress` y `Session.userAgent`: Para tracking de sesiones
 - `UserRole.createdBy`: Para saber quién asignó un rol
+
+**Sistema de Auditoría Completo** (Fase 3):
+- **Tabla `AuditLog`**: Registro completo de todas las acciones del sistema
+- **Eventos auditados**: Login, logout, CRUD de usuarios/roles/permisos, cambios de contraseña
+- **Información capturada**: Usuario, acción, módulo, entidad afectada, valores anteriores/nuevos, IP, User Agent
+- **Integración con eventos**: Sistema event-driven automático vía EventBus
+- **Índices optimizados**: Para queries de auditoría y reportes
+- **Retención**: Se recomienda política de 1 año con archivado posterior
 
 **Soft Delete**: No implementado actualmente
 - Consideración futura: Agregar `deletedAt` para soft delete de usuarios
@@ -835,16 +956,17 @@ return !!hasPermission;
    - Modelo actual es single-tenant
    - Requeriría agregar `tenantId` a todas las tablas
 
-3. **Histórico de Cambios**: No implementado
-   - Solo se guarda estado actual
-   - Consideración futura: Tabla de auditoría genérica
+3. **Particionamiento de AuditLog**: No implementado
+   - Consideración futura: Particionar por mes/año para mejor performance
+   - Archivado automático a cold storage después de 1 año
 
 ### Planes Futuros
 
 1. **Cache de Permisos**: Redis para cachear permisos de usuarios
 2. **Soft Delete**: Agregar `deletedAt` a tablas principales
-3. **Auditoría Completa**: Tabla de eventos de auditoría
+3. **Particionamiento de Auditoría**: Particionar tabla AuditLog por fecha
 4. **Multi-tenancy**: Agregar soporte para múltiples organizaciones
+5. **Dashboards de Auditoría**: UI para visualización y análisis de logs
 
 ---
 
@@ -865,6 +987,6 @@ return !!hasPermission;
 
 ---
 
-**Última Actualización**: 2025-11-29
-**Versión del Modelo**: 1.0.0
+**Última Actualización**: 2025-11-30
+**Versión del Modelo**: 1.1.0 (Sistema de Auditoría)
 **Mantenido por**: Equipo Aurora Nova

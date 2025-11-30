@@ -68,6 +68,11 @@ export type RolePermission = $Result.DefaultSelection<Prisma.$RolePermissionPayl
  * 
  */
 export type MenuItem = $Result.DefaultSelection<Prisma.$MenuItemPayload>
+/**
+ * Model AuditLog
+ * 
+ */
+export type AuditLog = $Result.DefaultSelection<Prisma.$AuditLogPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -296,6 +301,16 @@ export class PrismaClient<
     * ```
     */
   get menuItem(): Prisma.MenuItemDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.auditLog`: Exposes CRUD operations for the **AuditLog** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AuditLogs
+    * const auditLogs = await prisma.auditLog.findMany()
+    * ```
+    */
+  get auditLog(): Prisma.AuditLogDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -747,7 +762,8 @@ export namespace Prisma {
     Permission: 'Permission',
     UserRole: 'UserRole',
     RolePermission: 'RolePermission',
-    MenuItem: 'MenuItem'
+    MenuItem: 'MenuItem',
+    AuditLog: 'AuditLog'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -766,7 +782,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "account" | "session" | "verificationToken" | "passwordResetToken" | "userCredentials" | "role" | "permission" | "userRole" | "rolePermission" | "menuItem"
+      modelProps: "user" | "account" | "session" | "verificationToken" | "passwordResetToken" | "userCredentials" | "role" | "permission" | "userRole" | "rolePermission" | "menuItem" | "auditLog"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1584,6 +1600,80 @@ export namespace Prisma {
           }
         }
       }
+      AuditLog: {
+        payload: Prisma.$AuditLogPayload<ExtArgs>
+        fields: Prisma.AuditLogFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AuditLogFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuditLogPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AuditLogFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuditLogPayload>
+          }
+          findFirst: {
+            args: Prisma.AuditLogFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuditLogPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AuditLogFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuditLogPayload>
+          }
+          findMany: {
+            args: Prisma.AuditLogFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuditLogPayload>[]
+          }
+          create: {
+            args: Prisma.AuditLogCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuditLogPayload>
+          }
+          createMany: {
+            args: Prisma.AuditLogCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AuditLogCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuditLogPayload>[]
+          }
+          delete: {
+            args: Prisma.AuditLogDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuditLogPayload>
+          }
+          update: {
+            args: Prisma.AuditLogUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuditLogPayload>
+          }
+          deleteMany: {
+            args: Prisma.AuditLogDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AuditLogUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AuditLogUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuditLogPayload>[]
+          }
+          upsert: {
+            args: Prisma.AuditLogUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AuditLogPayload>
+          }
+          aggregate: {
+            args: Prisma.AuditLogAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAuditLog>
+          }
+          groupBy: {
+            args: Prisma.AuditLogGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AuditLogGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AuditLogCountArgs<ExtArgs>
+            result: $Utils.Optional<AuditLogCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1691,6 +1781,7 @@ export namespace Prisma {
     userRole?: UserRoleOmit
     rolePermission?: RolePermissionOmit
     menuItem?: MenuItemOmit
+    auditLog?: AuditLogOmit
   }
 
   /* Types for Logging */
@@ -1772,18 +1863,20 @@ export namespace Prisma {
 
   export type UserCountOutputType = {
     accounts: number
-    sessions: number
-    userRoles: number
-    createdRoles: number
     passwordResetTokens: number
+    sessions: number
+    createdRoles: number
+    userRoles: number
+    auditLogs: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     accounts?: boolean | UserCountOutputTypeCountAccountsArgs
-    sessions?: boolean | UserCountOutputTypeCountSessionsArgs
-    userRoles?: boolean | UserCountOutputTypeCountUserRolesArgs
-    createdRoles?: boolean | UserCountOutputTypeCountCreatedRolesArgs
     passwordResetTokens?: boolean | UserCountOutputTypeCountPasswordResetTokensArgs
+    sessions?: boolean | UserCountOutputTypeCountSessionsArgs
+    createdRoles?: boolean | UserCountOutputTypeCountCreatedRolesArgs
+    userRoles?: boolean | UserCountOutputTypeCountUserRolesArgs
+    auditLogs?: boolean | UserCountOutputTypeCountAuditLogsArgs
   }
 
   // Custom InputTypes
@@ -1807,15 +1900,15 @@ export namespace Prisma {
   /**
    * UserCountOutputType without action
    */
-  export type UserCountOutputTypeCountSessionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: SessionWhereInput
+  export type UserCountOutputTypeCountPasswordResetTokensArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PasswordResetTokenWhereInput
   }
 
   /**
    * UserCountOutputType without action
    */
-  export type UserCountOutputTypeCountUserRolesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: UserRoleWhereInput
+  export type UserCountOutputTypeCountSessionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SessionWhereInput
   }
 
   /**
@@ -1828,8 +1921,15 @@ export namespace Prisma {
   /**
    * UserCountOutputType without action
    */
-  export type UserCountOutputTypeCountPasswordResetTokensArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: PasswordResetTokenWhereInput
+  export type UserCountOutputTypeCountUserRolesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserRoleWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountAuditLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AuditLogWhereInput
   }
 
 
@@ -1838,13 +1938,13 @@ export namespace Prisma {
    */
 
   export type RoleCountOutputType = {
-    userRoles: number
     rolePermissions: number
+    userRoles: number
   }
 
   export type RoleCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    userRoles?: boolean | RoleCountOutputTypeCountUserRolesArgs
     rolePermissions?: boolean | RoleCountOutputTypeCountRolePermissionsArgs
+    userRoles?: boolean | RoleCountOutputTypeCountUserRolesArgs
   }
 
   // Custom InputTypes
@@ -1861,15 +1961,15 @@ export namespace Prisma {
   /**
    * RoleCountOutputType without action
    */
-  export type RoleCountOutputTypeCountUserRolesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: UserRoleWhereInput
+  export type RoleCountOutputTypeCountRolePermissionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RolePermissionWhereInput
   }
 
   /**
    * RoleCountOutputType without action
    */
-  export type RoleCountOutputTypeCountRolePermissionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: RolePermissionWhereInput
+  export type RoleCountOutputTypeCountUserRolesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserRoleWhereInput
   }
 
 
@@ -1878,13 +1978,13 @@ export namespace Prisma {
    */
 
   export type PermissionCountOutputType = {
-    rolePermissions: number
     menuItems: number
+    rolePermissions: number
   }
 
   export type PermissionCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    rolePermissions?: boolean | PermissionCountOutputTypeCountRolePermissionsArgs
     menuItems?: boolean | PermissionCountOutputTypeCountMenuItemsArgs
+    rolePermissions?: boolean | PermissionCountOutputTypeCountRolePermissionsArgs
   }
 
   // Custom InputTypes
@@ -1901,15 +2001,15 @@ export namespace Prisma {
   /**
    * PermissionCountOutputType without action
    */
-  export type PermissionCountOutputTypeCountRolePermissionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: RolePermissionWhereInput
+  export type PermissionCountOutputTypeCountMenuItemsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MenuItemWhereInput
   }
 
   /**
    * PermissionCountOutputType without action
    */
-  export type PermissionCountOutputTypeCountMenuItemsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: MenuItemWhereInput
+  export type PermissionCountOutputTypeCountRolePermissionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RolePermissionWhereInput
   }
 
 
@@ -2145,11 +2245,12 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     accounts?: boolean | User$accountsArgs<ExtArgs>
+    passwordResetTokens?: boolean | User$passwordResetTokensArgs<ExtArgs>
     sessions?: boolean | User$sessionsArgs<ExtArgs>
     credentials?: boolean | User$credentialsArgs<ExtArgs>
-    userRoles?: boolean | User$userRolesArgs<ExtArgs>
     createdRoles?: boolean | User$createdRolesArgs<ExtArgs>
-    passwordResetTokens?: boolean | User$passwordResetTokensArgs<ExtArgs>
+    userRoles?: boolean | User$userRolesArgs<ExtArgs>
+    auditLogs?: boolean | User$auditLogsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -2192,11 +2293,12 @@ export namespace Prisma {
   export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "firstName" | "lastName" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     accounts?: boolean | User$accountsArgs<ExtArgs>
+    passwordResetTokens?: boolean | User$passwordResetTokensArgs<ExtArgs>
     sessions?: boolean | User$sessionsArgs<ExtArgs>
     credentials?: boolean | User$credentialsArgs<ExtArgs>
-    userRoles?: boolean | User$userRolesArgs<ExtArgs>
     createdRoles?: boolean | User$createdRolesArgs<ExtArgs>
-    passwordResetTokens?: boolean | User$passwordResetTokensArgs<ExtArgs>
+    userRoles?: boolean | User$userRolesArgs<ExtArgs>
+    auditLogs?: boolean | User$auditLogsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -2206,11 +2308,12 @@ export namespace Prisma {
     name: "User"
     objects: {
       accounts: Prisma.$AccountPayload<ExtArgs>[]
+      passwordResetTokens: Prisma.$PasswordResetTokenPayload<ExtArgs>[]
       sessions: Prisma.$SessionPayload<ExtArgs>[]
       credentials: Prisma.$UserCredentialsPayload<ExtArgs> | null
-      userRoles: Prisma.$UserRolePayload<ExtArgs>[]
       createdRoles: Prisma.$UserRolePayload<ExtArgs>[]
-      passwordResetTokens: Prisma.$PasswordResetTokenPayload<ExtArgs>[]
+      userRoles: Prisma.$UserRolePayload<ExtArgs>[]
+      auditLogs: Prisma.$AuditLogPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -2617,11 +2720,12 @@ export namespace Prisma {
   export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     accounts<T extends User$accountsArgs<ExtArgs> = {}>(args?: Subset<T, User$accountsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    passwordResetTokens<T extends User$passwordResetTokensArgs<ExtArgs> = {}>(args?: Subset<T, User$passwordResetTokensArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PasswordResetTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     sessions<T extends User$sessionsArgs<ExtArgs> = {}>(args?: Subset<T, User$sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     credentials<T extends User$credentialsArgs<ExtArgs> = {}>(args?: Subset<T, User$credentialsArgs<ExtArgs>>): Prisma__UserCredentialsClient<$Result.GetResult<Prisma.$UserCredentialsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-    userRoles<T extends User$userRolesArgs<ExtArgs> = {}>(args?: Subset<T, User$userRolesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserRolePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     createdRoles<T extends User$createdRolesArgs<ExtArgs> = {}>(args?: Subset<T, User$createdRolesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserRolePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    passwordResetTokens<T extends User$passwordResetTokensArgs<ExtArgs> = {}>(args?: Subset<T, User$passwordResetTokensArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PasswordResetTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    userRoles<T extends User$userRolesArgs<ExtArgs> = {}>(args?: Subset<T, User$userRolesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserRolePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    auditLogs<T extends User$auditLogsArgs<ExtArgs> = {}>(args?: Subset<T, User$auditLogsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3072,6 +3176,30 @@ export namespace Prisma {
   }
 
   /**
+   * User.passwordResetTokens
+   */
+  export type User$passwordResetTokensArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PasswordResetToken
+     */
+    select?: PasswordResetTokenSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PasswordResetToken
+     */
+    omit?: PasswordResetTokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PasswordResetTokenInclude<ExtArgs> | null
+    where?: PasswordResetTokenWhereInput
+    orderBy?: PasswordResetTokenOrderByWithRelationInput | PasswordResetTokenOrderByWithRelationInput[]
+    cursor?: PasswordResetTokenWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PasswordResetTokenScalarFieldEnum | PasswordResetTokenScalarFieldEnum[]
+  }
+
+  /**
    * User.sessions
    */
   export type User$sessionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3115,30 +3243,6 @@ export namespace Prisma {
   }
 
   /**
-   * User.userRoles
-   */
-  export type User$userRolesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the UserRole
-     */
-    select?: UserRoleSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the UserRole
-     */
-    omit?: UserRoleOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserRoleInclude<ExtArgs> | null
-    where?: UserRoleWhereInput
-    orderBy?: UserRoleOrderByWithRelationInput | UserRoleOrderByWithRelationInput[]
-    cursor?: UserRoleWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: UserRoleScalarFieldEnum | UserRoleScalarFieldEnum[]
-  }
-
-  /**
    * User.createdRoles
    */
   export type User$createdRolesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3163,27 +3267,51 @@ export namespace Prisma {
   }
 
   /**
-   * User.passwordResetTokens
+   * User.userRoles
    */
-  export type User$passwordResetTokensArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type User$userRolesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the PasswordResetToken
+     * Select specific fields to fetch from the UserRole
      */
-    select?: PasswordResetTokenSelect<ExtArgs> | null
+    select?: UserRoleSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the PasswordResetToken
+     * Omit specific fields from the UserRole
      */
-    omit?: PasswordResetTokenOmit<ExtArgs> | null
+    omit?: UserRoleOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: PasswordResetTokenInclude<ExtArgs> | null
-    where?: PasswordResetTokenWhereInput
-    orderBy?: PasswordResetTokenOrderByWithRelationInput | PasswordResetTokenOrderByWithRelationInput[]
-    cursor?: PasswordResetTokenWhereUniqueInput
+    include?: UserRoleInclude<ExtArgs> | null
+    where?: UserRoleWhereInput
+    orderBy?: UserRoleOrderByWithRelationInput | UserRoleOrderByWithRelationInput[]
+    cursor?: UserRoleWhereUniqueInput
     take?: number
     skip?: number
-    distinct?: PasswordResetTokenScalarFieldEnum | PasswordResetTokenScalarFieldEnum[]
+    distinct?: UserRoleScalarFieldEnum | UserRoleScalarFieldEnum[]
+  }
+
+  /**
+   * User.auditLogs
+   */
+  export type User$auditLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuditLog
+     */
+    select?: AuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuditLog
+     */
+    omit?: AuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
+    where?: AuditLogWhereInput
+    orderBy?: AuditLogOrderByWithRelationInput | AuditLogOrderByWithRelationInput[]
+    cursor?: AuditLogWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: AuditLogScalarFieldEnum | AuditLogScalarFieldEnum[]
   }
 
   /**
@@ -8682,8 +8810,8 @@ export namespace Prisma {
     description?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    userRoles?: boolean | Role$userRolesArgs<ExtArgs>
     rolePermissions?: boolean | Role$rolePermissionsArgs<ExtArgs>
+    userRoles?: boolean | Role$userRolesArgs<ExtArgs>
     _count?: boolean | RoleCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["role"]>
 
@@ -8713,8 +8841,8 @@ export namespace Prisma {
 
   export type RoleOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "createdAt" | "updatedAt", ExtArgs["result"]["role"]>
   export type RoleInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    userRoles?: boolean | Role$userRolesArgs<ExtArgs>
     rolePermissions?: boolean | Role$rolePermissionsArgs<ExtArgs>
+    userRoles?: boolean | Role$userRolesArgs<ExtArgs>
     _count?: boolean | RoleCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type RoleIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -8723,8 +8851,8 @@ export namespace Prisma {
   export type $RolePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Role"
     objects: {
-      userRoles: Prisma.$UserRolePayload<ExtArgs>[]
       rolePermissions: Prisma.$RolePermissionPayload<ExtArgs>[]
+      userRoles: Prisma.$UserRolePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -9126,8 +9254,8 @@ export namespace Prisma {
    */
   export interface Prisma__RoleClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    userRoles<T extends Role$userRolesArgs<ExtArgs> = {}>(args?: Subset<T, Role$userRolesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserRolePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     rolePermissions<T extends Role$rolePermissionsArgs<ExtArgs> = {}>(args?: Subset<T, Role$rolePermissionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RolePermissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    userRoles<T extends Role$userRolesArgs<ExtArgs> = {}>(args?: Subset<T, Role$userRolesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserRolePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -9550,30 +9678,6 @@ export namespace Prisma {
   }
 
   /**
-   * Role.userRoles
-   */
-  export type Role$userRolesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the UserRole
-     */
-    select?: UserRoleSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the UserRole
-     */
-    omit?: UserRoleOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserRoleInclude<ExtArgs> | null
-    where?: UserRoleWhereInput
-    orderBy?: UserRoleOrderByWithRelationInput | UserRoleOrderByWithRelationInput[]
-    cursor?: UserRoleWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: UserRoleScalarFieldEnum | UserRoleScalarFieldEnum[]
-  }
-
-  /**
    * Role.rolePermissions
    */
   export type Role$rolePermissionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -9595,6 +9699,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: RolePermissionScalarFieldEnum | RolePermissionScalarFieldEnum[]
+  }
+
+  /**
+   * Role.userRoles
+   */
+  export type Role$userRolesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserRole
+     */
+    select?: UserRoleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserRole
+     */
+    omit?: UserRoleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserRoleInclude<ExtArgs> | null
+    where?: UserRoleWhereInput
+    orderBy?: UserRoleOrderByWithRelationInput | UserRoleOrderByWithRelationInput[]
+    cursor?: UserRoleWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: UserRoleScalarFieldEnum | UserRoleScalarFieldEnum[]
   }
 
   /**
@@ -9772,8 +9900,8 @@ export namespace Prisma {
     module?: boolean
     description?: boolean
     createdAt?: boolean
-    rolePermissions?: boolean | Permission$rolePermissionsArgs<ExtArgs>
     menuItems?: boolean | Permission$menuItemsArgs<ExtArgs>
+    rolePermissions?: boolean | Permission$rolePermissionsArgs<ExtArgs>
     _count?: boolean | PermissionCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["permission"]>
 
@@ -9800,8 +9928,8 @@ export namespace Prisma {
 
   export type PermissionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "module" | "description" | "createdAt", ExtArgs["result"]["permission"]>
   export type PermissionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    rolePermissions?: boolean | Permission$rolePermissionsArgs<ExtArgs>
     menuItems?: boolean | Permission$menuItemsArgs<ExtArgs>
+    rolePermissions?: boolean | Permission$rolePermissionsArgs<ExtArgs>
     _count?: boolean | PermissionCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type PermissionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -9810,8 +9938,8 @@ export namespace Prisma {
   export type $PermissionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Permission"
     objects: {
-      rolePermissions: Prisma.$RolePermissionPayload<ExtArgs>[]
       menuItems: Prisma.$MenuItemPayload<ExtArgs>[]
+      rolePermissions: Prisma.$RolePermissionPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -10212,8 +10340,8 @@ export namespace Prisma {
    */
   export interface Prisma__PermissionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    rolePermissions<T extends Permission$rolePermissionsArgs<ExtArgs> = {}>(args?: Subset<T, Permission$rolePermissionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RolePermissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     menuItems<T extends Permission$menuItemsArgs<ExtArgs> = {}>(args?: Subset<T, Permission$menuItemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MenuItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    rolePermissions<T extends Permission$rolePermissionsArgs<ExtArgs> = {}>(args?: Subset<T, Permission$rolePermissionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RolePermissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -10635,30 +10763,6 @@ export namespace Prisma {
   }
 
   /**
-   * Permission.rolePermissions
-   */
-  export type Permission$rolePermissionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the RolePermission
-     */
-    select?: RolePermissionSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the RolePermission
-     */
-    omit?: RolePermissionOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: RolePermissionInclude<ExtArgs> | null
-    where?: RolePermissionWhereInput
-    orderBy?: RolePermissionOrderByWithRelationInput | RolePermissionOrderByWithRelationInput[]
-    cursor?: RolePermissionWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: RolePermissionScalarFieldEnum | RolePermissionScalarFieldEnum[]
-  }
-
-  /**
    * Permission.menuItems
    */
   export type Permission$menuItemsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -10680,6 +10784,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: MenuItemScalarFieldEnum | MenuItemScalarFieldEnum[]
+  }
+
+  /**
+   * Permission.rolePermissions
+   */
+  export type Permission$rolePermissionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RolePermission
+     */
+    select?: RolePermissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the RolePermission
+     */
+    omit?: RolePermissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RolePermissionInclude<ExtArgs> | null
+    where?: RolePermissionWhereInput
+    orderBy?: RolePermissionOrderByWithRelationInput | RolePermissionOrderByWithRelationInput[]
+    cursor?: RolePermissionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: RolePermissionScalarFieldEnum | RolePermissionScalarFieldEnum[]
   }
 
   /**
@@ -10857,9 +10985,9 @@ export namespace Prisma {
     roleId?: boolean
     createdAt?: boolean
     createdBy?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
-    role?: boolean | RoleDefaultArgs<ExtArgs>
     creator?: boolean | UserRole$creatorArgs<ExtArgs>
+    role?: boolean | RoleDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["userRole"]>
 
   export type UserRoleSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -10867,9 +10995,9 @@ export namespace Prisma {
     roleId?: boolean
     createdAt?: boolean
     createdBy?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
-    role?: boolean | RoleDefaultArgs<ExtArgs>
     creator?: boolean | UserRole$creatorArgs<ExtArgs>
+    role?: boolean | RoleDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["userRole"]>
 
   export type UserRoleSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -10877,9 +11005,9 @@ export namespace Prisma {
     roleId?: boolean
     createdAt?: boolean
     createdBy?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
-    role?: boolean | RoleDefaultArgs<ExtArgs>
     creator?: boolean | UserRole$creatorArgs<ExtArgs>
+    role?: boolean | RoleDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["userRole"]>
 
   export type UserRoleSelectScalar = {
@@ -10891,27 +11019,27 @@ export namespace Prisma {
 
   export type UserRoleOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"userId" | "roleId" | "createdAt" | "createdBy", ExtArgs["result"]["userRole"]>
   export type UserRoleInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
-    role?: boolean | RoleDefaultArgs<ExtArgs>
     creator?: boolean | UserRole$creatorArgs<ExtArgs>
+    role?: boolean | RoleDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type UserRoleIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
-    role?: boolean | RoleDefaultArgs<ExtArgs>
     creator?: boolean | UserRole$creatorArgs<ExtArgs>
+    role?: boolean | RoleDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type UserRoleIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
-    role?: boolean | RoleDefaultArgs<ExtArgs>
     creator?: boolean | UserRole$creatorArgs<ExtArgs>
+    role?: boolean | RoleDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
   }
 
   export type $UserRolePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "UserRole"
     objects: {
-      user: Prisma.$UserPayload<ExtArgs>
-      role: Prisma.$RolePayload<ExtArgs>
       creator: Prisma.$UserPayload<ExtArgs> | null
+      role: Prisma.$RolePayload<ExtArgs>
+      user: Prisma.$UserPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       userId: string
@@ -11312,9 +11440,9 @@ export namespace Prisma {
    */
   export interface Prisma__UserRoleClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    role<T extends RoleDefaultArgs<ExtArgs> = {}>(args?: Subset<T, RoleDefaultArgs<ExtArgs>>): Prisma__RoleClient<$Result.GetResult<Prisma.$RolePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     creator<T extends UserRole$creatorArgs<ExtArgs> = {}>(args?: Subset<T, UserRole$creatorArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    role<T extends RoleDefaultArgs<ExtArgs> = {}>(args?: Subset<T, RoleDefaultArgs<ExtArgs>>): Prisma__RoleClient<$Result.GetResult<Prisma.$RolePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -11929,24 +12057,24 @@ export namespace Prisma {
     roleId?: boolean
     permissionId?: boolean
     createdAt?: boolean
-    role?: boolean | RoleDefaultArgs<ExtArgs>
     permission?: boolean | PermissionDefaultArgs<ExtArgs>
+    role?: boolean | RoleDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["rolePermission"]>
 
   export type RolePermissionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     roleId?: boolean
     permissionId?: boolean
     createdAt?: boolean
-    role?: boolean | RoleDefaultArgs<ExtArgs>
     permission?: boolean | PermissionDefaultArgs<ExtArgs>
+    role?: boolean | RoleDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["rolePermission"]>
 
   export type RolePermissionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     roleId?: boolean
     permissionId?: boolean
     createdAt?: boolean
-    role?: boolean | RoleDefaultArgs<ExtArgs>
     permission?: boolean | PermissionDefaultArgs<ExtArgs>
+    role?: boolean | RoleDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["rolePermission"]>
 
   export type RolePermissionSelectScalar = {
@@ -11957,23 +12085,23 @@ export namespace Prisma {
 
   export type RolePermissionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"roleId" | "permissionId" | "createdAt", ExtArgs["result"]["rolePermission"]>
   export type RolePermissionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    role?: boolean | RoleDefaultArgs<ExtArgs>
     permission?: boolean | PermissionDefaultArgs<ExtArgs>
+    role?: boolean | RoleDefaultArgs<ExtArgs>
   }
   export type RolePermissionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    role?: boolean | RoleDefaultArgs<ExtArgs>
     permission?: boolean | PermissionDefaultArgs<ExtArgs>
+    role?: boolean | RoleDefaultArgs<ExtArgs>
   }
   export type RolePermissionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    role?: boolean | RoleDefaultArgs<ExtArgs>
     permission?: boolean | PermissionDefaultArgs<ExtArgs>
+    role?: boolean | RoleDefaultArgs<ExtArgs>
   }
 
   export type $RolePermissionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "RolePermission"
     objects: {
-      role: Prisma.$RolePayload<ExtArgs>
       permission: Prisma.$PermissionPayload<ExtArgs>
+      role: Prisma.$RolePayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       roleId: string
@@ -12373,8 +12501,8 @@ export namespace Prisma {
    */
   export interface Prisma__RolePermissionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    role<T extends RoleDefaultArgs<ExtArgs> = {}>(args?: Subset<T, RoleDefaultArgs<ExtArgs>>): Prisma__RoleClient<$Result.GetResult<Prisma.$RolePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     permission<T extends PermissionDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PermissionDefaultArgs<ExtArgs>>): Prisma__PermissionClient<$Result.GetResult<Prisma.$PermissionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    role<T extends RoleDefaultArgs<ExtArgs> = {}>(args?: Subset<T, RoleDefaultArgs<ExtArgs>>): Prisma__RoleClient<$Result.GetResult<Prisma.$RolePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -13059,9 +13187,9 @@ export namespace Prisma {
     parentId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    permission?: boolean | MenuItem$permissionArgs<ExtArgs>
     parent?: boolean | MenuItem$parentArgs<ExtArgs>
     children?: boolean | MenuItem$childrenArgs<ExtArgs>
+    permission?: boolean | MenuItem$permissionArgs<ExtArgs>
     _count?: boolean | MenuItemCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["menuItem"]>
 
@@ -13076,8 +13204,8 @@ export namespace Prisma {
     parentId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    permission?: boolean | MenuItem$permissionArgs<ExtArgs>
     parent?: boolean | MenuItem$parentArgs<ExtArgs>
+    permission?: boolean | MenuItem$permissionArgs<ExtArgs>
   }, ExtArgs["result"]["menuItem"]>
 
   export type MenuItemSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -13091,8 +13219,8 @@ export namespace Prisma {
     parentId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    permission?: boolean | MenuItem$permissionArgs<ExtArgs>
     parent?: boolean | MenuItem$parentArgs<ExtArgs>
+    permission?: boolean | MenuItem$permissionArgs<ExtArgs>
   }, ExtArgs["result"]["menuItem"]>
 
   export type MenuItemSelectScalar = {
@@ -13110,26 +13238,26 @@ export namespace Prisma {
 
   export type MenuItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "href" | "icon" | "order" | "isActive" | "permissionId" | "parentId" | "createdAt" | "updatedAt", ExtArgs["result"]["menuItem"]>
   export type MenuItemInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    permission?: boolean | MenuItem$permissionArgs<ExtArgs>
     parent?: boolean | MenuItem$parentArgs<ExtArgs>
     children?: boolean | MenuItem$childrenArgs<ExtArgs>
+    permission?: boolean | MenuItem$permissionArgs<ExtArgs>
     _count?: boolean | MenuItemCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type MenuItemIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    permission?: boolean | MenuItem$permissionArgs<ExtArgs>
     parent?: boolean | MenuItem$parentArgs<ExtArgs>
+    permission?: boolean | MenuItem$permissionArgs<ExtArgs>
   }
   export type MenuItemIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    permission?: boolean | MenuItem$permissionArgs<ExtArgs>
     parent?: boolean | MenuItem$parentArgs<ExtArgs>
+    permission?: boolean | MenuItem$permissionArgs<ExtArgs>
   }
 
   export type $MenuItemPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "MenuItem"
     objects: {
-      permission: Prisma.$PermissionPayload<ExtArgs> | null
       parent: Prisma.$MenuItemPayload<ExtArgs> | null
       children: Prisma.$MenuItemPayload<ExtArgs>[]
+      permission: Prisma.$PermissionPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -13536,9 +13664,9 @@ export namespace Prisma {
    */
   export interface Prisma__MenuItemClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    permission<T extends MenuItem$permissionArgs<ExtArgs> = {}>(args?: Subset<T, MenuItem$permissionArgs<ExtArgs>>): Prisma__PermissionClient<$Result.GetResult<Prisma.$PermissionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     parent<T extends MenuItem$parentArgs<ExtArgs> = {}>(args?: Subset<T, MenuItem$parentArgs<ExtArgs>>): Prisma__MenuItemClient<$Result.GetResult<Prisma.$MenuItemPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     children<T extends MenuItem$childrenArgs<ExtArgs> = {}>(args?: Subset<T, MenuItem$childrenArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MenuItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    permission<T extends MenuItem$permissionArgs<ExtArgs> = {}>(args?: Subset<T, MenuItem$permissionArgs<ExtArgs>>): Prisma__PermissionClient<$Result.GetResult<Prisma.$PermissionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -13974,25 +14102,6 @@ export namespace Prisma {
   }
 
   /**
-   * MenuItem.permission
-   */
-  export type MenuItem$permissionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Permission
-     */
-    select?: PermissionSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Permission
-     */
-    omit?: PermissionOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: PermissionInclude<ExtArgs> | null
-    where?: PermissionWhereInput
-  }
-
-  /**
    * MenuItem.parent
    */
   export type MenuItem$parentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -14036,6 +14145,25 @@ export namespace Prisma {
   }
 
   /**
+   * MenuItem.permission
+   */
+  export type MenuItem$permissionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Permission
+     */
+    select?: PermissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Permission
+     */
+    omit?: PermissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PermissionInclude<ExtArgs> | null
+    where?: PermissionWhereInput
+  }
+
+  /**
    * MenuItem without action
    */
   export type MenuItemDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -14051,6 +14179,1175 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: MenuItemInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model AuditLog
+   */
+
+  export type AggregateAuditLog = {
+    _count: AuditLogCountAggregateOutputType | null
+    _min: AuditLogMinAggregateOutputType | null
+    _max: AuditLogMaxAggregateOutputType | null
+  }
+
+  export type AuditLogMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    action: string | null
+    module: string | null
+    entityType: string | null
+    entityId: string | null
+    ipAddress: string | null
+    userAgent: string | null
+    requestId: string | null
+    timestamp: Date | null
+  }
+
+  export type AuditLogMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    action: string | null
+    module: string | null
+    entityType: string | null
+    entityId: string | null
+    ipAddress: string | null
+    userAgent: string | null
+    requestId: string | null
+    timestamp: Date | null
+  }
+
+  export type AuditLogCountAggregateOutputType = {
+    id: number
+    userId: number
+    action: number
+    module: number
+    entityType: number
+    entityId: number
+    oldValues: number
+    newValues: number
+    ipAddress: number
+    userAgent: number
+    requestId: number
+    metadata: number
+    timestamp: number
+    _all: number
+  }
+
+
+  export type AuditLogMinAggregateInputType = {
+    id?: true
+    userId?: true
+    action?: true
+    module?: true
+    entityType?: true
+    entityId?: true
+    ipAddress?: true
+    userAgent?: true
+    requestId?: true
+    timestamp?: true
+  }
+
+  export type AuditLogMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    action?: true
+    module?: true
+    entityType?: true
+    entityId?: true
+    ipAddress?: true
+    userAgent?: true
+    requestId?: true
+    timestamp?: true
+  }
+
+  export type AuditLogCountAggregateInputType = {
+    id?: true
+    userId?: true
+    action?: true
+    module?: true
+    entityType?: true
+    entityId?: true
+    oldValues?: true
+    newValues?: true
+    ipAddress?: true
+    userAgent?: true
+    requestId?: true
+    metadata?: true
+    timestamp?: true
+    _all?: true
+  }
+
+  export type AuditLogAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AuditLog to aggregate.
+     */
+    where?: AuditLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AuditLogs to fetch.
+     */
+    orderBy?: AuditLogOrderByWithRelationInput | AuditLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AuditLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AuditLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AuditLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AuditLogs
+    **/
+    _count?: true | AuditLogCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AuditLogMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AuditLogMaxAggregateInputType
+  }
+
+  export type GetAuditLogAggregateType<T extends AuditLogAggregateArgs> = {
+        [P in keyof T & keyof AggregateAuditLog]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAuditLog[P]>
+      : GetScalarType<T[P], AggregateAuditLog[P]>
+  }
+
+
+
+
+  export type AuditLogGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AuditLogWhereInput
+    orderBy?: AuditLogOrderByWithAggregationInput | AuditLogOrderByWithAggregationInput[]
+    by: AuditLogScalarFieldEnum[] | AuditLogScalarFieldEnum
+    having?: AuditLogScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AuditLogCountAggregateInputType | true
+    _min?: AuditLogMinAggregateInputType
+    _max?: AuditLogMaxAggregateInputType
+  }
+
+  export type AuditLogGroupByOutputType = {
+    id: string
+    userId: string | null
+    action: string
+    module: string
+    entityType: string | null
+    entityId: string | null
+    oldValues: JsonValue | null
+    newValues: JsonValue | null
+    ipAddress: string | null
+    userAgent: string | null
+    requestId: string | null
+    metadata: JsonValue | null
+    timestamp: Date
+    _count: AuditLogCountAggregateOutputType | null
+    _min: AuditLogMinAggregateOutputType | null
+    _max: AuditLogMaxAggregateOutputType | null
+  }
+
+  type GetAuditLogGroupByPayload<T extends AuditLogGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AuditLogGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AuditLogGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AuditLogGroupByOutputType[P]>
+            : GetScalarType<T[P], AuditLogGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AuditLogSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    action?: boolean
+    module?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    oldValues?: boolean
+    newValues?: boolean
+    ipAddress?: boolean
+    userAgent?: boolean
+    requestId?: boolean
+    metadata?: boolean
+    timestamp?: boolean
+    user?: boolean | AuditLog$userArgs<ExtArgs>
+  }, ExtArgs["result"]["auditLog"]>
+
+  export type AuditLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    action?: boolean
+    module?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    oldValues?: boolean
+    newValues?: boolean
+    ipAddress?: boolean
+    userAgent?: boolean
+    requestId?: boolean
+    metadata?: boolean
+    timestamp?: boolean
+    user?: boolean | AuditLog$userArgs<ExtArgs>
+  }, ExtArgs["result"]["auditLog"]>
+
+  export type AuditLogSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    action?: boolean
+    module?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    oldValues?: boolean
+    newValues?: boolean
+    ipAddress?: boolean
+    userAgent?: boolean
+    requestId?: boolean
+    metadata?: boolean
+    timestamp?: boolean
+    user?: boolean | AuditLog$userArgs<ExtArgs>
+  }, ExtArgs["result"]["auditLog"]>
+
+  export type AuditLogSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    action?: boolean
+    module?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    oldValues?: boolean
+    newValues?: boolean
+    ipAddress?: boolean
+    userAgent?: boolean
+    requestId?: boolean
+    metadata?: boolean
+    timestamp?: boolean
+  }
+
+  export type AuditLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "action" | "module" | "entityType" | "entityId" | "oldValues" | "newValues" | "ipAddress" | "userAgent" | "requestId" | "metadata" | "timestamp", ExtArgs["result"]["auditLog"]>
+  export type AuditLogInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | AuditLog$userArgs<ExtArgs>
+  }
+  export type AuditLogIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | AuditLog$userArgs<ExtArgs>
+  }
+  export type AuditLogIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | AuditLog$userArgs<ExtArgs>
+  }
+
+  export type $AuditLogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AuditLog"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string | null
+      action: string
+      module: string
+      entityType: string | null
+      entityId: string | null
+      oldValues: Prisma.JsonValue | null
+      newValues: Prisma.JsonValue | null
+      ipAddress: string | null
+      userAgent: string | null
+      requestId: string | null
+      metadata: Prisma.JsonValue | null
+      timestamp: Date
+    }, ExtArgs["result"]["auditLog"]>
+    composites: {}
+  }
+
+  type AuditLogGetPayload<S extends boolean | null | undefined | AuditLogDefaultArgs> = $Result.GetResult<Prisma.$AuditLogPayload, S>
+
+  type AuditLogCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AuditLogFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AuditLogCountAggregateInputType | true
+    }
+
+  export interface AuditLogDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AuditLog'], meta: { name: 'AuditLog' } }
+    /**
+     * Find zero or one AuditLog that matches the filter.
+     * @param {AuditLogFindUniqueArgs} args - Arguments to find a AuditLog
+     * @example
+     * // Get one AuditLog
+     * const auditLog = await prisma.auditLog.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AuditLogFindUniqueArgs>(args: SelectSubset<T, AuditLogFindUniqueArgs<ExtArgs>>): Prisma__AuditLogClient<$Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one AuditLog that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AuditLogFindUniqueOrThrowArgs} args - Arguments to find a AuditLog
+     * @example
+     * // Get one AuditLog
+     * const auditLog = await prisma.auditLog.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AuditLogFindUniqueOrThrowArgs>(args: SelectSubset<T, AuditLogFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AuditLogClient<$Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AuditLog that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AuditLogFindFirstArgs} args - Arguments to find a AuditLog
+     * @example
+     * // Get one AuditLog
+     * const auditLog = await prisma.auditLog.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AuditLogFindFirstArgs>(args?: SelectSubset<T, AuditLogFindFirstArgs<ExtArgs>>): Prisma__AuditLogClient<$Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AuditLog that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AuditLogFindFirstOrThrowArgs} args - Arguments to find a AuditLog
+     * @example
+     * // Get one AuditLog
+     * const auditLog = await prisma.auditLog.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AuditLogFindFirstOrThrowArgs>(args?: SelectSubset<T, AuditLogFindFirstOrThrowArgs<ExtArgs>>): Prisma__AuditLogClient<$Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more AuditLogs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AuditLogFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AuditLogs
+     * const auditLogs = await prisma.auditLog.findMany()
+     * 
+     * // Get first 10 AuditLogs
+     * const auditLogs = await prisma.auditLog.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const auditLogWithIdOnly = await prisma.auditLog.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AuditLogFindManyArgs>(args?: SelectSubset<T, AuditLogFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a AuditLog.
+     * @param {AuditLogCreateArgs} args - Arguments to create a AuditLog.
+     * @example
+     * // Create one AuditLog
+     * const AuditLog = await prisma.auditLog.create({
+     *   data: {
+     *     // ... data to create a AuditLog
+     *   }
+     * })
+     * 
+     */
+    create<T extends AuditLogCreateArgs>(args: SelectSubset<T, AuditLogCreateArgs<ExtArgs>>): Prisma__AuditLogClient<$Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many AuditLogs.
+     * @param {AuditLogCreateManyArgs} args - Arguments to create many AuditLogs.
+     * @example
+     * // Create many AuditLogs
+     * const auditLog = await prisma.auditLog.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AuditLogCreateManyArgs>(args?: SelectSubset<T, AuditLogCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AuditLogs and returns the data saved in the database.
+     * @param {AuditLogCreateManyAndReturnArgs} args - Arguments to create many AuditLogs.
+     * @example
+     * // Create many AuditLogs
+     * const auditLog = await prisma.auditLog.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AuditLogs and only return the `id`
+     * const auditLogWithIdOnly = await prisma.auditLog.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AuditLogCreateManyAndReturnArgs>(args?: SelectSubset<T, AuditLogCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a AuditLog.
+     * @param {AuditLogDeleteArgs} args - Arguments to delete one AuditLog.
+     * @example
+     * // Delete one AuditLog
+     * const AuditLog = await prisma.auditLog.delete({
+     *   where: {
+     *     // ... filter to delete one AuditLog
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AuditLogDeleteArgs>(args: SelectSubset<T, AuditLogDeleteArgs<ExtArgs>>): Prisma__AuditLogClient<$Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one AuditLog.
+     * @param {AuditLogUpdateArgs} args - Arguments to update one AuditLog.
+     * @example
+     * // Update one AuditLog
+     * const auditLog = await prisma.auditLog.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AuditLogUpdateArgs>(args: SelectSubset<T, AuditLogUpdateArgs<ExtArgs>>): Prisma__AuditLogClient<$Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more AuditLogs.
+     * @param {AuditLogDeleteManyArgs} args - Arguments to filter AuditLogs to delete.
+     * @example
+     * // Delete a few AuditLogs
+     * const { count } = await prisma.auditLog.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AuditLogDeleteManyArgs>(args?: SelectSubset<T, AuditLogDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AuditLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AuditLogUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AuditLogs
+     * const auditLog = await prisma.auditLog.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AuditLogUpdateManyArgs>(args: SelectSubset<T, AuditLogUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AuditLogs and returns the data updated in the database.
+     * @param {AuditLogUpdateManyAndReturnArgs} args - Arguments to update many AuditLogs.
+     * @example
+     * // Update many AuditLogs
+     * const auditLog = await prisma.auditLog.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more AuditLogs and only return the `id`
+     * const auditLogWithIdOnly = await prisma.auditLog.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AuditLogUpdateManyAndReturnArgs>(args: SelectSubset<T, AuditLogUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one AuditLog.
+     * @param {AuditLogUpsertArgs} args - Arguments to update or create a AuditLog.
+     * @example
+     * // Update or create a AuditLog
+     * const auditLog = await prisma.auditLog.upsert({
+     *   create: {
+     *     // ... data to create a AuditLog
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AuditLog we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AuditLogUpsertArgs>(args: SelectSubset<T, AuditLogUpsertArgs<ExtArgs>>): Prisma__AuditLogClient<$Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of AuditLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AuditLogCountArgs} args - Arguments to filter AuditLogs to count.
+     * @example
+     * // Count the number of AuditLogs
+     * const count = await prisma.auditLog.count({
+     *   where: {
+     *     // ... the filter for the AuditLogs we want to count
+     *   }
+     * })
+    **/
+    count<T extends AuditLogCountArgs>(
+      args?: Subset<T, AuditLogCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AuditLogCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AuditLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AuditLogAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AuditLogAggregateArgs>(args: Subset<T, AuditLogAggregateArgs>): Prisma.PrismaPromise<GetAuditLogAggregateType<T>>
+
+    /**
+     * Group by AuditLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AuditLogGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AuditLogGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AuditLogGroupByArgs['orderBy'] }
+        : { orderBy?: AuditLogGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AuditLogGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAuditLogGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AuditLog model
+   */
+  readonly fields: AuditLogFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AuditLog.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AuditLogClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends AuditLog$userArgs<ExtArgs> = {}>(args?: Subset<T, AuditLog$userArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AuditLog model
+   */
+  interface AuditLogFieldRefs {
+    readonly id: FieldRef<"AuditLog", 'String'>
+    readonly userId: FieldRef<"AuditLog", 'String'>
+    readonly action: FieldRef<"AuditLog", 'String'>
+    readonly module: FieldRef<"AuditLog", 'String'>
+    readonly entityType: FieldRef<"AuditLog", 'String'>
+    readonly entityId: FieldRef<"AuditLog", 'String'>
+    readonly oldValues: FieldRef<"AuditLog", 'Json'>
+    readonly newValues: FieldRef<"AuditLog", 'Json'>
+    readonly ipAddress: FieldRef<"AuditLog", 'String'>
+    readonly userAgent: FieldRef<"AuditLog", 'String'>
+    readonly requestId: FieldRef<"AuditLog", 'String'>
+    readonly metadata: FieldRef<"AuditLog", 'Json'>
+    readonly timestamp: FieldRef<"AuditLog", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AuditLog findUnique
+   */
+  export type AuditLogFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuditLog
+     */
+    select?: AuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuditLog
+     */
+    omit?: AuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
+    /**
+     * Filter, which AuditLog to fetch.
+     */
+    where: AuditLogWhereUniqueInput
+  }
+
+  /**
+   * AuditLog findUniqueOrThrow
+   */
+  export type AuditLogFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuditLog
+     */
+    select?: AuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuditLog
+     */
+    omit?: AuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
+    /**
+     * Filter, which AuditLog to fetch.
+     */
+    where: AuditLogWhereUniqueInput
+  }
+
+  /**
+   * AuditLog findFirst
+   */
+  export type AuditLogFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuditLog
+     */
+    select?: AuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuditLog
+     */
+    omit?: AuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
+    /**
+     * Filter, which AuditLog to fetch.
+     */
+    where?: AuditLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AuditLogs to fetch.
+     */
+    orderBy?: AuditLogOrderByWithRelationInput | AuditLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AuditLogs.
+     */
+    cursor?: AuditLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AuditLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AuditLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AuditLogs.
+     */
+    distinct?: AuditLogScalarFieldEnum | AuditLogScalarFieldEnum[]
+  }
+
+  /**
+   * AuditLog findFirstOrThrow
+   */
+  export type AuditLogFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuditLog
+     */
+    select?: AuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuditLog
+     */
+    omit?: AuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
+    /**
+     * Filter, which AuditLog to fetch.
+     */
+    where?: AuditLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AuditLogs to fetch.
+     */
+    orderBy?: AuditLogOrderByWithRelationInput | AuditLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AuditLogs.
+     */
+    cursor?: AuditLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AuditLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AuditLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AuditLogs.
+     */
+    distinct?: AuditLogScalarFieldEnum | AuditLogScalarFieldEnum[]
+  }
+
+  /**
+   * AuditLog findMany
+   */
+  export type AuditLogFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuditLog
+     */
+    select?: AuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuditLog
+     */
+    omit?: AuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
+    /**
+     * Filter, which AuditLogs to fetch.
+     */
+    where?: AuditLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AuditLogs to fetch.
+     */
+    orderBy?: AuditLogOrderByWithRelationInput | AuditLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AuditLogs.
+     */
+    cursor?: AuditLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AuditLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AuditLogs.
+     */
+    skip?: number
+    distinct?: AuditLogScalarFieldEnum | AuditLogScalarFieldEnum[]
+  }
+
+  /**
+   * AuditLog create
+   */
+  export type AuditLogCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuditLog
+     */
+    select?: AuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuditLog
+     */
+    omit?: AuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
+    /**
+     * The data needed to create a AuditLog.
+     */
+    data: XOR<AuditLogCreateInput, AuditLogUncheckedCreateInput>
+  }
+
+  /**
+   * AuditLog createMany
+   */
+  export type AuditLogCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AuditLogs.
+     */
+    data: AuditLogCreateManyInput | AuditLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AuditLog createManyAndReturn
+   */
+  export type AuditLogCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuditLog
+     */
+    select?: AuditLogSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuditLog
+     */
+    omit?: AuditLogOmit<ExtArgs> | null
+    /**
+     * The data used to create many AuditLogs.
+     */
+    data: AuditLogCreateManyInput | AuditLogCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * AuditLog update
+   */
+  export type AuditLogUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuditLog
+     */
+    select?: AuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuditLog
+     */
+    omit?: AuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
+    /**
+     * The data needed to update a AuditLog.
+     */
+    data: XOR<AuditLogUpdateInput, AuditLogUncheckedUpdateInput>
+    /**
+     * Choose, which AuditLog to update.
+     */
+    where: AuditLogWhereUniqueInput
+  }
+
+  /**
+   * AuditLog updateMany
+   */
+  export type AuditLogUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AuditLogs.
+     */
+    data: XOR<AuditLogUpdateManyMutationInput, AuditLogUncheckedUpdateManyInput>
+    /**
+     * Filter which AuditLogs to update
+     */
+    where?: AuditLogWhereInput
+    /**
+     * Limit how many AuditLogs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AuditLog updateManyAndReturn
+   */
+  export type AuditLogUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuditLog
+     */
+    select?: AuditLogSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuditLog
+     */
+    omit?: AuditLogOmit<ExtArgs> | null
+    /**
+     * The data used to update AuditLogs.
+     */
+    data: XOR<AuditLogUpdateManyMutationInput, AuditLogUncheckedUpdateManyInput>
+    /**
+     * Filter which AuditLogs to update
+     */
+    where?: AuditLogWhereInput
+    /**
+     * Limit how many AuditLogs to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * AuditLog upsert
+   */
+  export type AuditLogUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuditLog
+     */
+    select?: AuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuditLog
+     */
+    omit?: AuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
+    /**
+     * The filter to search for the AuditLog to update in case it exists.
+     */
+    where: AuditLogWhereUniqueInput
+    /**
+     * In case the AuditLog found by the `where` argument doesn't exist, create a new AuditLog with this data.
+     */
+    create: XOR<AuditLogCreateInput, AuditLogUncheckedCreateInput>
+    /**
+     * In case the AuditLog was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AuditLogUpdateInput, AuditLogUncheckedUpdateInput>
+  }
+
+  /**
+   * AuditLog delete
+   */
+  export type AuditLogDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuditLog
+     */
+    select?: AuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuditLog
+     */
+    omit?: AuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
+    /**
+     * Filter which AuditLog to delete.
+     */
+    where: AuditLogWhereUniqueInput
+  }
+
+  /**
+   * AuditLog deleteMany
+   */
+  export type AuditLogDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AuditLogs to delete
+     */
+    where?: AuditLogWhereInput
+    /**
+     * Limit how many AuditLogs to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * AuditLog.user
+   */
+  export type AuditLog$userArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
+   * AuditLog without action
+   */
+  export type AuditLogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuditLog
+     */
+    select?: AuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuditLog
+     */
+    omit?: AuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
   }
 
 
@@ -14198,12 +15495,39 @@ export namespace Prisma {
   export type MenuItemScalarFieldEnum = (typeof MenuItemScalarFieldEnum)[keyof typeof MenuItemScalarFieldEnum]
 
 
+  export const AuditLogScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    action: 'action',
+    module: 'module',
+    entityType: 'entityType',
+    entityId: 'entityId',
+    oldValues: 'oldValues',
+    newValues: 'newValues',
+    ipAddress: 'ipAddress',
+    userAgent: 'userAgent',
+    requestId: 'requestId',
+    metadata: 'metadata',
+    timestamp: 'timestamp'
+  };
+
+  export type AuditLogScalarFieldEnum = (typeof AuditLogScalarFieldEnum)[keyof typeof AuditLogScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
   };
 
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+  export const NullableJsonNullValueInput: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull
+  };
+
+  export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
   export const QueryMode: {
@@ -14220,6 +15544,15 @@ export namespace Prisma {
   };
 
   export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+  export const JsonNullValueFilter: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull,
+    AnyNull: typeof AnyNull
+  };
+
+  export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
   /**
@@ -14277,6 +15610,20 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+  /**
+   * Reference to a field of type 'QueryMode'
+   */
+  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+  /**
    * Reference to a field of type 'Float'
    */
   export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -14307,11 +15654,12 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     accounts?: AccountListRelationFilter
+    passwordResetTokens?: PasswordResetTokenListRelationFilter
     sessions?: SessionListRelationFilter
     credentials?: XOR<UserCredentialsNullableScalarRelationFilter, UserCredentialsWhereInput> | null
-    userRoles?: UserRoleListRelationFilter
     createdRoles?: UserRoleListRelationFilter
-    passwordResetTokens?: PasswordResetTokenListRelationFilter
+    userRoles?: UserRoleListRelationFilter
+    auditLogs?: AuditLogListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -14325,11 +15673,12 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     accounts?: AccountOrderByRelationAggregateInput
+    passwordResetTokens?: PasswordResetTokenOrderByRelationAggregateInput
     sessions?: SessionOrderByRelationAggregateInput
     credentials?: UserCredentialsOrderByWithRelationInput
-    userRoles?: UserRoleOrderByRelationAggregateInput
     createdRoles?: UserRoleOrderByRelationAggregateInput
-    passwordResetTokens?: PasswordResetTokenOrderByRelationAggregateInput
+    userRoles?: UserRoleOrderByRelationAggregateInput
+    auditLogs?: AuditLogOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -14346,11 +15695,12 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     accounts?: AccountListRelationFilter
+    passwordResetTokens?: PasswordResetTokenListRelationFilter
     sessions?: SessionListRelationFilter
     credentials?: XOR<UserCredentialsNullableScalarRelationFilter, UserCredentialsWhereInput> | null
-    userRoles?: UserRoleListRelationFilter
     createdRoles?: UserRoleListRelationFilter
-    passwordResetTokens?: PasswordResetTokenListRelationFilter
+    userRoles?: UserRoleListRelationFilter
+    auditLogs?: AuditLogListRelationFilter
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -14688,8 +16038,8 @@ export namespace Prisma {
     description?: StringNullableFilter<"Role"> | string | null
     createdAt?: DateTimeFilter<"Role"> | Date | string
     updatedAt?: DateTimeFilter<"Role"> | Date | string
-    userRoles?: UserRoleListRelationFilter
     rolePermissions?: RolePermissionListRelationFilter
+    userRoles?: UserRoleListRelationFilter
   }
 
   export type RoleOrderByWithRelationInput = {
@@ -14698,8 +16048,8 @@ export namespace Prisma {
     description?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    userRoles?: UserRoleOrderByRelationAggregateInput
     rolePermissions?: RolePermissionOrderByRelationAggregateInput
+    userRoles?: UserRoleOrderByRelationAggregateInput
   }
 
   export type RoleWhereUniqueInput = Prisma.AtLeast<{
@@ -14711,8 +16061,8 @@ export namespace Prisma {
     description?: StringNullableFilter<"Role"> | string | null
     createdAt?: DateTimeFilter<"Role"> | Date | string
     updatedAt?: DateTimeFilter<"Role"> | Date | string
-    userRoles?: UserRoleListRelationFilter
     rolePermissions?: RolePermissionListRelationFilter
+    userRoles?: UserRoleListRelationFilter
   }, "id" | "name">
 
   export type RoleOrderByWithAggregationInput = {
@@ -14745,8 +16095,8 @@ export namespace Prisma {
     module?: StringFilter<"Permission"> | string
     description?: StringNullableFilter<"Permission"> | string | null
     createdAt?: DateTimeFilter<"Permission"> | Date | string
-    rolePermissions?: RolePermissionListRelationFilter
     menuItems?: MenuItemListRelationFilter
+    rolePermissions?: RolePermissionListRelationFilter
   }
 
   export type PermissionOrderByWithRelationInput = {
@@ -14754,8 +16104,8 @@ export namespace Prisma {
     module?: SortOrder
     description?: SortOrderInput | SortOrder
     createdAt?: SortOrder
-    rolePermissions?: RolePermissionOrderByRelationAggregateInput
     menuItems?: MenuItemOrderByRelationAggregateInput
+    rolePermissions?: RolePermissionOrderByRelationAggregateInput
   }
 
   export type PermissionWhereUniqueInput = Prisma.AtLeast<{
@@ -14766,8 +16116,8 @@ export namespace Prisma {
     module?: StringFilter<"Permission"> | string
     description?: StringNullableFilter<"Permission"> | string | null
     createdAt?: DateTimeFilter<"Permission"> | Date | string
-    rolePermissions?: RolePermissionListRelationFilter
     menuItems?: MenuItemListRelationFilter
+    rolePermissions?: RolePermissionListRelationFilter
   }, "id">
 
   export type PermissionOrderByWithAggregationInput = {
@@ -14798,9 +16148,9 @@ export namespace Prisma {
     roleId?: UuidFilter<"UserRole"> | string
     createdAt?: DateTimeFilter<"UserRole"> | Date | string
     createdBy?: UuidNullableFilter<"UserRole"> | string | null
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
-    role?: XOR<RoleScalarRelationFilter, RoleWhereInput>
     creator?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    role?: XOR<RoleScalarRelationFilter, RoleWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }
 
   export type UserRoleOrderByWithRelationInput = {
@@ -14808,9 +16158,9 @@ export namespace Prisma {
     roleId?: SortOrder
     createdAt?: SortOrder
     createdBy?: SortOrderInput | SortOrder
-    user?: UserOrderByWithRelationInput
-    role?: RoleOrderByWithRelationInput
     creator?: UserOrderByWithRelationInput
+    role?: RoleOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
   }
 
   export type UserRoleWhereUniqueInput = Prisma.AtLeast<{
@@ -14822,9 +16172,9 @@ export namespace Prisma {
     roleId?: UuidFilter<"UserRole"> | string
     createdAt?: DateTimeFilter<"UserRole"> | Date | string
     createdBy?: UuidNullableFilter<"UserRole"> | string | null
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
-    role?: XOR<RoleScalarRelationFilter, RoleWhereInput>
     creator?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    role?: XOR<RoleScalarRelationFilter, RoleWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }, "userId_roleId">
 
   export type UserRoleOrderByWithAggregationInput = {
@@ -14854,16 +16204,16 @@ export namespace Prisma {
     roleId?: UuidFilter<"RolePermission"> | string
     permissionId?: StringFilter<"RolePermission"> | string
     createdAt?: DateTimeFilter<"RolePermission"> | Date | string
-    role?: XOR<RoleScalarRelationFilter, RoleWhereInput>
     permission?: XOR<PermissionScalarRelationFilter, PermissionWhereInput>
+    role?: XOR<RoleScalarRelationFilter, RoleWhereInput>
   }
 
   export type RolePermissionOrderByWithRelationInput = {
     roleId?: SortOrder
     permissionId?: SortOrder
     createdAt?: SortOrder
-    role?: RoleOrderByWithRelationInput
     permission?: PermissionOrderByWithRelationInput
+    role?: RoleOrderByWithRelationInput
   }
 
   export type RolePermissionWhereUniqueInput = Prisma.AtLeast<{
@@ -14874,8 +16224,8 @@ export namespace Prisma {
     roleId?: UuidFilter<"RolePermission"> | string
     permissionId?: StringFilter<"RolePermission"> | string
     createdAt?: DateTimeFilter<"RolePermission"> | Date | string
-    role?: XOR<RoleScalarRelationFilter, RoleWhereInput>
     permission?: XOR<PermissionScalarRelationFilter, PermissionWhereInput>
+    role?: XOR<RoleScalarRelationFilter, RoleWhereInput>
   }, "roleId_permissionId">
 
   export type RolePermissionOrderByWithAggregationInput = {
@@ -14910,9 +16260,9 @@ export namespace Prisma {
     parentId?: UuidNullableFilter<"MenuItem"> | string | null
     createdAt?: DateTimeFilter<"MenuItem"> | Date | string
     updatedAt?: DateTimeFilter<"MenuItem"> | Date | string
-    permission?: XOR<PermissionNullableScalarRelationFilter, PermissionWhereInput> | null
     parent?: XOR<MenuItemNullableScalarRelationFilter, MenuItemWhereInput> | null
     children?: MenuItemListRelationFilter
+    permission?: XOR<PermissionNullableScalarRelationFilter, PermissionWhereInput> | null
   }
 
   export type MenuItemOrderByWithRelationInput = {
@@ -14926,9 +16276,9 @@ export namespace Prisma {
     parentId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    permission?: PermissionOrderByWithRelationInput
     parent?: MenuItemOrderByWithRelationInput
     children?: MenuItemOrderByRelationAggregateInput
+    permission?: PermissionOrderByWithRelationInput
   }
 
   export type MenuItemWhereUniqueInput = Prisma.AtLeast<{
@@ -14945,9 +16295,9 @@ export namespace Prisma {
     parentId?: UuidNullableFilter<"MenuItem"> | string | null
     createdAt?: DateTimeFilter<"MenuItem"> | Date | string
     updatedAt?: DateTimeFilter<"MenuItem"> | Date | string
-    permission?: XOR<PermissionNullableScalarRelationFilter, PermissionWhereInput> | null
     parent?: XOR<MenuItemNullableScalarRelationFilter, MenuItemWhereInput> | null
     children?: MenuItemListRelationFilter
+    permission?: XOR<PermissionNullableScalarRelationFilter, PermissionWhereInput> | null
   }, "id">
 
   export type MenuItemOrderByWithAggregationInput = {
@@ -14984,6 +16334,101 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"MenuItem"> | Date | string
   }
 
+  export type AuditLogWhereInput = {
+    AND?: AuditLogWhereInput | AuditLogWhereInput[]
+    OR?: AuditLogWhereInput[]
+    NOT?: AuditLogWhereInput | AuditLogWhereInput[]
+    id?: UuidFilter<"AuditLog"> | string
+    userId?: UuidNullableFilter<"AuditLog"> | string | null
+    action?: StringFilter<"AuditLog"> | string
+    module?: StringFilter<"AuditLog"> | string
+    entityType?: StringNullableFilter<"AuditLog"> | string | null
+    entityId?: StringNullableFilter<"AuditLog"> | string | null
+    oldValues?: JsonNullableFilter<"AuditLog">
+    newValues?: JsonNullableFilter<"AuditLog">
+    ipAddress?: StringNullableFilter<"AuditLog"> | string | null
+    userAgent?: StringNullableFilter<"AuditLog"> | string | null
+    requestId?: UuidNullableFilter<"AuditLog"> | string | null
+    metadata?: JsonNullableFilter<"AuditLog">
+    timestamp?: DateTimeFilter<"AuditLog"> | Date | string
+    user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+  }
+
+  export type AuditLogOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrderInput | SortOrder
+    action?: SortOrder
+    module?: SortOrder
+    entityType?: SortOrderInput | SortOrder
+    entityId?: SortOrderInput | SortOrder
+    oldValues?: SortOrderInput | SortOrder
+    newValues?: SortOrderInput | SortOrder
+    ipAddress?: SortOrderInput | SortOrder
+    userAgent?: SortOrderInput | SortOrder
+    requestId?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
+    timestamp?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type AuditLogWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: AuditLogWhereInput | AuditLogWhereInput[]
+    OR?: AuditLogWhereInput[]
+    NOT?: AuditLogWhereInput | AuditLogWhereInput[]
+    userId?: UuidNullableFilter<"AuditLog"> | string | null
+    action?: StringFilter<"AuditLog"> | string
+    module?: StringFilter<"AuditLog"> | string
+    entityType?: StringNullableFilter<"AuditLog"> | string | null
+    entityId?: StringNullableFilter<"AuditLog"> | string | null
+    oldValues?: JsonNullableFilter<"AuditLog">
+    newValues?: JsonNullableFilter<"AuditLog">
+    ipAddress?: StringNullableFilter<"AuditLog"> | string | null
+    userAgent?: StringNullableFilter<"AuditLog"> | string | null
+    requestId?: UuidNullableFilter<"AuditLog"> | string | null
+    metadata?: JsonNullableFilter<"AuditLog">
+    timestamp?: DateTimeFilter<"AuditLog"> | Date | string
+    user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+  }, "id">
+
+  export type AuditLogOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrderInput | SortOrder
+    action?: SortOrder
+    module?: SortOrder
+    entityType?: SortOrderInput | SortOrder
+    entityId?: SortOrderInput | SortOrder
+    oldValues?: SortOrderInput | SortOrder
+    newValues?: SortOrderInput | SortOrder
+    ipAddress?: SortOrderInput | SortOrder
+    userAgent?: SortOrderInput | SortOrder
+    requestId?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
+    timestamp?: SortOrder
+    _count?: AuditLogCountOrderByAggregateInput
+    _max?: AuditLogMaxOrderByAggregateInput
+    _min?: AuditLogMinOrderByAggregateInput
+  }
+
+  export type AuditLogScalarWhereWithAggregatesInput = {
+    AND?: AuditLogScalarWhereWithAggregatesInput | AuditLogScalarWhereWithAggregatesInput[]
+    OR?: AuditLogScalarWhereWithAggregatesInput[]
+    NOT?: AuditLogScalarWhereWithAggregatesInput | AuditLogScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"AuditLog"> | string
+    userId?: UuidNullableWithAggregatesFilter<"AuditLog"> | string | null
+    action?: StringWithAggregatesFilter<"AuditLog"> | string
+    module?: StringWithAggregatesFilter<"AuditLog"> | string
+    entityType?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
+    entityId?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
+    oldValues?: JsonNullableWithAggregatesFilter<"AuditLog">
+    newValues?: JsonNullableWithAggregatesFilter<"AuditLog">
+    ipAddress?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
+    userAgent?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
+    requestId?: UuidNullableWithAggregatesFilter<"AuditLog"> | string | null
+    metadata?: JsonNullableWithAggregatesFilter<"AuditLog">
+    timestamp?: DateTimeWithAggregatesFilter<"AuditLog"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     name?: string | null
@@ -14995,11 +16440,12 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
     credentials?: UserCredentialsCreateNestedOneWithoutUserInput
-    userRoles?: UserRoleCreateNestedManyWithoutUserInput
     createdRoles?: UserRoleCreateNestedManyWithoutCreatorInput
-    passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    userRoles?: UserRoleCreateNestedManyWithoutUserInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -15013,11 +16459,12 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     credentials?: UserCredentialsUncheckedCreateNestedOneWithoutUserInput
-    userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     createdRoles?: UserRoleUncheckedCreateNestedManyWithoutCreatorInput
-    passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -15031,11 +16478,12 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
     credentials?: UserCredentialsUpdateOneWithoutUserNestedInput
-    userRoles?: UserRoleUpdateManyWithoutUserNestedInput
     createdRoles?: UserRoleUpdateManyWithoutCreatorNestedInput
-    passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    userRoles?: UserRoleUpdateManyWithoutUserNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -15049,11 +16497,12 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     credentials?: UserCredentialsUncheckedUpdateOneWithoutUserNestedInput
-    userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     createdRoles?: UserRoleUncheckedUpdateManyWithoutCreatorNestedInput
-    passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -15402,8 +16851,8 @@ export namespace Prisma {
     description?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    userRoles?: UserRoleCreateNestedManyWithoutRoleInput
     rolePermissions?: RolePermissionCreateNestedManyWithoutRoleInput
+    userRoles?: UserRoleCreateNestedManyWithoutRoleInput
   }
 
   export type RoleUncheckedCreateInput = {
@@ -15412,8 +16861,8 @@ export namespace Prisma {
     description?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    userRoles?: UserRoleUncheckedCreateNestedManyWithoutRoleInput
     rolePermissions?: RolePermissionUncheckedCreateNestedManyWithoutRoleInput
+    userRoles?: UserRoleUncheckedCreateNestedManyWithoutRoleInput
   }
 
   export type RoleUpdateInput = {
@@ -15422,8 +16871,8 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    userRoles?: UserRoleUpdateManyWithoutRoleNestedInput
     rolePermissions?: RolePermissionUpdateManyWithoutRoleNestedInput
+    userRoles?: UserRoleUpdateManyWithoutRoleNestedInput
   }
 
   export type RoleUncheckedUpdateInput = {
@@ -15432,8 +16881,8 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    userRoles?: UserRoleUncheckedUpdateManyWithoutRoleNestedInput
     rolePermissions?: RolePermissionUncheckedUpdateManyWithoutRoleNestedInput
+    userRoles?: UserRoleUncheckedUpdateManyWithoutRoleNestedInput
   }
 
   export type RoleCreateManyInput = {
@@ -15465,8 +16914,8 @@ export namespace Prisma {
     module: string
     description?: string | null
     createdAt?: Date | string
-    rolePermissions?: RolePermissionCreateNestedManyWithoutPermissionInput
     menuItems?: MenuItemCreateNestedManyWithoutPermissionInput
+    rolePermissions?: RolePermissionCreateNestedManyWithoutPermissionInput
   }
 
   export type PermissionUncheckedCreateInput = {
@@ -15474,8 +16923,8 @@ export namespace Prisma {
     module: string
     description?: string | null
     createdAt?: Date | string
-    rolePermissions?: RolePermissionUncheckedCreateNestedManyWithoutPermissionInput
     menuItems?: MenuItemUncheckedCreateNestedManyWithoutPermissionInput
+    rolePermissions?: RolePermissionUncheckedCreateNestedManyWithoutPermissionInput
   }
 
   export type PermissionUpdateInput = {
@@ -15483,8 +16932,8 @@ export namespace Prisma {
     module?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    rolePermissions?: RolePermissionUpdateManyWithoutPermissionNestedInput
     menuItems?: MenuItemUpdateManyWithoutPermissionNestedInput
+    rolePermissions?: RolePermissionUpdateManyWithoutPermissionNestedInput
   }
 
   export type PermissionUncheckedUpdateInput = {
@@ -15492,8 +16941,8 @@ export namespace Prisma {
     module?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    rolePermissions?: RolePermissionUncheckedUpdateManyWithoutPermissionNestedInput
     menuItems?: MenuItemUncheckedUpdateManyWithoutPermissionNestedInput
+    rolePermissions?: RolePermissionUncheckedUpdateManyWithoutPermissionNestedInput
   }
 
   export type PermissionCreateManyInput = {
@@ -15519,9 +16968,9 @@ export namespace Prisma {
 
   export type UserRoleCreateInput = {
     createdAt?: Date | string
-    user: UserCreateNestedOneWithoutUserRolesInput
-    role: RoleCreateNestedOneWithoutUserRolesInput
     creator?: UserCreateNestedOneWithoutCreatedRolesInput
+    role: RoleCreateNestedOneWithoutUserRolesInput
+    user: UserCreateNestedOneWithoutUserRolesInput
   }
 
   export type UserRoleUncheckedCreateInput = {
@@ -15533,9 +16982,9 @@ export namespace Prisma {
 
   export type UserRoleUpdateInput = {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutUserRolesNestedInput
-    role?: RoleUpdateOneRequiredWithoutUserRolesNestedInput
     creator?: UserUpdateOneWithoutCreatedRolesNestedInput
+    role?: RoleUpdateOneRequiredWithoutUserRolesNestedInput
+    user?: UserUpdateOneRequiredWithoutUserRolesNestedInput
   }
 
   export type UserRoleUncheckedUpdateInput = {
@@ -15565,8 +17014,8 @@ export namespace Prisma {
 
   export type RolePermissionCreateInput = {
     createdAt?: Date | string
-    role: RoleCreateNestedOneWithoutRolePermissionsInput
     permission: PermissionCreateNestedOneWithoutRolePermissionsInput
+    role: RoleCreateNestedOneWithoutRolePermissionsInput
   }
 
   export type RolePermissionUncheckedCreateInput = {
@@ -15577,8 +17026,8 @@ export namespace Prisma {
 
   export type RolePermissionUpdateInput = {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    role?: RoleUpdateOneRequiredWithoutRolePermissionsNestedInput
     permission?: PermissionUpdateOneRequiredWithoutRolePermissionsNestedInput
+    role?: RoleUpdateOneRequiredWithoutRolePermissionsNestedInput
   }
 
   export type RolePermissionUncheckedUpdateInput = {
@@ -15612,9 +17061,9 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    permission?: PermissionCreateNestedOneWithoutMenuItemsInput
     parent?: MenuItemCreateNestedOneWithoutChildrenInput
     children?: MenuItemCreateNestedManyWithoutParentInput
+    permission?: PermissionCreateNestedOneWithoutMenuItemsInput
   }
 
   export type MenuItemUncheckedCreateInput = {
@@ -15640,9 +17089,9 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    permission?: PermissionUpdateOneWithoutMenuItemsNestedInput
     parent?: MenuItemUpdateOneWithoutChildrenNestedInput
     children?: MenuItemUpdateManyWithoutParentNestedInput
+    permission?: PermissionUpdateOneWithoutMenuItemsNestedInput
   }
 
   export type MenuItemUncheckedUpdateInput = {
@@ -15694,6 +17143,117 @@ export namespace Prisma {
     parentId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AuditLogCreateInput = {
+    id?: string
+    action: string
+    module: string
+    entityType?: string | null
+    entityId?: string | null
+    oldValues?: NullableJsonNullValueInput | InputJsonValue
+    newValues?: NullableJsonNullValueInput | InputJsonValue
+    ipAddress?: string | null
+    userAgent?: string | null
+    requestId?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    timestamp?: Date | string
+    user?: UserCreateNestedOneWithoutAuditLogsInput
+  }
+
+  export type AuditLogUncheckedCreateInput = {
+    id?: string
+    userId?: string | null
+    action: string
+    module: string
+    entityType?: string | null
+    entityId?: string | null
+    oldValues?: NullableJsonNullValueInput | InputJsonValue
+    newValues?: NullableJsonNullValueInput | InputJsonValue
+    ipAddress?: string | null
+    userAgent?: string | null
+    requestId?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    timestamp?: Date | string
+  }
+
+  export type AuditLogUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    module?: StringFieldUpdateOperationsInput | string
+    entityType?: NullableStringFieldUpdateOperationsInput | string | null
+    entityId?: NullableStringFieldUpdateOperationsInput | string | null
+    oldValues?: NullableJsonNullValueInput | InputJsonValue
+    newValues?: NullableJsonNullValueInput | InputJsonValue
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    requestId?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneWithoutAuditLogsNestedInput
+  }
+
+  export type AuditLogUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: StringFieldUpdateOperationsInput | string
+    module?: StringFieldUpdateOperationsInput | string
+    entityType?: NullableStringFieldUpdateOperationsInput | string | null
+    entityId?: NullableStringFieldUpdateOperationsInput | string | null
+    oldValues?: NullableJsonNullValueInput | InputJsonValue
+    newValues?: NullableJsonNullValueInput | InputJsonValue
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    requestId?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AuditLogCreateManyInput = {
+    id?: string
+    userId?: string | null
+    action: string
+    module: string
+    entityType?: string | null
+    entityId?: string | null
+    oldValues?: NullableJsonNullValueInput | InputJsonValue
+    newValues?: NullableJsonNullValueInput | InputJsonValue
+    ipAddress?: string | null
+    userAgent?: string | null
+    requestId?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    timestamp?: Date | string
+  }
+
+  export type AuditLogUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    module?: StringFieldUpdateOperationsInput | string
+    entityType?: NullableStringFieldUpdateOperationsInput | string | null
+    entityId?: NullableStringFieldUpdateOperationsInput | string | null
+    oldValues?: NullableJsonNullValueInput | InputJsonValue
+    newValues?: NullableJsonNullValueInput | InputJsonValue
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    requestId?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AuditLogUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: StringFieldUpdateOperationsInput | string
+    module?: StringFieldUpdateOperationsInput | string
+    entityType?: NullableStringFieldUpdateOperationsInput | string | null
+    entityId?: NullableStringFieldUpdateOperationsInput | string | null
+    oldValues?: NullableJsonNullValueInput | InputJsonValue
+    newValues?: NullableJsonNullValueInput | InputJsonValue
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    requestId?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type UuidFilter<$PrismaModel = never> = {
@@ -15766,6 +17326,12 @@ export namespace Prisma {
     none?: AccountWhereInput
   }
 
+  export type PasswordResetTokenListRelationFilter = {
+    every?: PasswordResetTokenWhereInput
+    some?: PasswordResetTokenWhereInput
+    none?: PasswordResetTokenWhereInput
+  }
+
   export type SessionListRelationFilter = {
     every?: SessionWhereInput
     some?: SessionWhereInput
@@ -15783,10 +17349,10 @@ export namespace Prisma {
     none?: UserRoleWhereInput
   }
 
-  export type PasswordResetTokenListRelationFilter = {
-    every?: PasswordResetTokenWhereInput
-    some?: PasswordResetTokenWhereInput
-    none?: PasswordResetTokenWhereInput
+  export type AuditLogListRelationFilter = {
+    every?: AuditLogWhereInput
+    some?: AuditLogWhereInput
+    none?: AuditLogWhereInput
   }
 
   export type SortOrderInput = {
@@ -15798,6 +17364,10 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type PasswordResetTokenOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type SessionOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -15806,7 +17376,7 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
-  export type PasswordResetTokenOrderByRelationAggregateInput = {
+  export type AuditLogOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -16184,14 +17754,14 @@ export namespace Prisma {
     not?: NestedUuidNullableFilter<$PrismaModel> | string | null
   }
 
-  export type RoleScalarRelationFilter = {
-    is?: RoleWhereInput
-    isNot?: RoleWhereInput
-  }
-
   export type UserNullableScalarRelationFilter = {
     is?: UserWhereInput | null
     isNot?: UserWhereInput | null
+  }
+
+  export type RoleScalarRelationFilter = {
+    is?: RoleWhereInput
+    isNot?: RoleWhereInput
   }
 
   export type UserRoleUserIdRoleIdCompoundUniqueInput = {
@@ -16279,14 +17849,14 @@ export namespace Prisma {
     not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
-  export type PermissionNullableScalarRelationFilter = {
-    is?: PermissionWhereInput | null
-    isNot?: PermissionWhereInput | null
-  }
-
   export type MenuItemNullableScalarRelationFilter = {
     is?: MenuItemWhereInput | null
     isNot?: MenuItemWhereInput | null
+  }
+
+  export type PermissionNullableScalarRelationFilter = {
+    is?: PermissionWhereInput | null
+    isNot?: PermissionWhereInput | null
   }
 
   export type MenuItemCountOrderByAggregateInput = {
@@ -16359,12 +17929,110 @@ export namespace Prisma {
     _min?: NestedBoolFilter<$PrismaModel>
     _max?: NestedBoolFilter<$PrismaModel>
   }
+  export type JsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type AuditLogCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    action?: SortOrder
+    module?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    oldValues?: SortOrder
+    newValues?: SortOrder
+    ipAddress?: SortOrder
+    userAgent?: SortOrder
+    requestId?: SortOrder
+    metadata?: SortOrder
+    timestamp?: SortOrder
+  }
+
+  export type AuditLogMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    action?: SortOrder
+    module?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    ipAddress?: SortOrder
+    userAgent?: SortOrder
+    requestId?: SortOrder
+    timestamp?: SortOrder
+  }
+
+  export type AuditLogMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    action?: SortOrder
+    module?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    ipAddress?: SortOrder
+    userAgent?: SortOrder
+    requestId?: SortOrder
+    timestamp?: SortOrder
+  }
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
+  }
 
   export type AccountCreateNestedManyWithoutUserInput = {
     create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
     createMany?: AccountCreateManyUserInputEnvelope
     connect?: AccountWhereUniqueInput | AccountWhereUniqueInput[]
+  }
+
+  export type PasswordResetTokenCreateNestedManyWithoutUserInput = {
+    create?: XOR<PasswordResetTokenCreateWithoutUserInput, PasswordResetTokenUncheckedCreateWithoutUserInput> | PasswordResetTokenCreateWithoutUserInput[] | PasswordResetTokenUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: PasswordResetTokenCreateOrConnectWithoutUserInput | PasswordResetTokenCreateOrConnectWithoutUserInput[]
+    createMany?: PasswordResetTokenCreateManyUserInputEnvelope
+    connect?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
   }
 
   export type SessionCreateNestedManyWithoutUserInput = {
@@ -16380,13 +18048,6 @@ export namespace Prisma {
     connect?: UserCredentialsWhereUniqueInput
   }
 
-  export type UserRoleCreateNestedManyWithoutUserInput = {
-    create?: XOR<UserRoleCreateWithoutUserInput, UserRoleUncheckedCreateWithoutUserInput> | UserRoleCreateWithoutUserInput[] | UserRoleUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: UserRoleCreateOrConnectWithoutUserInput | UserRoleCreateOrConnectWithoutUserInput[]
-    createMany?: UserRoleCreateManyUserInputEnvelope
-    connect?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
-  }
-
   export type UserRoleCreateNestedManyWithoutCreatorInput = {
     create?: XOR<UserRoleCreateWithoutCreatorInput, UserRoleUncheckedCreateWithoutCreatorInput> | UserRoleCreateWithoutCreatorInput[] | UserRoleUncheckedCreateWithoutCreatorInput[]
     connectOrCreate?: UserRoleCreateOrConnectWithoutCreatorInput | UserRoleCreateOrConnectWithoutCreatorInput[]
@@ -16394,11 +18055,18 @@ export namespace Prisma {
     connect?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
   }
 
-  export type PasswordResetTokenCreateNestedManyWithoutUserInput = {
-    create?: XOR<PasswordResetTokenCreateWithoutUserInput, PasswordResetTokenUncheckedCreateWithoutUserInput> | PasswordResetTokenCreateWithoutUserInput[] | PasswordResetTokenUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: PasswordResetTokenCreateOrConnectWithoutUserInput | PasswordResetTokenCreateOrConnectWithoutUserInput[]
-    createMany?: PasswordResetTokenCreateManyUserInputEnvelope
-    connect?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
+  export type UserRoleCreateNestedManyWithoutUserInput = {
+    create?: XOR<UserRoleCreateWithoutUserInput, UserRoleUncheckedCreateWithoutUserInput> | UserRoleCreateWithoutUserInput[] | UserRoleUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserRoleCreateOrConnectWithoutUserInput | UserRoleCreateOrConnectWithoutUserInput[]
+    createMany?: UserRoleCreateManyUserInputEnvelope
+    connect?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
+  }
+
+  export type AuditLogCreateNestedManyWithoutUserInput = {
+    create?: XOR<AuditLogCreateWithoutUserInput, AuditLogUncheckedCreateWithoutUserInput> | AuditLogCreateWithoutUserInput[] | AuditLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: AuditLogCreateOrConnectWithoutUserInput | AuditLogCreateOrConnectWithoutUserInput[]
+    createMany?: AuditLogCreateManyUserInputEnvelope
+    connect?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
   }
 
   export type AccountUncheckedCreateNestedManyWithoutUserInput = {
@@ -16406,6 +18074,13 @@ export namespace Prisma {
     connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
     createMany?: AccountCreateManyUserInputEnvelope
     connect?: AccountWhereUniqueInput | AccountWhereUniqueInput[]
+  }
+
+  export type PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<PasswordResetTokenCreateWithoutUserInput, PasswordResetTokenUncheckedCreateWithoutUserInput> | PasswordResetTokenCreateWithoutUserInput[] | PasswordResetTokenUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: PasswordResetTokenCreateOrConnectWithoutUserInput | PasswordResetTokenCreateOrConnectWithoutUserInput[]
+    createMany?: PasswordResetTokenCreateManyUserInputEnvelope
+    connect?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
   }
 
   export type SessionUncheckedCreateNestedManyWithoutUserInput = {
@@ -16421,13 +18096,6 @@ export namespace Prisma {
     connect?: UserCredentialsWhereUniqueInput
   }
 
-  export type UserRoleUncheckedCreateNestedManyWithoutUserInput = {
-    create?: XOR<UserRoleCreateWithoutUserInput, UserRoleUncheckedCreateWithoutUserInput> | UserRoleCreateWithoutUserInput[] | UserRoleUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: UserRoleCreateOrConnectWithoutUserInput | UserRoleCreateOrConnectWithoutUserInput[]
-    createMany?: UserRoleCreateManyUserInputEnvelope
-    connect?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
-  }
-
   export type UserRoleUncheckedCreateNestedManyWithoutCreatorInput = {
     create?: XOR<UserRoleCreateWithoutCreatorInput, UserRoleUncheckedCreateWithoutCreatorInput> | UserRoleCreateWithoutCreatorInput[] | UserRoleUncheckedCreateWithoutCreatorInput[]
     connectOrCreate?: UserRoleCreateOrConnectWithoutCreatorInput | UserRoleCreateOrConnectWithoutCreatorInput[]
@@ -16435,11 +18103,18 @@ export namespace Prisma {
     connect?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
   }
 
-  export type PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput = {
-    create?: XOR<PasswordResetTokenCreateWithoutUserInput, PasswordResetTokenUncheckedCreateWithoutUserInput> | PasswordResetTokenCreateWithoutUserInput[] | PasswordResetTokenUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: PasswordResetTokenCreateOrConnectWithoutUserInput | PasswordResetTokenCreateOrConnectWithoutUserInput[]
-    createMany?: PasswordResetTokenCreateManyUserInputEnvelope
-    connect?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
+  export type UserRoleUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<UserRoleCreateWithoutUserInput, UserRoleUncheckedCreateWithoutUserInput> | UserRoleCreateWithoutUserInput[] | UserRoleUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserRoleCreateOrConnectWithoutUserInput | UserRoleCreateOrConnectWithoutUserInput[]
+    createMany?: UserRoleCreateManyUserInputEnvelope
+    connect?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
+  }
+
+  export type AuditLogUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<AuditLogCreateWithoutUserInput, AuditLogUncheckedCreateWithoutUserInput> | AuditLogCreateWithoutUserInput[] | AuditLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: AuditLogCreateOrConnectWithoutUserInput | AuditLogCreateOrConnectWithoutUserInput[]
+    createMany?: AuditLogCreateManyUserInputEnvelope
+    connect?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -16472,6 +18147,20 @@ export namespace Prisma {
     deleteMany?: AccountScalarWhereInput | AccountScalarWhereInput[]
   }
 
+  export type PasswordResetTokenUpdateManyWithoutUserNestedInput = {
+    create?: XOR<PasswordResetTokenCreateWithoutUserInput, PasswordResetTokenUncheckedCreateWithoutUserInput> | PasswordResetTokenCreateWithoutUserInput[] | PasswordResetTokenUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: PasswordResetTokenCreateOrConnectWithoutUserInput | PasswordResetTokenCreateOrConnectWithoutUserInput[]
+    upsert?: PasswordResetTokenUpsertWithWhereUniqueWithoutUserInput | PasswordResetTokenUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: PasswordResetTokenCreateManyUserInputEnvelope
+    set?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
+    disconnect?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
+    delete?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
+    connect?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
+    update?: PasswordResetTokenUpdateWithWhereUniqueWithoutUserInput | PasswordResetTokenUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: PasswordResetTokenUpdateManyWithWhereWithoutUserInput | PasswordResetTokenUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: PasswordResetTokenScalarWhereInput | PasswordResetTokenScalarWhereInput[]
+  }
+
   export type SessionUpdateManyWithoutUserNestedInput = {
     create?: XOR<SessionCreateWithoutUserInput, SessionUncheckedCreateWithoutUserInput> | SessionCreateWithoutUserInput[] | SessionUncheckedCreateWithoutUserInput[]
     connectOrCreate?: SessionCreateOrConnectWithoutUserInput | SessionCreateOrConnectWithoutUserInput[]
@@ -16496,20 +18185,6 @@ export namespace Prisma {
     update?: XOR<XOR<UserCredentialsUpdateToOneWithWhereWithoutUserInput, UserCredentialsUpdateWithoutUserInput>, UserCredentialsUncheckedUpdateWithoutUserInput>
   }
 
-  export type UserRoleUpdateManyWithoutUserNestedInput = {
-    create?: XOR<UserRoleCreateWithoutUserInput, UserRoleUncheckedCreateWithoutUserInput> | UserRoleCreateWithoutUserInput[] | UserRoleUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: UserRoleCreateOrConnectWithoutUserInput | UserRoleCreateOrConnectWithoutUserInput[]
-    upsert?: UserRoleUpsertWithWhereUniqueWithoutUserInput | UserRoleUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: UserRoleCreateManyUserInputEnvelope
-    set?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
-    disconnect?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
-    delete?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
-    connect?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
-    update?: UserRoleUpdateWithWhereUniqueWithoutUserInput | UserRoleUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: UserRoleUpdateManyWithWhereWithoutUserInput | UserRoleUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: UserRoleScalarWhereInput | UserRoleScalarWhereInput[]
-  }
-
   export type UserRoleUpdateManyWithoutCreatorNestedInput = {
     create?: XOR<UserRoleCreateWithoutCreatorInput, UserRoleUncheckedCreateWithoutCreatorInput> | UserRoleCreateWithoutCreatorInput[] | UserRoleUncheckedCreateWithoutCreatorInput[]
     connectOrCreate?: UserRoleCreateOrConnectWithoutCreatorInput | UserRoleCreateOrConnectWithoutCreatorInput[]
@@ -16524,18 +18199,32 @@ export namespace Prisma {
     deleteMany?: UserRoleScalarWhereInput | UserRoleScalarWhereInput[]
   }
 
-  export type PasswordResetTokenUpdateManyWithoutUserNestedInput = {
-    create?: XOR<PasswordResetTokenCreateWithoutUserInput, PasswordResetTokenUncheckedCreateWithoutUserInput> | PasswordResetTokenCreateWithoutUserInput[] | PasswordResetTokenUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: PasswordResetTokenCreateOrConnectWithoutUserInput | PasswordResetTokenCreateOrConnectWithoutUserInput[]
-    upsert?: PasswordResetTokenUpsertWithWhereUniqueWithoutUserInput | PasswordResetTokenUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: PasswordResetTokenCreateManyUserInputEnvelope
-    set?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
-    disconnect?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
-    delete?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
-    connect?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
-    update?: PasswordResetTokenUpdateWithWhereUniqueWithoutUserInput | PasswordResetTokenUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: PasswordResetTokenUpdateManyWithWhereWithoutUserInput | PasswordResetTokenUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: PasswordResetTokenScalarWhereInput | PasswordResetTokenScalarWhereInput[]
+  export type UserRoleUpdateManyWithoutUserNestedInput = {
+    create?: XOR<UserRoleCreateWithoutUserInput, UserRoleUncheckedCreateWithoutUserInput> | UserRoleCreateWithoutUserInput[] | UserRoleUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserRoleCreateOrConnectWithoutUserInput | UserRoleCreateOrConnectWithoutUserInput[]
+    upsert?: UserRoleUpsertWithWhereUniqueWithoutUserInput | UserRoleUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: UserRoleCreateManyUserInputEnvelope
+    set?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
+    disconnect?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
+    delete?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
+    connect?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
+    update?: UserRoleUpdateWithWhereUniqueWithoutUserInput | UserRoleUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: UserRoleUpdateManyWithWhereWithoutUserInput | UserRoleUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: UserRoleScalarWhereInput | UserRoleScalarWhereInput[]
+  }
+
+  export type AuditLogUpdateManyWithoutUserNestedInput = {
+    create?: XOR<AuditLogCreateWithoutUserInput, AuditLogUncheckedCreateWithoutUserInput> | AuditLogCreateWithoutUserInput[] | AuditLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: AuditLogCreateOrConnectWithoutUserInput | AuditLogCreateOrConnectWithoutUserInput[]
+    upsert?: AuditLogUpsertWithWhereUniqueWithoutUserInput | AuditLogUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: AuditLogCreateManyUserInputEnvelope
+    set?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
+    disconnect?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
+    delete?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
+    connect?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
+    update?: AuditLogUpdateWithWhereUniqueWithoutUserInput | AuditLogUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: AuditLogUpdateManyWithWhereWithoutUserInput | AuditLogUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: AuditLogScalarWhereInput | AuditLogScalarWhereInput[]
   }
 
   export type AccountUncheckedUpdateManyWithoutUserNestedInput = {
@@ -16550,6 +18239,20 @@ export namespace Prisma {
     update?: AccountUpdateWithWhereUniqueWithoutUserInput | AccountUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: AccountUpdateManyWithWhereWithoutUserInput | AccountUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: AccountScalarWhereInput | AccountScalarWhereInput[]
+  }
+
+  export type PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<PasswordResetTokenCreateWithoutUserInput, PasswordResetTokenUncheckedCreateWithoutUserInput> | PasswordResetTokenCreateWithoutUserInput[] | PasswordResetTokenUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: PasswordResetTokenCreateOrConnectWithoutUserInput | PasswordResetTokenCreateOrConnectWithoutUserInput[]
+    upsert?: PasswordResetTokenUpsertWithWhereUniqueWithoutUserInput | PasswordResetTokenUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: PasswordResetTokenCreateManyUserInputEnvelope
+    set?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
+    disconnect?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
+    delete?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
+    connect?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
+    update?: PasswordResetTokenUpdateWithWhereUniqueWithoutUserInput | PasswordResetTokenUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: PasswordResetTokenUpdateManyWithWhereWithoutUserInput | PasswordResetTokenUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: PasswordResetTokenScalarWhereInput | PasswordResetTokenScalarWhereInput[]
   }
 
   export type SessionUncheckedUpdateManyWithoutUserNestedInput = {
@@ -16576,20 +18279,6 @@ export namespace Prisma {
     update?: XOR<XOR<UserCredentialsUpdateToOneWithWhereWithoutUserInput, UserCredentialsUpdateWithoutUserInput>, UserCredentialsUncheckedUpdateWithoutUserInput>
   }
 
-  export type UserRoleUncheckedUpdateManyWithoutUserNestedInput = {
-    create?: XOR<UserRoleCreateWithoutUserInput, UserRoleUncheckedCreateWithoutUserInput> | UserRoleCreateWithoutUserInput[] | UserRoleUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: UserRoleCreateOrConnectWithoutUserInput | UserRoleCreateOrConnectWithoutUserInput[]
-    upsert?: UserRoleUpsertWithWhereUniqueWithoutUserInput | UserRoleUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: UserRoleCreateManyUserInputEnvelope
-    set?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
-    disconnect?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
-    delete?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
-    connect?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
-    update?: UserRoleUpdateWithWhereUniqueWithoutUserInput | UserRoleUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: UserRoleUpdateManyWithWhereWithoutUserInput | UserRoleUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: UserRoleScalarWhereInput | UserRoleScalarWhereInput[]
-  }
-
   export type UserRoleUncheckedUpdateManyWithoutCreatorNestedInput = {
     create?: XOR<UserRoleCreateWithoutCreatorInput, UserRoleUncheckedCreateWithoutCreatorInput> | UserRoleCreateWithoutCreatorInput[] | UserRoleUncheckedCreateWithoutCreatorInput[]
     connectOrCreate?: UserRoleCreateOrConnectWithoutCreatorInput | UserRoleCreateOrConnectWithoutCreatorInput[]
@@ -16604,18 +18293,32 @@ export namespace Prisma {
     deleteMany?: UserRoleScalarWhereInput | UserRoleScalarWhereInput[]
   }
 
-  export type PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput = {
-    create?: XOR<PasswordResetTokenCreateWithoutUserInput, PasswordResetTokenUncheckedCreateWithoutUserInput> | PasswordResetTokenCreateWithoutUserInput[] | PasswordResetTokenUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: PasswordResetTokenCreateOrConnectWithoutUserInput | PasswordResetTokenCreateOrConnectWithoutUserInput[]
-    upsert?: PasswordResetTokenUpsertWithWhereUniqueWithoutUserInput | PasswordResetTokenUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: PasswordResetTokenCreateManyUserInputEnvelope
-    set?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
-    disconnect?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
-    delete?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
-    connect?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
-    update?: PasswordResetTokenUpdateWithWhereUniqueWithoutUserInput | PasswordResetTokenUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: PasswordResetTokenUpdateManyWithWhereWithoutUserInput | PasswordResetTokenUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: PasswordResetTokenScalarWhereInput | PasswordResetTokenScalarWhereInput[]
+  export type UserRoleUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<UserRoleCreateWithoutUserInput, UserRoleUncheckedCreateWithoutUserInput> | UserRoleCreateWithoutUserInput[] | UserRoleUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserRoleCreateOrConnectWithoutUserInput | UserRoleCreateOrConnectWithoutUserInput[]
+    upsert?: UserRoleUpsertWithWhereUniqueWithoutUserInput | UserRoleUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: UserRoleCreateManyUserInputEnvelope
+    set?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
+    disconnect?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
+    delete?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
+    connect?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
+    update?: UserRoleUpdateWithWhereUniqueWithoutUserInput | UserRoleUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: UserRoleUpdateManyWithWhereWithoutUserInput | UserRoleUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: UserRoleScalarWhereInput | UserRoleScalarWhereInput[]
+  }
+
+  export type AuditLogUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<AuditLogCreateWithoutUserInput, AuditLogUncheckedCreateWithoutUserInput> | AuditLogCreateWithoutUserInput[] | AuditLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: AuditLogCreateOrConnectWithoutUserInput | AuditLogCreateOrConnectWithoutUserInput[]
+    upsert?: AuditLogUpsertWithWhereUniqueWithoutUserInput | AuditLogUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: AuditLogCreateManyUserInputEnvelope
+    set?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
+    disconnect?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
+    delete?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
+    connect?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
+    update?: AuditLogUpdateWithWhereUniqueWithoutUserInput | AuditLogUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: AuditLogUpdateManyWithWhereWithoutUserInput | AuditLogUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: AuditLogScalarWhereInput | AuditLogScalarWhereInput[]
   }
 
   export type UserCreateNestedOneWithoutAccountsInput = {
@@ -16682,13 +18385,6 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCredentialsInput, UserUpdateWithoutCredentialsInput>, UserUncheckedUpdateWithoutCredentialsInput>
   }
 
-  export type UserRoleCreateNestedManyWithoutRoleInput = {
-    create?: XOR<UserRoleCreateWithoutRoleInput, UserRoleUncheckedCreateWithoutRoleInput> | UserRoleCreateWithoutRoleInput[] | UserRoleUncheckedCreateWithoutRoleInput[]
-    connectOrCreate?: UserRoleCreateOrConnectWithoutRoleInput | UserRoleCreateOrConnectWithoutRoleInput[]
-    createMany?: UserRoleCreateManyRoleInputEnvelope
-    connect?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
-  }
-
   export type RolePermissionCreateNestedManyWithoutRoleInput = {
     create?: XOR<RolePermissionCreateWithoutRoleInput, RolePermissionUncheckedCreateWithoutRoleInput> | RolePermissionCreateWithoutRoleInput[] | RolePermissionUncheckedCreateWithoutRoleInput[]
     connectOrCreate?: RolePermissionCreateOrConnectWithoutRoleInput | RolePermissionCreateOrConnectWithoutRoleInput[]
@@ -16696,7 +18392,7 @@ export namespace Prisma {
     connect?: RolePermissionWhereUniqueInput | RolePermissionWhereUniqueInput[]
   }
 
-  export type UserRoleUncheckedCreateNestedManyWithoutRoleInput = {
+  export type UserRoleCreateNestedManyWithoutRoleInput = {
     create?: XOR<UserRoleCreateWithoutRoleInput, UserRoleUncheckedCreateWithoutRoleInput> | UserRoleCreateWithoutRoleInput[] | UserRoleUncheckedCreateWithoutRoleInput[]
     connectOrCreate?: UserRoleCreateOrConnectWithoutRoleInput | UserRoleCreateOrConnectWithoutRoleInput[]
     createMany?: UserRoleCreateManyRoleInputEnvelope
@@ -16710,18 +18406,11 @@ export namespace Prisma {
     connect?: RolePermissionWhereUniqueInput | RolePermissionWhereUniqueInput[]
   }
 
-  export type UserRoleUpdateManyWithoutRoleNestedInput = {
+  export type UserRoleUncheckedCreateNestedManyWithoutRoleInput = {
     create?: XOR<UserRoleCreateWithoutRoleInput, UserRoleUncheckedCreateWithoutRoleInput> | UserRoleCreateWithoutRoleInput[] | UserRoleUncheckedCreateWithoutRoleInput[]
     connectOrCreate?: UserRoleCreateOrConnectWithoutRoleInput | UserRoleCreateOrConnectWithoutRoleInput[]
-    upsert?: UserRoleUpsertWithWhereUniqueWithoutRoleInput | UserRoleUpsertWithWhereUniqueWithoutRoleInput[]
     createMany?: UserRoleCreateManyRoleInputEnvelope
-    set?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
-    disconnect?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
-    delete?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
     connect?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
-    update?: UserRoleUpdateWithWhereUniqueWithoutRoleInput | UserRoleUpdateWithWhereUniqueWithoutRoleInput[]
-    updateMany?: UserRoleUpdateManyWithWhereWithoutRoleInput | UserRoleUpdateManyWithWhereWithoutRoleInput[]
-    deleteMany?: UserRoleScalarWhereInput | UserRoleScalarWhereInput[]
   }
 
   export type RolePermissionUpdateManyWithoutRoleNestedInput = {
@@ -16738,7 +18427,7 @@ export namespace Prisma {
     deleteMany?: RolePermissionScalarWhereInput | RolePermissionScalarWhereInput[]
   }
 
-  export type UserRoleUncheckedUpdateManyWithoutRoleNestedInput = {
+  export type UserRoleUpdateManyWithoutRoleNestedInput = {
     create?: XOR<UserRoleCreateWithoutRoleInput, UserRoleUncheckedCreateWithoutRoleInput> | UserRoleCreateWithoutRoleInput[] | UserRoleUncheckedCreateWithoutRoleInput[]
     connectOrCreate?: UserRoleCreateOrConnectWithoutRoleInput | UserRoleCreateOrConnectWithoutRoleInput[]
     upsert?: UserRoleUpsertWithWhereUniqueWithoutRoleInput | UserRoleUpsertWithWhereUniqueWithoutRoleInput[]
@@ -16766,11 +18455,18 @@ export namespace Prisma {
     deleteMany?: RolePermissionScalarWhereInput | RolePermissionScalarWhereInput[]
   }
 
-  export type RolePermissionCreateNestedManyWithoutPermissionInput = {
-    create?: XOR<RolePermissionCreateWithoutPermissionInput, RolePermissionUncheckedCreateWithoutPermissionInput> | RolePermissionCreateWithoutPermissionInput[] | RolePermissionUncheckedCreateWithoutPermissionInput[]
-    connectOrCreate?: RolePermissionCreateOrConnectWithoutPermissionInput | RolePermissionCreateOrConnectWithoutPermissionInput[]
-    createMany?: RolePermissionCreateManyPermissionInputEnvelope
-    connect?: RolePermissionWhereUniqueInput | RolePermissionWhereUniqueInput[]
+  export type UserRoleUncheckedUpdateManyWithoutRoleNestedInput = {
+    create?: XOR<UserRoleCreateWithoutRoleInput, UserRoleUncheckedCreateWithoutRoleInput> | UserRoleCreateWithoutRoleInput[] | UserRoleUncheckedCreateWithoutRoleInput[]
+    connectOrCreate?: UserRoleCreateOrConnectWithoutRoleInput | UserRoleCreateOrConnectWithoutRoleInput[]
+    upsert?: UserRoleUpsertWithWhereUniqueWithoutRoleInput | UserRoleUpsertWithWhereUniqueWithoutRoleInput[]
+    createMany?: UserRoleCreateManyRoleInputEnvelope
+    set?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
+    disconnect?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
+    delete?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
+    connect?: UserRoleWhereUniqueInput | UserRoleWhereUniqueInput[]
+    update?: UserRoleUpdateWithWhereUniqueWithoutRoleInput | UserRoleUpdateWithWhereUniqueWithoutRoleInput[]
+    updateMany?: UserRoleUpdateManyWithWhereWithoutRoleInput | UserRoleUpdateManyWithWhereWithoutRoleInput[]
+    deleteMany?: UserRoleScalarWhereInput | UserRoleScalarWhereInput[]
   }
 
   export type MenuItemCreateNestedManyWithoutPermissionInput = {
@@ -16780,7 +18476,7 @@ export namespace Prisma {
     connect?: MenuItemWhereUniqueInput | MenuItemWhereUniqueInput[]
   }
 
-  export type RolePermissionUncheckedCreateNestedManyWithoutPermissionInput = {
+  export type RolePermissionCreateNestedManyWithoutPermissionInput = {
     create?: XOR<RolePermissionCreateWithoutPermissionInput, RolePermissionUncheckedCreateWithoutPermissionInput> | RolePermissionCreateWithoutPermissionInput[] | RolePermissionUncheckedCreateWithoutPermissionInput[]
     connectOrCreate?: RolePermissionCreateOrConnectWithoutPermissionInput | RolePermissionCreateOrConnectWithoutPermissionInput[]
     createMany?: RolePermissionCreateManyPermissionInputEnvelope
@@ -16794,18 +18490,11 @@ export namespace Prisma {
     connect?: MenuItemWhereUniqueInput | MenuItemWhereUniqueInput[]
   }
 
-  export type RolePermissionUpdateManyWithoutPermissionNestedInput = {
+  export type RolePermissionUncheckedCreateNestedManyWithoutPermissionInput = {
     create?: XOR<RolePermissionCreateWithoutPermissionInput, RolePermissionUncheckedCreateWithoutPermissionInput> | RolePermissionCreateWithoutPermissionInput[] | RolePermissionUncheckedCreateWithoutPermissionInput[]
     connectOrCreate?: RolePermissionCreateOrConnectWithoutPermissionInput | RolePermissionCreateOrConnectWithoutPermissionInput[]
-    upsert?: RolePermissionUpsertWithWhereUniqueWithoutPermissionInput | RolePermissionUpsertWithWhereUniqueWithoutPermissionInput[]
     createMany?: RolePermissionCreateManyPermissionInputEnvelope
-    set?: RolePermissionWhereUniqueInput | RolePermissionWhereUniqueInput[]
-    disconnect?: RolePermissionWhereUniqueInput | RolePermissionWhereUniqueInput[]
-    delete?: RolePermissionWhereUniqueInput | RolePermissionWhereUniqueInput[]
     connect?: RolePermissionWhereUniqueInput | RolePermissionWhereUniqueInput[]
-    update?: RolePermissionUpdateWithWhereUniqueWithoutPermissionInput | RolePermissionUpdateWithWhereUniqueWithoutPermissionInput[]
-    updateMany?: RolePermissionUpdateManyWithWhereWithoutPermissionInput | RolePermissionUpdateManyWithWhereWithoutPermissionInput[]
-    deleteMany?: RolePermissionScalarWhereInput | RolePermissionScalarWhereInput[]
   }
 
   export type MenuItemUpdateManyWithoutPermissionNestedInput = {
@@ -16822,7 +18511,7 @@ export namespace Prisma {
     deleteMany?: MenuItemScalarWhereInput | MenuItemScalarWhereInput[]
   }
 
-  export type RolePermissionUncheckedUpdateManyWithoutPermissionNestedInput = {
+  export type RolePermissionUpdateManyWithoutPermissionNestedInput = {
     create?: XOR<RolePermissionCreateWithoutPermissionInput, RolePermissionUncheckedCreateWithoutPermissionInput> | RolePermissionCreateWithoutPermissionInput[] | RolePermissionUncheckedCreateWithoutPermissionInput[]
     connectOrCreate?: RolePermissionCreateOrConnectWithoutPermissionInput | RolePermissionCreateOrConnectWithoutPermissionInput[]
     upsert?: RolePermissionUpsertWithWhereUniqueWithoutPermissionInput | RolePermissionUpsertWithWhereUniqueWithoutPermissionInput[]
@@ -16850,9 +18539,23 @@ export namespace Prisma {
     deleteMany?: MenuItemScalarWhereInput | MenuItemScalarWhereInput[]
   }
 
-  export type UserCreateNestedOneWithoutUserRolesInput = {
-    create?: XOR<UserCreateWithoutUserRolesInput, UserUncheckedCreateWithoutUserRolesInput>
-    connectOrCreate?: UserCreateOrConnectWithoutUserRolesInput
+  export type RolePermissionUncheckedUpdateManyWithoutPermissionNestedInput = {
+    create?: XOR<RolePermissionCreateWithoutPermissionInput, RolePermissionUncheckedCreateWithoutPermissionInput> | RolePermissionCreateWithoutPermissionInput[] | RolePermissionUncheckedCreateWithoutPermissionInput[]
+    connectOrCreate?: RolePermissionCreateOrConnectWithoutPermissionInput | RolePermissionCreateOrConnectWithoutPermissionInput[]
+    upsert?: RolePermissionUpsertWithWhereUniqueWithoutPermissionInput | RolePermissionUpsertWithWhereUniqueWithoutPermissionInput[]
+    createMany?: RolePermissionCreateManyPermissionInputEnvelope
+    set?: RolePermissionWhereUniqueInput | RolePermissionWhereUniqueInput[]
+    disconnect?: RolePermissionWhereUniqueInput | RolePermissionWhereUniqueInput[]
+    delete?: RolePermissionWhereUniqueInput | RolePermissionWhereUniqueInput[]
+    connect?: RolePermissionWhereUniqueInput | RolePermissionWhereUniqueInput[]
+    update?: RolePermissionUpdateWithWhereUniqueWithoutPermissionInput | RolePermissionUpdateWithWhereUniqueWithoutPermissionInput[]
+    updateMany?: RolePermissionUpdateManyWithWhereWithoutPermissionInput | RolePermissionUpdateManyWithWhereWithoutPermissionInput[]
+    deleteMany?: RolePermissionScalarWhereInput | RolePermissionScalarWhereInput[]
+  }
+
+  export type UserCreateNestedOneWithoutCreatedRolesInput = {
+    create?: XOR<UserCreateWithoutCreatedRolesInput, UserUncheckedCreateWithoutCreatedRolesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCreatedRolesInput
     connect?: UserWhereUniqueInput
   }
 
@@ -16862,26 +18565,10 @@ export namespace Prisma {
     connect?: RoleWhereUniqueInput
   }
 
-  export type UserCreateNestedOneWithoutCreatedRolesInput = {
-    create?: XOR<UserCreateWithoutCreatedRolesInput, UserUncheckedCreateWithoutCreatedRolesInput>
-    connectOrCreate?: UserCreateOrConnectWithoutCreatedRolesInput
-    connect?: UserWhereUniqueInput
-  }
-
-  export type UserUpdateOneRequiredWithoutUserRolesNestedInput = {
+  export type UserCreateNestedOneWithoutUserRolesInput = {
     create?: XOR<UserCreateWithoutUserRolesInput, UserUncheckedCreateWithoutUserRolesInput>
     connectOrCreate?: UserCreateOrConnectWithoutUserRolesInput
-    upsert?: UserUpsertWithoutUserRolesInput
     connect?: UserWhereUniqueInput
-    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutUserRolesInput, UserUpdateWithoutUserRolesInput>, UserUncheckedUpdateWithoutUserRolesInput>
-  }
-
-  export type RoleUpdateOneRequiredWithoutUserRolesNestedInput = {
-    create?: XOR<RoleCreateWithoutUserRolesInput, RoleUncheckedCreateWithoutUserRolesInput>
-    connectOrCreate?: RoleCreateOrConnectWithoutUserRolesInput
-    upsert?: RoleUpsertWithoutUserRolesInput
-    connect?: RoleWhereUniqueInput
-    update?: XOR<XOR<RoleUpdateToOneWithWhereWithoutUserRolesInput, RoleUpdateWithoutUserRolesInput>, RoleUncheckedUpdateWithoutUserRolesInput>
   }
 
   export type UserUpdateOneWithoutCreatedRolesNestedInput = {
@@ -16894,10 +18581,20 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCreatedRolesInput, UserUpdateWithoutCreatedRolesInput>, UserUncheckedUpdateWithoutCreatedRolesInput>
   }
 
-  export type RoleCreateNestedOneWithoutRolePermissionsInput = {
-    create?: XOR<RoleCreateWithoutRolePermissionsInput, RoleUncheckedCreateWithoutRolePermissionsInput>
-    connectOrCreate?: RoleCreateOrConnectWithoutRolePermissionsInput
+  export type RoleUpdateOneRequiredWithoutUserRolesNestedInput = {
+    create?: XOR<RoleCreateWithoutUserRolesInput, RoleUncheckedCreateWithoutUserRolesInput>
+    connectOrCreate?: RoleCreateOrConnectWithoutUserRolesInput
+    upsert?: RoleUpsertWithoutUserRolesInput
     connect?: RoleWhereUniqueInput
+    update?: XOR<XOR<RoleUpdateToOneWithWhereWithoutUserRolesInput, RoleUpdateWithoutUserRolesInput>, RoleUncheckedUpdateWithoutUserRolesInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutUserRolesNestedInput = {
+    create?: XOR<UserCreateWithoutUserRolesInput, UserUncheckedCreateWithoutUserRolesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutUserRolesInput
+    upsert?: UserUpsertWithoutUserRolesInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutUserRolesInput, UserUpdateWithoutUserRolesInput>, UserUncheckedUpdateWithoutUserRolesInput>
   }
 
   export type PermissionCreateNestedOneWithoutRolePermissionsInput = {
@@ -16906,12 +18603,10 @@ export namespace Prisma {
     connect?: PermissionWhereUniqueInput
   }
 
-  export type RoleUpdateOneRequiredWithoutRolePermissionsNestedInput = {
+  export type RoleCreateNestedOneWithoutRolePermissionsInput = {
     create?: XOR<RoleCreateWithoutRolePermissionsInput, RoleUncheckedCreateWithoutRolePermissionsInput>
     connectOrCreate?: RoleCreateOrConnectWithoutRolePermissionsInput
-    upsert?: RoleUpsertWithoutRolePermissionsInput
     connect?: RoleWhereUniqueInput
-    update?: XOR<XOR<RoleUpdateToOneWithWhereWithoutRolePermissionsInput, RoleUpdateWithoutRolePermissionsInput>, RoleUncheckedUpdateWithoutRolePermissionsInput>
   }
 
   export type PermissionUpdateOneRequiredWithoutRolePermissionsNestedInput = {
@@ -16922,10 +18617,12 @@ export namespace Prisma {
     update?: XOR<XOR<PermissionUpdateToOneWithWhereWithoutRolePermissionsInput, PermissionUpdateWithoutRolePermissionsInput>, PermissionUncheckedUpdateWithoutRolePermissionsInput>
   }
 
-  export type PermissionCreateNestedOneWithoutMenuItemsInput = {
-    create?: XOR<PermissionCreateWithoutMenuItemsInput, PermissionUncheckedCreateWithoutMenuItemsInput>
-    connectOrCreate?: PermissionCreateOrConnectWithoutMenuItemsInput
-    connect?: PermissionWhereUniqueInput
+  export type RoleUpdateOneRequiredWithoutRolePermissionsNestedInput = {
+    create?: XOR<RoleCreateWithoutRolePermissionsInput, RoleUncheckedCreateWithoutRolePermissionsInput>
+    connectOrCreate?: RoleCreateOrConnectWithoutRolePermissionsInput
+    upsert?: RoleUpsertWithoutRolePermissionsInput
+    connect?: RoleWhereUniqueInput
+    update?: XOR<XOR<RoleUpdateToOneWithWhereWithoutRolePermissionsInput, RoleUpdateWithoutRolePermissionsInput>, RoleUncheckedUpdateWithoutRolePermissionsInput>
   }
 
   export type MenuItemCreateNestedOneWithoutChildrenInput = {
@@ -16939,6 +18636,12 @@ export namespace Prisma {
     connectOrCreate?: MenuItemCreateOrConnectWithoutParentInput | MenuItemCreateOrConnectWithoutParentInput[]
     createMany?: MenuItemCreateManyParentInputEnvelope
     connect?: MenuItemWhereUniqueInput | MenuItemWhereUniqueInput[]
+  }
+
+  export type PermissionCreateNestedOneWithoutMenuItemsInput = {
+    create?: XOR<PermissionCreateWithoutMenuItemsInput, PermissionUncheckedCreateWithoutMenuItemsInput>
+    connectOrCreate?: PermissionCreateOrConnectWithoutMenuItemsInput
+    connect?: PermissionWhereUniqueInput
   }
 
   export type MenuItemUncheckedCreateNestedManyWithoutParentInput = {
@@ -16958,16 +18661,6 @@ export namespace Prisma {
 
   export type BoolFieldUpdateOperationsInput = {
     set?: boolean
-  }
-
-  export type PermissionUpdateOneWithoutMenuItemsNestedInput = {
-    create?: XOR<PermissionCreateWithoutMenuItemsInput, PermissionUncheckedCreateWithoutMenuItemsInput>
-    connectOrCreate?: PermissionCreateOrConnectWithoutMenuItemsInput
-    upsert?: PermissionUpsertWithoutMenuItemsInput
-    disconnect?: PermissionWhereInput | boolean
-    delete?: PermissionWhereInput | boolean
-    connect?: PermissionWhereUniqueInput
-    update?: XOR<XOR<PermissionUpdateToOneWithWhereWithoutMenuItemsInput, PermissionUpdateWithoutMenuItemsInput>, PermissionUncheckedUpdateWithoutMenuItemsInput>
   }
 
   export type MenuItemUpdateOneWithoutChildrenNestedInput = {
@@ -16994,6 +18687,16 @@ export namespace Prisma {
     deleteMany?: MenuItemScalarWhereInput | MenuItemScalarWhereInput[]
   }
 
+  export type PermissionUpdateOneWithoutMenuItemsNestedInput = {
+    create?: XOR<PermissionCreateWithoutMenuItemsInput, PermissionUncheckedCreateWithoutMenuItemsInput>
+    connectOrCreate?: PermissionCreateOrConnectWithoutMenuItemsInput
+    upsert?: PermissionUpsertWithoutMenuItemsInput
+    disconnect?: PermissionWhereInput | boolean
+    delete?: PermissionWhereInput | boolean
+    connect?: PermissionWhereUniqueInput
+    update?: XOR<XOR<PermissionUpdateToOneWithWhereWithoutMenuItemsInput, PermissionUpdateWithoutMenuItemsInput>, PermissionUncheckedUpdateWithoutMenuItemsInput>
+  }
+
   export type MenuItemUncheckedUpdateManyWithoutParentNestedInput = {
     create?: XOR<MenuItemCreateWithoutParentInput, MenuItemUncheckedCreateWithoutParentInput> | MenuItemCreateWithoutParentInput[] | MenuItemUncheckedCreateWithoutParentInput[]
     connectOrCreate?: MenuItemCreateOrConnectWithoutParentInput | MenuItemCreateOrConnectWithoutParentInput[]
@@ -17006,6 +18709,22 @@ export namespace Prisma {
     update?: MenuItemUpdateWithWhereUniqueWithoutParentInput | MenuItemUpdateWithWhereUniqueWithoutParentInput[]
     updateMany?: MenuItemUpdateManyWithWhereWithoutParentInput | MenuItemUpdateManyWithWhereWithoutParentInput[]
     deleteMany?: MenuItemScalarWhereInput | MenuItemScalarWhereInput[]
+  }
+
+  export type UserCreateNestedOneWithoutAuditLogsInput = {
+    create?: XOR<UserCreateWithoutAuditLogsInput, UserUncheckedCreateWithoutAuditLogsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutAuditLogsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneWithoutAuditLogsNestedInput = {
+    create?: XOR<UserCreateWithoutAuditLogsInput, UserUncheckedCreateWithoutAuditLogsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutAuditLogsInput
+    upsert?: UserUpsertWithoutAuditLogsInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutAuditLogsInput, UserUpdateWithoutAuditLogsInput>, UserUncheckedUpdateWithoutAuditLogsInput>
   }
 
   export type NestedUuidFilter<$PrismaModel = never> = {
@@ -17258,6 +18977,29 @@ export namespace Prisma {
     _min?: NestedBoolFilter<$PrismaModel>
     _max?: NestedBoolFilter<$PrismaModel>
   }
+  export type NestedJsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type AccountCreateWithoutUserInput = {
     type: string
@@ -17292,6 +19034,30 @@ export namespace Prisma {
 
   export type AccountCreateManyUserInputEnvelope = {
     data: AccountCreateManyUserInput | AccountCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type PasswordResetTokenCreateWithoutUserInput = {
+    id?: string
+    token: string
+    expiresAt: Date | string
+    createdAt?: Date | string
+  }
+
+  export type PasswordResetTokenUncheckedCreateWithoutUserInput = {
+    id?: string
+    token: string
+    expiresAt: Date | string
+    createdAt?: Date | string
+  }
+
+  export type PasswordResetTokenCreateOrConnectWithoutUserInput = {
+    where: PasswordResetTokenWhereUniqueInput
+    create: XOR<PasswordResetTokenCreateWithoutUserInput, PasswordResetTokenUncheckedCreateWithoutUserInput>
+  }
+
+  export type PasswordResetTokenCreateManyUserInputEnvelope = {
+    data: PasswordResetTokenCreateManyUserInput | PasswordResetTokenCreateManyUserInput[]
     skipDuplicates?: boolean
   }
 
@@ -17338,32 +19104,10 @@ export namespace Prisma {
     create: XOR<UserCredentialsCreateWithoutUserInput, UserCredentialsUncheckedCreateWithoutUserInput>
   }
 
-  export type UserRoleCreateWithoutUserInput = {
-    createdAt?: Date | string
-    role: RoleCreateNestedOneWithoutUserRolesInput
-    creator?: UserCreateNestedOneWithoutCreatedRolesInput
-  }
-
-  export type UserRoleUncheckedCreateWithoutUserInput = {
-    roleId: string
-    createdAt?: Date | string
-    createdBy?: string | null
-  }
-
-  export type UserRoleCreateOrConnectWithoutUserInput = {
-    where: UserRoleWhereUniqueInput
-    create: XOR<UserRoleCreateWithoutUserInput, UserRoleUncheckedCreateWithoutUserInput>
-  }
-
-  export type UserRoleCreateManyUserInputEnvelope = {
-    data: UserRoleCreateManyUserInput | UserRoleCreateManyUserInput[]
-    skipDuplicates?: boolean
-  }
-
   export type UserRoleCreateWithoutCreatorInput = {
     createdAt?: Date | string
-    user: UserCreateNestedOneWithoutUserRolesInput
     role: RoleCreateNestedOneWithoutUserRolesInput
+    user: UserCreateNestedOneWithoutUserRolesInput
   }
 
   export type UserRoleUncheckedCreateWithoutCreatorInput = {
@@ -17382,27 +19126,65 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type PasswordResetTokenCreateWithoutUserInput = {
-    id?: string
-    token: string
-    expiresAt: Date | string
+  export type UserRoleCreateWithoutUserInput = {
     createdAt?: Date | string
+    creator?: UserCreateNestedOneWithoutCreatedRolesInput
+    role: RoleCreateNestedOneWithoutUserRolesInput
   }
 
-  export type PasswordResetTokenUncheckedCreateWithoutUserInput = {
-    id?: string
-    token: string
-    expiresAt: Date | string
+  export type UserRoleUncheckedCreateWithoutUserInput = {
+    roleId: string
     createdAt?: Date | string
+    createdBy?: string | null
   }
 
-  export type PasswordResetTokenCreateOrConnectWithoutUserInput = {
-    where: PasswordResetTokenWhereUniqueInput
-    create: XOR<PasswordResetTokenCreateWithoutUserInput, PasswordResetTokenUncheckedCreateWithoutUserInput>
+  export type UserRoleCreateOrConnectWithoutUserInput = {
+    where: UserRoleWhereUniqueInput
+    create: XOR<UserRoleCreateWithoutUserInput, UserRoleUncheckedCreateWithoutUserInput>
   }
 
-  export type PasswordResetTokenCreateManyUserInputEnvelope = {
-    data: PasswordResetTokenCreateManyUserInput | PasswordResetTokenCreateManyUserInput[]
+  export type UserRoleCreateManyUserInputEnvelope = {
+    data: UserRoleCreateManyUserInput | UserRoleCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type AuditLogCreateWithoutUserInput = {
+    id?: string
+    action: string
+    module: string
+    entityType?: string | null
+    entityId?: string | null
+    oldValues?: NullableJsonNullValueInput | InputJsonValue
+    newValues?: NullableJsonNullValueInput | InputJsonValue
+    ipAddress?: string | null
+    userAgent?: string | null
+    requestId?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    timestamp?: Date | string
+  }
+
+  export type AuditLogUncheckedCreateWithoutUserInput = {
+    id?: string
+    action: string
+    module: string
+    entityType?: string | null
+    entityId?: string | null
+    oldValues?: NullableJsonNullValueInput | InputJsonValue
+    newValues?: NullableJsonNullValueInput | InputJsonValue
+    ipAddress?: string | null
+    userAgent?: string | null
+    requestId?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    timestamp?: Date | string
+  }
+
+  export type AuditLogCreateOrConnectWithoutUserInput = {
+    where: AuditLogWhereUniqueInput
+    create: XOR<AuditLogCreateWithoutUserInput, AuditLogUncheckedCreateWithoutUserInput>
+  }
+
+  export type AuditLogCreateManyUserInputEnvelope = {
+    data: AuditLogCreateManyUserInput | AuditLogCreateManyUserInput[]
     skipDuplicates?: boolean
   }
 
@@ -17437,6 +19219,33 @@ export namespace Prisma {
     scope?: StringNullableFilter<"Account"> | string | null
     id_token?: StringNullableFilter<"Account"> | string | null
     session_state?: StringNullableFilter<"Account"> | string | null
+  }
+
+  export type PasswordResetTokenUpsertWithWhereUniqueWithoutUserInput = {
+    where: PasswordResetTokenWhereUniqueInput
+    update: XOR<PasswordResetTokenUpdateWithoutUserInput, PasswordResetTokenUncheckedUpdateWithoutUserInput>
+    create: XOR<PasswordResetTokenCreateWithoutUserInput, PasswordResetTokenUncheckedCreateWithoutUserInput>
+  }
+
+  export type PasswordResetTokenUpdateWithWhereUniqueWithoutUserInput = {
+    where: PasswordResetTokenWhereUniqueInput
+    data: XOR<PasswordResetTokenUpdateWithoutUserInput, PasswordResetTokenUncheckedUpdateWithoutUserInput>
+  }
+
+  export type PasswordResetTokenUpdateManyWithWhereWithoutUserInput = {
+    where: PasswordResetTokenScalarWhereInput
+    data: XOR<PasswordResetTokenUpdateManyMutationInput, PasswordResetTokenUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type PasswordResetTokenScalarWhereInput = {
+    AND?: PasswordResetTokenScalarWhereInput | PasswordResetTokenScalarWhereInput[]
+    OR?: PasswordResetTokenScalarWhereInput[]
+    NOT?: PasswordResetTokenScalarWhereInput | PasswordResetTokenScalarWhereInput[]
+    id?: StringFilter<"PasswordResetToken"> | string
+    token?: StringFilter<"PasswordResetToken"> | string
+    expiresAt?: DateTimeFilter<"PasswordResetToken"> | Date | string
+    userId?: UuidFilter<"PasswordResetToken"> | string
+    createdAt?: DateTimeFilter<"PasswordResetToken"> | Date | string
   }
 
   export type SessionUpsertWithWhereUniqueWithoutUserInput = {
@@ -17490,32 +19299,6 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type UserRoleUpsertWithWhereUniqueWithoutUserInput = {
-    where: UserRoleWhereUniqueInput
-    update: XOR<UserRoleUpdateWithoutUserInput, UserRoleUncheckedUpdateWithoutUserInput>
-    create: XOR<UserRoleCreateWithoutUserInput, UserRoleUncheckedCreateWithoutUserInput>
-  }
-
-  export type UserRoleUpdateWithWhereUniqueWithoutUserInput = {
-    where: UserRoleWhereUniqueInput
-    data: XOR<UserRoleUpdateWithoutUserInput, UserRoleUncheckedUpdateWithoutUserInput>
-  }
-
-  export type UserRoleUpdateManyWithWhereWithoutUserInput = {
-    where: UserRoleScalarWhereInput
-    data: XOR<UserRoleUpdateManyMutationInput, UserRoleUncheckedUpdateManyWithoutUserInput>
-  }
-
-  export type UserRoleScalarWhereInput = {
-    AND?: UserRoleScalarWhereInput | UserRoleScalarWhereInput[]
-    OR?: UserRoleScalarWhereInput[]
-    NOT?: UserRoleScalarWhereInput | UserRoleScalarWhereInput[]
-    userId?: UuidFilter<"UserRole"> | string
-    roleId?: UuidFilter<"UserRole"> | string
-    createdAt?: DateTimeFilter<"UserRole"> | Date | string
-    createdBy?: UuidNullableFilter<"UserRole"> | string | null
-  }
-
   export type UserRoleUpsertWithWhereUniqueWithoutCreatorInput = {
     where: UserRoleWhereUniqueInput
     update: XOR<UserRoleUpdateWithoutCreatorInput, UserRoleUncheckedUpdateWithoutCreatorInput>
@@ -17532,31 +19315,65 @@ export namespace Prisma {
     data: XOR<UserRoleUpdateManyMutationInput, UserRoleUncheckedUpdateManyWithoutCreatorInput>
   }
 
-  export type PasswordResetTokenUpsertWithWhereUniqueWithoutUserInput = {
-    where: PasswordResetTokenWhereUniqueInput
-    update: XOR<PasswordResetTokenUpdateWithoutUserInput, PasswordResetTokenUncheckedUpdateWithoutUserInput>
-    create: XOR<PasswordResetTokenCreateWithoutUserInput, PasswordResetTokenUncheckedCreateWithoutUserInput>
+  export type UserRoleScalarWhereInput = {
+    AND?: UserRoleScalarWhereInput | UserRoleScalarWhereInput[]
+    OR?: UserRoleScalarWhereInput[]
+    NOT?: UserRoleScalarWhereInput | UserRoleScalarWhereInput[]
+    userId?: UuidFilter<"UserRole"> | string
+    roleId?: UuidFilter<"UserRole"> | string
+    createdAt?: DateTimeFilter<"UserRole"> | Date | string
+    createdBy?: UuidNullableFilter<"UserRole"> | string | null
   }
 
-  export type PasswordResetTokenUpdateWithWhereUniqueWithoutUserInput = {
-    where: PasswordResetTokenWhereUniqueInput
-    data: XOR<PasswordResetTokenUpdateWithoutUserInput, PasswordResetTokenUncheckedUpdateWithoutUserInput>
+  export type UserRoleUpsertWithWhereUniqueWithoutUserInput = {
+    where: UserRoleWhereUniqueInput
+    update: XOR<UserRoleUpdateWithoutUserInput, UserRoleUncheckedUpdateWithoutUserInput>
+    create: XOR<UserRoleCreateWithoutUserInput, UserRoleUncheckedCreateWithoutUserInput>
   }
 
-  export type PasswordResetTokenUpdateManyWithWhereWithoutUserInput = {
-    where: PasswordResetTokenScalarWhereInput
-    data: XOR<PasswordResetTokenUpdateManyMutationInput, PasswordResetTokenUncheckedUpdateManyWithoutUserInput>
+  export type UserRoleUpdateWithWhereUniqueWithoutUserInput = {
+    where: UserRoleWhereUniqueInput
+    data: XOR<UserRoleUpdateWithoutUserInput, UserRoleUncheckedUpdateWithoutUserInput>
   }
 
-  export type PasswordResetTokenScalarWhereInput = {
-    AND?: PasswordResetTokenScalarWhereInput | PasswordResetTokenScalarWhereInput[]
-    OR?: PasswordResetTokenScalarWhereInput[]
-    NOT?: PasswordResetTokenScalarWhereInput | PasswordResetTokenScalarWhereInput[]
-    id?: StringFilter<"PasswordResetToken"> | string
-    token?: StringFilter<"PasswordResetToken"> | string
-    expiresAt?: DateTimeFilter<"PasswordResetToken"> | Date | string
-    userId?: UuidFilter<"PasswordResetToken"> | string
-    createdAt?: DateTimeFilter<"PasswordResetToken"> | Date | string
+  export type UserRoleUpdateManyWithWhereWithoutUserInput = {
+    where: UserRoleScalarWhereInput
+    data: XOR<UserRoleUpdateManyMutationInput, UserRoleUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type AuditLogUpsertWithWhereUniqueWithoutUserInput = {
+    where: AuditLogWhereUniqueInput
+    update: XOR<AuditLogUpdateWithoutUserInput, AuditLogUncheckedUpdateWithoutUserInput>
+    create: XOR<AuditLogCreateWithoutUserInput, AuditLogUncheckedCreateWithoutUserInput>
+  }
+
+  export type AuditLogUpdateWithWhereUniqueWithoutUserInput = {
+    where: AuditLogWhereUniqueInput
+    data: XOR<AuditLogUpdateWithoutUserInput, AuditLogUncheckedUpdateWithoutUserInput>
+  }
+
+  export type AuditLogUpdateManyWithWhereWithoutUserInput = {
+    where: AuditLogScalarWhereInput
+    data: XOR<AuditLogUpdateManyMutationInput, AuditLogUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type AuditLogScalarWhereInput = {
+    AND?: AuditLogScalarWhereInput | AuditLogScalarWhereInput[]
+    OR?: AuditLogScalarWhereInput[]
+    NOT?: AuditLogScalarWhereInput | AuditLogScalarWhereInput[]
+    id?: UuidFilter<"AuditLog"> | string
+    userId?: UuidNullableFilter<"AuditLog"> | string | null
+    action?: StringFilter<"AuditLog"> | string
+    module?: StringFilter<"AuditLog"> | string
+    entityType?: StringNullableFilter<"AuditLog"> | string | null
+    entityId?: StringNullableFilter<"AuditLog"> | string | null
+    oldValues?: JsonNullableFilter<"AuditLog">
+    newValues?: JsonNullableFilter<"AuditLog">
+    ipAddress?: StringNullableFilter<"AuditLog"> | string | null
+    userAgent?: StringNullableFilter<"AuditLog"> | string | null
+    requestId?: UuidNullableFilter<"AuditLog"> | string | null
+    metadata?: JsonNullableFilter<"AuditLog">
+    timestamp?: DateTimeFilter<"AuditLog"> | Date | string
   }
 
   export type UserCreateWithoutAccountsInput = {
@@ -17569,11 +19386,12 @@ export namespace Prisma {
     lastName?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
     credentials?: UserCredentialsCreateNestedOneWithoutUserInput
-    userRoles?: UserRoleCreateNestedManyWithoutUserInput
     createdRoles?: UserRoleCreateNestedManyWithoutCreatorInput
-    passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    userRoles?: UserRoleCreateNestedManyWithoutUserInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAccountsInput = {
@@ -17586,11 +19404,12 @@ export namespace Prisma {
     lastName?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     credentials?: UserCredentialsUncheckedCreateNestedOneWithoutUserInput
-    userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     createdRoles?: UserRoleUncheckedCreateNestedManyWithoutCreatorInput
-    passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAccountsInput = {
@@ -17619,11 +19438,12 @@ export namespace Prisma {
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
     credentials?: UserCredentialsUpdateOneWithoutUserNestedInput
-    userRoles?: UserRoleUpdateManyWithoutUserNestedInput
     createdRoles?: UserRoleUpdateManyWithoutCreatorNestedInput
-    passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    userRoles?: UserRoleUpdateManyWithoutUserNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -17636,11 +19456,12 @@ export namespace Prisma {
     lastName?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     credentials?: UserCredentialsUncheckedUpdateOneWithoutUserNestedInput
-    userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     createdRoles?: UserRoleUncheckedUpdateManyWithoutCreatorNestedInput
-    passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutSessionsInput = {
@@ -17654,10 +19475,11 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
-    credentials?: UserCredentialsCreateNestedOneWithoutUserInput
-    userRoles?: UserRoleCreateNestedManyWithoutUserInput
-    createdRoles?: UserRoleCreateNestedManyWithoutCreatorInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    credentials?: UserCredentialsCreateNestedOneWithoutUserInput
+    createdRoles?: UserRoleCreateNestedManyWithoutCreatorInput
+    userRoles?: UserRoleCreateNestedManyWithoutUserInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutSessionsInput = {
@@ -17671,10 +19493,11 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
-    credentials?: UserCredentialsUncheckedCreateNestedOneWithoutUserInput
-    userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
-    createdRoles?: UserRoleUncheckedCreateNestedManyWithoutCreatorInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    credentials?: UserCredentialsUncheckedCreateNestedOneWithoutUserInput
+    createdRoles?: UserRoleUncheckedCreateNestedManyWithoutCreatorInput
+    userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutSessionsInput = {
@@ -17704,10 +19527,11 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
-    credentials?: UserCredentialsUpdateOneWithoutUserNestedInput
-    userRoles?: UserRoleUpdateManyWithoutUserNestedInput
-    createdRoles?: UserRoleUpdateManyWithoutCreatorNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    credentials?: UserCredentialsUpdateOneWithoutUserNestedInput
+    createdRoles?: UserRoleUpdateManyWithoutCreatorNestedInput
+    userRoles?: UserRoleUpdateManyWithoutUserNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -17721,10 +19545,11 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
-    credentials?: UserCredentialsUncheckedUpdateOneWithoutUserNestedInput
-    userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
-    createdRoles?: UserRoleUncheckedUpdateManyWithoutCreatorNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    credentials?: UserCredentialsUncheckedUpdateOneWithoutUserNestedInput
+    createdRoles?: UserRoleUncheckedUpdateManyWithoutCreatorNestedInput
+    userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutPasswordResetTokensInput = {
@@ -17740,8 +19565,9 @@ export namespace Prisma {
     accounts?: AccountCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
     credentials?: UserCredentialsCreateNestedOneWithoutUserInput
-    userRoles?: UserRoleCreateNestedManyWithoutUserInput
     createdRoles?: UserRoleCreateNestedManyWithoutCreatorInput
+    userRoles?: UserRoleCreateNestedManyWithoutUserInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPasswordResetTokensInput = {
@@ -17757,8 +19583,9 @@ export namespace Prisma {
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     credentials?: UserCredentialsUncheckedCreateNestedOneWithoutUserInput
-    userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     createdRoles?: UserRoleUncheckedCreateNestedManyWithoutCreatorInput
+    userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPasswordResetTokensInput = {
@@ -17790,8 +19617,9 @@ export namespace Prisma {
     accounts?: AccountUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
     credentials?: UserCredentialsUpdateOneWithoutUserNestedInput
-    userRoles?: UserRoleUpdateManyWithoutUserNestedInput
     createdRoles?: UserRoleUpdateManyWithoutCreatorNestedInput
+    userRoles?: UserRoleUpdateManyWithoutUserNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPasswordResetTokensInput = {
@@ -17807,8 +19635,9 @@ export namespace Prisma {
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     credentials?: UserCredentialsUncheckedUpdateOneWithoutUserNestedInput
-    userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     createdRoles?: UserRoleUncheckedUpdateManyWithoutCreatorNestedInput
+    userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutCredentialsInput = {
@@ -17822,10 +19651,11 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
-    sessions?: SessionCreateNestedManyWithoutUserInput
-    userRoles?: UserRoleCreateNestedManyWithoutUserInput
-    createdRoles?: UserRoleCreateNestedManyWithoutCreatorInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    createdRoles?: UserRoleCreateNestedManyWithoutCreatorInput
+    userRoles?: UserRoleCreateNestedManyWithoutUserInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCredentialsInput = {
@@ -17839,10 +19669,11 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
-    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
-    userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
-    createdRoles?: UserRoleUncheckedCreateNestedManyWithoutCreatorInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    createdRoles?: UserRoleUncheckedCreateNestedManyWithoutCreatorInput
+    userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCredentialsInput = {
@@ -17872,10 +19703,11 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
-    sessions?: SessionUpdateManyWithoutUserNestedInput
-    userRoles?: UserRoleUpdateManyWithoutUserNestedInput
-    createdRoles?: UserRoleUpdateManyWithoutCreatorNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    createdRoles?: UserRoleUpdateManyWithoutCreatorNestedInput
+    userRoles?: UserRoleUpdateManyWithoutUserNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCredentialsInput = {
@@ -17889,32 +19721,11 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
-    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
-    userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
-    createdRoles?: UserRoleUncheckedUpdateManyWithoutCreatorNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
-  }
-
-  export type UserRoleCreateWithoutRoleInput = {
-    createdAt?: Date | string
-    user: UserCreateNestedOneWithoutUserRolesInput
-    creator?: UserCreateNestedOneWithoutCreatedRolesInput
-  }
-
-  export type UserRoleUncheckedCreateWithoutRoleInput = {
-    userId: string
-    createdAt?: Date | string
-    createdBy?: string | null
-  }
-
-  export type UserRoleCreateOrConnectWithoutRoleInput = {
-    where: UserRoleWhereUniqueInput
-    create: XOR<UserRoleCreateWithoutRoleInput, UserRoleUncheckedCreateWithoutRoleInput>
-  }
-
-  export type UserRoleCreateManyRoleInputEnvelope = {
-    data: UserRoleCreateManyRoleInput | UserRoleCreateManyRoleInput[]
-    skipDuplicates?: boolean
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    createdRoles?: UserRoleUncheckedUpdateManyWithoutCreatorNestedInput
+    userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type RolePermissionCreateWithoutRoleInput = {
@@ -17937,20 +19748,26 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type UserRoleUpsertWithWhereUniqueWithoutRoleInput = {
+  export type UserRoleCreateWithoutRoleInput = {
+    createdAt?: Date | string
+    creator?: UserCreateNestedOneWithoutCreatedRolesInput
+    user: UserCreateNestedOneWithoutUserRolesInput
+  }
+
+  export type UserRoleUncheckedCreateWithoutRoleInput = {
+    userId: string
+    createdAt?: Date | string
+    createdBy?: string | null
+  }
+
+  export type UserRoleCreateOrConnectWithoutRoleInput = {
     where: UserRoleWhereUniqueInput
-    update: XOR<UserRoleUpdateWithoutRoleInput, UserRoleUncheckedUpdateWithoutRoleInput>
     create: XOR<UserRoleCreateWithoutRoleInput, UserRoleUncheckedCreateWithoutRoleInput>
   }
 
-  export type UserRoleUpdateWithWhereUniqueWithoutRoleInput = {
-    where: UserRoleWhereUniqueInput
-    data: XOR<UserRoleUpdateWithoutRoleInput, UserRoleUncheckedUpdateWithoutRoleInput>
-  }
-
-  export type UserRoleUpdateManyWithWhereWithoutRoleInput = {
-    where: UserRoleScalarWhereInput
-    data: XOR<UserRoleUpdateManyMutationInput, UserRoleUncheckedUpdateManyWithoutRoleInput>
+  export type UserRoleCreateManyRoleInputEnvelope = {
+    data: UserRoleCreateManyRoleInput | UserRoleCreateManyRoleInput[]
+    skipDuplicates?: boolean
   }
 
   export type RolePermissionUpsertWithWhereUniqueWithoutRoleInput = {
@@ -17978,24 +19795,20 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"RolePermission"> | Date | string
   }
 
-  export type RolePermissionCreateWithoutPermissionInput = {
-    createdAt?: Date | string
-    role: RoleCreateNestedOneWithoutRolePermissionsInput
+  export type UserRoleUpsertWithWhereUniqueWithoutRoleInput = {
+    where: UserRoleWhereUniqueInput
+    update: XOR<UserRoleUpdateWithoutRoleInput, UserRoleUncheckedUpdateWithoutRoleInput>
+    create: XOR<UserRoleCreateWithoutRoleInput, UserRoleUncheckedCreateWithoutRoleInput>
   }
 
-  export type RolePermissionUncheckedCreateWithoutPermissionInput = {
-    roleId: string
-    createdAt?: Date | string
+  export type UserRoleUpdateWithWhereUniqueWithoutRoleInput = {
+    where: UserRoleWhereUniqueInput
+    data: XOR<UserRoleUpdateWithoutRoleInput, UserRoleUncheckedUpdateWithoutRoleInput>
   }
 
-  export type RolePermissionCreateOrConnectWithoutPermissionInput = {
-    where: RolePermissionWhereUniqueInput
-    create: XOR<RolePermissionCreateWithoutPermissionInput, RolePermissionUncheckedCreateWithoutPermissionInput>
-  }
-
-  export type RolePermissionCreateManyPermissionInputEnvelope = {
-    data: RolePermissionCreateManyPermissionInput | RolePermissionCreateManyPermissionInput[]
-    skipDuplicates?: boolean
+  export type UserRoleUpdateManyWithWhereWithoutRoleInput = {
+    where: UserRoleScalarWhereInput
+    data: XOR<UserRoleUpdateManyMutationInput, UserRoleUncheckedUpdateManyWithoutRoleInput>
   }
 
   export type MenuItemCreateWithoutPermissionInput = {
@@ -18034,20 +19847,24 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type RolePermissionUpsertWithWhereUniqueWithoutPermissionInput = {
+  export type RolePermissionCreateWithoutPermissionInput = {
+    createdAt?: Date | string
+    role: RoleCreateNestedOneWithoutRolePermissionsInput
+  }
+
+  export type RolePermissionUncheckedCreateWithoutPermissionInput = {
+    roleId: string
+    createdAt?: Date | string
+  }
+
+  export type RolePermissionCreateOrConnectWithoutPermissionInput = {
     where: RolePermissionWhereUniqueInput
-    update: XOR<RolePermissionUpdateWithoutPermissionInput, RolePermissionUncheckedUpdateWithoutPermissionInput>
     create: XOR<RolePermissionCreateWithoutPermissionInput, RolePermissionUncheckedCreateWithoutPermissionInput>
   }
 
-  export type RolePermissionUpdateWithWhereUniqueWithoutPermissionInput = {
-    where: RolePermissionWhereUniqueInput
-    data: XOR<RolePermissionUpdateWithoutPermissionInput, RolePermissionUncheckedUpdateWithoutPermissionInput>
-  }
-
-  export type RolePermissionUpdateManyWithWhereWithoutPermissionInput = {
-    where: RolePermissionScalarWhereInput
-    data: XOR<RolePermissionUpdateManyMutationInput, RolePermissionUncheckedUpdateManyWithoutPermissionInput>
+  export type RolePermissionCreateManyPermissionInputEnvelope = {
+    data: RolePermissionCreateManyPermissionInput | RolePermissionCreateManyPermissionInput[]
+    skipDuplicates?: boolean
   }
 
   export type MenuItemUpsertWithWhereUniqueWithoutPermissionInput = {
@@ -18082,7 +19899,23 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"MenuItem"> | Date | string
   }
 
-  export type UserCreateWithoutUserRolesInput = {
+  export type RolePermissionUpsertWithWhereUniqueWithoutPermissionInput = {
+    where: RolePermissionWhereUniqueInput
+    update: XOR<RolePermissionUpdateWithoutPermissionInput, RolePermissionUncheckedUpdateWithoutPermissionInput>
+    create: XOR<RolePermissionCreateWithoutPermissionInput, RolePermissionUncheckedCreateWithoutPermissionInput>
+  }
+
+  export type RolePermissionUpdateWithWhereUniqueWithoutPermissionInput = {
+    where: RolePermissionWhereUniqueInput
+    data: XOR<RolePermissionUpdateWithoutPermissionInput, RolePermissionUncheckedUpdateWithoutPermissionInput>
+  }
+
+  export type RolePermissionUpdateManyWithWhereWithoutPermissionInput = {
+    where: RolePermissionScalarWhereInput
+    data: XOR<RolePermissionUpdateManyMutationInput, RolePermissionUncheckedUpdateManyWithoutPermissionInput>
+  }
+
+  export type UserCreateWithoutCreatedRolesInput = {
     id?: string
     name?: string | null
     email: string
@@ -18093,13 +19926,14 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
     credentials?: UserCredentialsCreateNestedOneWithoutUserInput
-    createdRoles?: UserRoleCreateNestedManyWithoutCreatorInput
-    passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    userRoles?: UserRoleCreateNestedManyWithoutUserInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
   }
 
-  export type UserUncheckedCreateWithoutUserRolesInput = {
+  export type UserUncheckedCreateWithoutCreatedRolesInput = {
     id?: string
     name?: string | null
     email: string
@@ -18110,15 +19944,16 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     credentials?: UserCredentialsUncheckedCreateNestedOneWithoutUserInput
-    createdRoles?: UserRoleUncheckedCreateNestedManyWithoutCreatorInput
-    passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
   }
 
-  export type UserCreateOrConnectWithoutUserRolesInput = {
+  export type UserCreateOrConnectWithoutCreatedRolesInput = {
     where: UserWhereUniqueInput
-    create: XOR<UserCreateWithoutUserRolesInput, UserUncheckedCreateWithoutUserRolesInput>
+    create: XOR<UserCreateWithoutCreatedRolesInput, UserUncheckedCreateWithoutCreatedRolesInput>
   }
 
   export type RoleCreateWithoutUserRolesInput = {
@@ -18144,7 +19979,7 @@ export namespace Prisma {
     create: XOR<RoleCreateWithoutUserRolesInput, RoleUncheckedCreateWithoutUserRolesInput>
   }
 
-  export type UserCreateWithoutCreatedRolesInput = {
+  export type UserCreateWithoutUserRolesInput = {
     id?: string
     name?: string | null
     email: string
@@ -18155,13 +19990,14 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
     credentials?: UserCredentialsCreateNestedOneWithoutUserInput
-    userRoles?: UserRoleCreateNestedManyWithoutUserInput
-    passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    createdRoles?: UserRoleCreateNestedManyWithoutCreatorInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
   }
 
-  export type UserUncheckedCreateWithoutCreatedRolesInput = {
+  export type UserUncheckedCreateWithoutUserRolesInput = {
     id?: string
     name?: string | null
     email: string
@@ -18172,29 +20008,30 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     credentials?: UserCredentialsUncheckedCreateNestedOneWithoutUserInput
-    userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
-    passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    createdRoles?: UserRoleUncheckedCreateNestedManyWithoutCreatorInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
   }
 
-  export type UserCreateOrConnectWithoutCreatedRolesInput = {
+  export type UserCreateOrConnectWithoutUserRolesInput = {
     where: UserWhereUniqueInput
-    create: XOR<UserCreateWithoutCreatedRolesInput, UserUncheckedCreateWithoutCreatedRolesInput>
-  }
-
-  export type UserUpsertWithoutUserRolesInput = {
-    update: XOR<UserUpdateWithoutUserRolesInput, UserUncheckedUpdateWithoutUserRolesInput>
     create: XOR<UserCreateWithoutUserRolesInput, UserUncheckedCreateWithoutUserRolesInput>
+  }
+
+  export type UserUpsertWithoutCreatedRolesInput = {
+    update: XOR<UserUpdateWithoutCreatedRolesInput, UserUncheckedUpdateWithoutCreatedRolesInput>
+    create: XOR<UserCreateWithoutCreatedRolesInput, UserUncheckedCreateWithoutCreatedRolesInput>
     where?: UserWhereInput
   }
 
-  export type UserUpdateToOneWithWhereWithoutUserRolesInput = {
+  export type UserUpdateToOneWithWhereWithoutCreatedRolesInput = {
     where?: UserWhereInput
-    data: XOR<UserUpdateWithoutUserRolesInput, UserUncheckedUpdateWithoutUserRolesInput>
+    data: XOR<UserUpdateWithoutCreatedRolesInput, UserUncheckedUpdateWithoutCreatedRolesInput>
   }
 
-  export type UserUpdateWithoutUserRolesInput = {
+  export type UserUpdateWithoutCreatedRolesInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
@@ -18205,13 +20042,14 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
     credentials?: UserCredentialsUpdateOneWithoutUserNestedInput
-    createdRoles?: UserRoleUpdateManyWithoutCreatorNestedInput
-    passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    userRoles?: UserRoleUpdateManyWithoutUserNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
   }
 
-  export type UserUncheckedUpdateWithoutUserRolesInput = {
+  export type UserUncheckedUpdateWithoutCreatedRolesInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
@@ -18222,10 +20060,11 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     credentials?: UserCredentialsUncheckedUpdateOneWithoutUserNestedInput
-    createdRoles?: UserRoleUncheckedUpdateManyWithoutCreatorNestedInput
-    passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type RoleUpsertWithoutUserRolesInput = {
@@ -18257,18 +20096,18 @@ export namespace Prisma {
     rolePermissions?: RolePermissionUncheckedUpdateManyWithoutRoleNestedInput
   }
 
-  export type UserUpsertWithoutCreatedRolesInput = {
-    update: XOR<UserUpdateWithoutCreatedRolesInput, UserUncheckedUpdateWithoutCreatedRolesInput>
-    create: XOR<UserCreateWithoutCreatedRolesInput, UserUncheckedCreateWithoutCreatedRolesInput>
+  export type UserUpsertWithoutUserRolesInput = {
+    update: XOR<UserUpdateWithoutUserRolesInput, UserUncheckedUpdateWithoutUserRolesInput>
+    create: XOR<UserCreateWithoutUserRolesInput, UserUncheckedCreateWithoutUserRolesInput>
     where?: UserWhereInput
   }
 
-  export type UserUpdateToOneWithWhereWithoutCreatedRolesInput = {
+  export type UserUpdateToOneWithWhereWithoutUserRolesInput = {
     where?: UserWhereInput
-    data: XOR<UserUpdateWithoutCreatedRolesInput, UserUncheckedUpdateWithoutCreatedRolesInput>
+    data: XOR<UserUpdateWithoutUserRolesInput, UserUncheckedUpdateWithoutUserRolesInput>
   }
 
-  export type UserUpdateWithoutCreatedRolesInput = {
+  export type UserUpdateWithoutUserRolesInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
@@ -18279,13 +20118,14 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
     credentials?: UserCredentialsUpdateOneWithoutUserNestedInput
-    userRoles?: UserRoleUpdateManyWithoutUserNestedInput
-    passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    createdRoles?: UserRoleUpdateManyWithoutCreatorNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
   }
 
-  export type UserUncheckedUpdateWithoutCreatedRolesInput = {
+  export type UserUncheckedUpdateWithoutUserRolesInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
@@ -18296,10 +20136,32 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     credentials?: UserCredentialsUncheckedUpdateOneWithoutUserNestedInput
-    userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
-    passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    createdRoles?: UserRoleUncheckedUpdateManyWithoutCreatorNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type PermissionCreateWithoutRolePermissionsInput = {
+    id: string
+    module: string
+    description?: string | null
+    createdAt?: Date | string
+    menuItems?: MenuItemCreateNestedManyWithoutPermissionInput
+  }
+
+  export type PermissionUncheckedCreateWithoutRolePermissionsInput = {
+    id: string
+    module: string
+    description?: string | null
+    createdAt?: Date | string
+    menuItems?: MenuItemUncheckedCreateNestedManyWithoutPermissionInput
+  }
+
+  export type PermissionCreateOrConnectWithoutRolePermissionsInput = {
+    where: PermissionWhereUniqueInput
+    create: XOR<PermissionCreateWithoutRolePermissionsInput, PermissionUncheckedCreateWithoutRolePermissionsInput>
   }
 
   export type RoleCreateWithoutRolePermissionsInput = {
@@ -18325,25 +20187,31 @@ export namespace Prisma {
     create: XOR<RoleCreateWithoutRolePermissionsInput, RoleUncheckedCreateWithoutRolePermissionsInput>
   }
 
-  export type PermissionCreateWithoutRolePermissionsInput = {
-    id: string
-    module: string
-    description?: string | null
-    createdAt?: Date | string
-    menuItems?: MenuItemCreateNestedManyWithoutPermissionInput
-  }
-
-  export type PermissionUncheckedCreateWithoutRolePermissionsInput = {
-    id: string
-    module: string
-    description?: string | null
-    createdAt?: Date | string
-    menuItems?: MenuItemUncheckedCreateNestedManyWithoutPermissionInput
-  }
-
-  export type PermissionCreateOrConnectWithoutRolePermissionsInput = {
-    where: PermissionWhereUniqueInput
+  export type PermissionUpsertWithoutRolePermissionsInput = {
+    update: XOR<PermissionUpdateWithoutRolePermissionsInput, PermissionUncheckedUpdateWithoutRolePermissionsInput>
     create: XOR<PermissionCreateWithoutRolePermissionsInput, PermissionUncheckedCreateWithoutRolePermissionsInput>
+    where?: PermissionWhereInput
+  }
+
+  export type PermissionUpdateToOneWithWhereWithoutRolePermissionsInput = {
+    where?: PermissionWhereInput
+    data: XOR<PermissionUpdateWithoutRolePermissionsInput, PermissionUncheckedUpdateWithoutRolePermissionsInput>
+  }
+
+  export type PermissionUpdateWithoutRolePermissionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    module?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    menuItems?: MenuItemUpdateManyWithoutPermissionNestedInput
+  }
+
+  export type PermissionUncheckedUpdateWithoutRolePermissionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    module?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    menuItems?: MenuItemUncheckedUpdateManyWithoutPermissionNestedInput
   }
 
   export type RoleUpsertWithoutRolePermissionsInput = {
@@ -18375,54 +20243,6 @@ export namespace Prisma {
     userRoles?: UserRoleUncheckedUpdateManyWithoutRoleNestedInput
   }
 
-  export type PermissionUpsertWithoutRolePermissionsInput = {
-    update: XOR<PermissionUpdateWithoutRolePermissionsInput, PermissionUncheckedUpdateWithoutRolePermissionsInput>
-    create: XOR<PermissionCreateWithoutRolePermissionsInput, PermissionUncheckedCreateWithoutRolePermissionsInput>
-    where?: PermissionWhereInput
-  }
-
-  export type PermissionUpdateToOneWithWhereWithoutRolePermissionsInput = {
-    where?: PermissionWhereInput
-    data: XOR<PermissionUpdateWithoutRolePermissionsInput, PermissionUncheckedUpdateWithoutRolePermissionsInput>
-  }
-
-  export type PermissionUpdateWithoutRolePermissionsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    module?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    menuItems?: MenuItemUpdateManyWithoutPermissionNestedInput
-  }
-
-  export type PermissionUncheckedUpdateWithoutRolePermissionsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    module?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    menuItems?: MenuItemUncheckedUpdateManyWithoutPermissionNestedInput
-  }
-
-  export type PermissionCreateWithoutMenuItemsInput = {
-    id: string
-    module: string
-    description?: string | null
-    createdAt?: Date | string
-    rolePermissions?: RolePermissionCreateNestedManyWithoutPermissionInput
-  }
-
-  export type PermissionUncheckedCreateWithoutMenuItemsInput = {
-    id: string
-    module: string
-    description?: string | null
-    createdAt?: Date | string
-    rolePermissions?: RolePermissionUncheckedCreateNestedManyWithoutPermissionInput
-  }
-
-  export type PermissionCreateOrConnectWithoutMenuItemsInput = {
-    where: PermissionWhereUniqueInput
-    create: XOR<PermissionCreateWithoutMenuItemsInput, PermissionUncheckedCreateWithoutMenuItemsInput>
-  }
-
   export type MenuItemCreateWithoutChildrenInput = {
     id?: string
     title: string
@@ -18432,8 +20252,8 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    permission?: PermissionCreateNestedOneWithoutMenuItemsInput
     parent?: MenuItemCreateNestedOneWithoutChildrenInput
+    permission?: PermissionCreateNestedOneWithoutMenuItemsInput
   }
 
   export type MenuItemUncheckedCreateWithoutChildrenInput = {
@@ -18463,8 +20283,8 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    permission?: PermissionCreateNestedOneWithoutMenuItemsInput
     children?: MenuItemCreateNestedManyWithoutParentInput
+    permission?: PermissionCreateNestedOneWithoutMenuItemsInput
   }
 
   export type MenuItemUncheckedCreateWithoutParentInput = {
@@ -18490,31 +20310,25 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type PermissionUpsertWithoutMenuItemsInput = {
-    update: XOR<PermissionUpdateWithoutMenuItemsInput, PermissionUncheckedUpdateWithoutMenuItemsInput>
+  export type PermissionCreateWithoutMenuItemsInput = {
+    id: string
+    module: string
+    description?: string | null
+    createdAt?: Date | string
+    rolePermissions?: RolePermissionCreateNestedManyWithoutPermissionInput
+  }
+
+  export type PermissionUncheckedCreateWithoutMenuItemsInput = {
+    id: string
+    module: string
+    description?: string | null
+    createdAt?: Date | string
+    rolePermissions?: RolePermissionUncheckedCreateNestedManyWithoutPermissionInput
+  }
+
+  export type PermissionCreateOrConnectWithoutMenuItemsInput = {
+    where: PermissionWhereUniqueInput
     create: XOR<PermissionCreateWithoutMenuItemsInput, PermissionUncheckedCreateWithoutMenuItemsInput>
-    where?: PermissionWhereInput
-  }
-
-  export type PermissionUpdateToOneWithWhereWithoutMenuItemsInput = {
-    where?: PermissionWhereInput
-    data: XOR<PermissionUpdateWithoutMenuItemsInput, PermissionUncheckedUpdateWithoutMenuItemsInput>
-  }
-
-  export type PermissionUpdateWithoutMenuItemsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    module?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    rolePermissions?: RolePermissionUpdateManyWithoutPermissionNestedInput
-  }
-
-  export type PermissionUncheckedUpdateWithoutMenuItemsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    module?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    rolePermissions?: RolePermissionUncheckedUpdateManyWithoutPermissionNestedInput
   }
 
   export type MenuItemUpsertWithoutChildrenInput = {
@@ -18537,8 +20351,8 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    permission?: PermissionUpdateOneWithoutMenuItemsNestedInput
     parent?: MenuItemUpdateOneWithoutChildrenNestedInput
+    permission?: PermissionUpdateOneWithoutMenuItemsNestedInput
   }
 
   export type MenuItemUncheckedUpdateWithoutChildrenInput = {
@@ -18570,6 +20384,121 @@ export namespace Prisma {
     data: XOR<MenuItemUpdateManyMutationInput, MenuItemUncheckedUpdateManyWithoutParentInput>
   }
 
+  export type PermissionUpsertWithoutMenuItemsInput = {
+    update: XOR<PermissionUpdateWithoutMenuItemsInput, PermissionUncheckedUpdateWithoutMenuItemsInput>
+    create: XOR<PermissionCreateWithoutMenuItemsInput, PermissionUncheckedCreateWithoutMenuItemsInput>
+    where?: PermissionWhereInput
+  }
+
+  export type PermissionUpdateToOneWithWhereWithoutMenuItemsInput = {
+    where?: PermissionWhereInput
+    data: XOR<PermissionUpdateWithoutMenuItemsInput, PermissionUncheckedUpdateWithoutMenuItemsInput>
+  }
+
+  export type PermissionUpdateWithoutMenuItemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    module?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rolePermissions?: RolePermissionUpdateManyWithoutPermissionNestedInput
+  }
+
+  export type PermissionUncheckedUpdateWithoutMenuItemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    module?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rolePermissions?: RolePermissionUncheckedUpdateManyWithoutPermissionNestedInput
+  }
+
+  export type UserCreateWithoutAuditLogsInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    firstName?: string | null
+    lastName?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    credentials?: UserCredentialsCreateNestedOneWithoutUserInput
+    createdRoles?: UserRoleCreateNestedManyWithoutCreatorInput
+    userRoles?: UserRoleCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutAuditLogsInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    image?: string | null
+    firstName?: string | null
+    lastName?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    credentials?: UserCredentialsUncheckedCreateNestedOneWithoutUserInput
+    createdRoles?: UserRoleUncheckedCreateNestedManyWithoutCreatorInput
+    userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutAuditLogsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutAuditLogsInput, UserUncheckedCreateWithoutAuditLogsInput>
+  }
+
+  export type UserUpsertWithoutAuditLogsInput = {
+    update: XOR<UserUpdateWithoutAuditLogsInput, UserUncheckedUpdateWithoutAuditLogsInput>
+    create: XOR<UserCreateWithoutAuditLogsInput, UserUncheckedCreateWithoutAuditLogsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutAuditLogsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutAuditLogsInput, UserUncheckedUpdateWithoutAuditLogsInput>
+  }
+
+  export type UserUpdateWithoutAuditLogsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    credentials?: UserCredentialsUpdateOneWithoutUserNestedInput
+    createdRoles?: UserRoleUpdateManyWithoutCreatorNestedInput
+    userRoles?: UserRoleUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutAuditLogsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    credentials?: UserCredentialsUncheckedUpdateOneWithoutUserNestedInput
+    createdRoles?: UserRoleUncheckedUpdateManyWithoutCreatorNestedInput
+    userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
+  }
+
   export type AccountCreateManyUserInput = {
     type: string
     provider: string
@@ -18583,6 +20512,13 @@ export namespace Prisma {
     session_state?: string | null
   }
 
+  export type PasswordResetTokenCreateManyUserInput = {
+    id?: string
+    token: string
+    expiresAt: Date | string
+    createdAt?: Date | string
+  }
+
   export type SessionCreateManyUserInput = {
     sessionToken: string
     expires: Date | string
@@ -18591,23 +20527,31 @@ export namespace Prisma {
     userAgent?: string | null
   }
 
-  export type UserRoleCreateManyUserInput = {
-    roleId: string
-    createdAt?: Date | string
-    createdBy?: string | null
-  }
-
   export type UserRoleCreateManyCreatorInput = {
     userId: string
     roleId: string
     createdAt?: Date | string
   }
 
-  export type PasswordResetTokenCreateManyUserInput = {
-    id?: string
-    token: string
-    expiresAt: Date | string
+  export type UserRoleCreateManyUserInput = {
+    roleId: string
     createdAt?: Date | string
+    createdBy?: string | null
+  }
+
+  export type AuditLogCreateManyUserInput = {
+    id?: string
+    action: string
+    module: string
+    entityType?: string | null
+    entityId?: string | null
+    oldValues?: NullableJsonNullValueInput | InputJsonValue
+    newValues?: NullableJsonNullValueInput | InputJsonValue
+    ipAddress?: string | null
+    userAgent?: string | null
+    requestId?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    timestamp?: Date | string
   }
 
   export type AccountUpdateWithoutUserInput = {
@@ -18649,6 +20593,27 @@ export namespace Prisma {
     session_state?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type PasswordResetTokenUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    token?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PasswordResetTokenUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    token?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PasswordResetTokenUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    token?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type SessionUpdateWithoutUserInput = {
     sessionToken?: StringFieldUpdateOperationsInput | string
     expires?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18673,28 +20638,10 @@ export namespace Prisma {
     userAgent?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
-  export type UserRoleUpdateWithoutUserInput = {
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    role?: RoleUpdateOneRequiredWithoutUserRolesNestedInput
-    creator?: UserUpdateOneWithoutCreatedRolesNestedInput
-  }
-
-  export type UserRoleUncheckedUpdateWithoutUserInput = {
-    roleId?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
-  }
-
-  export type UserRoleUncheckedUpdateManyWithoutUserInput = {
-    roleId?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
-  }
-
   export type UserRoleUpdateWithoutCreatorInput = {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutUserRolesNestedInput
     role?: RoleUpdateOneRequiredWithoutUserRolesNestedInput
+    user?: UserUpdateOneRequiredWithoutUserRolesNestedInput
   }
 
   export type UserRoleUncheckedUpdateWithoutCreatorInput = {
@@ -18709,31 +20656,67 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type PasswordResetTokenUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    token?: StringFieldUpdateOperationsInput | string
-    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  export type UserRoleUpdateWithoutUserInput = {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    creator?: UserUpdateOneWithoutCreatedRolesNestedInput
+    role?: RoleUpdateOneRequiredWithoutUserRolesNestedInput
   }
 
-  export type PasswordResetTokenUncheckedUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    token?: StringFieldUpdateOperationsInput | string
-    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  export type UserRoleUncheckedUpdateWithoutUserInput = {
+    roleId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
-  export type PasswordResetTokenUncheckedUpdateManyWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    token?: StringFieldUpdateOperationsInput | string
-    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  export type UserRoleUncheckedUpdateManyWithoutUserInput = {
+    roleId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
-  export type UserRoleCreateManyRoleInput = {
-    userId: string
-    createdAt?: Date | string
-    createdBy?: string | null
+  export type AuditLogUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    module?: StringFieldUpdateOperationsInput | string
+    entityType?: NullableStringFieldUpdateOperationsInput | string | null
+    entityId?: NullableStringFieldUpdateOperationsInput | string | null
+    oldValues?: NullableJsonNullValueInput | InputJsonValue
+    newValues?: NullableJsonNullValueInput | InputJsonValue
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    requestId?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AuditLogUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    module?: StringFieldUpdateOperationsInput | string
+    entityType?: NullableStringFieldUpdateOperationsInput | string | null
+    entityId?: NullableStringFieldUpdateOperationsInput | string | null
+    oldValues?: NullableJsonNullValueInput | InputJsonValue
+    newValues?: NullableJsonNullValueInput | InputJsonValue
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    requestId?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AuditLogUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    module?: StringFieldUpdateOperationsInput | string
+    entityType?: NullableStringFieldUpdateOperationsInput | string | null
+    entityId?: NullableStringFieldUpdateOperationsInput | string | null
+    oldValues?: NullableJsonNullValueInput | InputJsonValue
+    newValues?: NullableJsonNullValueInput | InputJsonValue
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    requestId?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type RolePermissionCreateManyRoleInput = {
@@ -18741,22 +20724,10 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
-  export type UserRoleUpdateWithoutRoleInput = {
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutUserRolesNestedInput
-    creator?: UserUpdateOneWithoutCreatedRolesNestedInput
-  }
-
-  export type UserRoleUncheckedUpdateWithoutRoleInput = {
-    userId?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
-  }
-
-  export type UserRoleUncheckedUpdateManyWithoutRoleInput = {
-    userId?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+  export type UserRoleCreateManyRoleInput = {
+    userId: string
+    createdAt?: Date | string
+    createdBy?: string | null
   }
 
   export type RolePermissionUpdateWithoutRoleInput = {
@@ -18774,9 +20745,22 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type RolePermissionCreateManyPermissionInput = {
-    roleId: string
-    createdAt?: Date | string
+  export type UserRoleUpdateWithoutRoleInput = {
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    creator?: UserUpdateOneWithoutCreatedRolesNestedInput
+    user?: UserUpdateOneRequiredWithoutUserRolesNestedInput
+  }
+
+  export type UserRoleUncheckedUpdateWithoutRoleInput = {
+    userId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type UserRoleUncheckedUpdateManyWithoutRoleInput = {
+    userId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type MenuItemCreateManyPermissionInput = {
@@ -18791,19 +20775,9 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
-  export type RolePermissionUpdateWithoutPermissionInput = {
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    role?: RoleUpdateOneRequiredWithoutRolePermissionsNestedInput
-  }
-
-  export type RolePermissionUncheckedUpdateWithoutPermissionInput = {
-    roleId?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type RolePermissionUncheckedUpdateManyWithoutPermissionInput = {
-    roleId?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  export type RolePermissionCreateManyPermissionInput = {
+    roleId: string
+    createdAt?: Date | string
   }
 
   export type MenuItemUpdateWithoutPermissionInput = {
@@ -18844,6 +20818,21 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type RolePermissionUpdateWithoutPermissionInput = {
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: RoleUpdateOneRequiredWithoutRolePermissionsNestedInput
+  }
+
+  export type RolePermissionUncheckedUpdateWithoutPermissionInput = {
+    roleId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RolePermissionUncheckedUpdateManyWithoutPermissionInput = {
+    roleId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type MenuItemCreateManyParentInput = {
     id?: string
     title: string
@@ -18865,8 +20854,8 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    permission?: PermissionUpdateOneWithoutMenuItemsNestedInput
     children?: MenuItemUpdateManyWithoutParentNestedInput
+    permission?: PermissionUpdateOneWithoutMenuItemsNestedInput
   }
 
   export type MenuItemUncheckedUpdateWithoutParentInput = {

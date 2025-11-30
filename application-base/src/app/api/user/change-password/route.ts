@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Dispatch login event
+    // Dispatch password changed event
     await eventBus.dispatch(
       SystemEvent.PASSWORD_CHANGED,
       {

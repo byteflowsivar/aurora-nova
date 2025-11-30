@@ -217,9 +217,30 @@ exports.Prisma.MenuItemScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.AuditLogScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  action: 'action',
+  module: 'module',
+  entityType: 'entityType',
+  entityId: 'entityId',
+  oldValues: 'oldValues',
+  newValues: 'newValues',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  requestId: 'requestId',
+  metadata: 'metadata',
+  timestamp: 'timestamp'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.QueryMode = {
@@ -230,6 +251,12 @@ exports.Prisma.QueryMode = {
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
+};
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
 };
 
 
@@ -244,7 +271,8 @@ exports.Prisma.ModelName = {
   Permission: 'Permission',
   UserRole: 'UserRole',
   RolePermission: 'RolePermission',
-  MenuItem: 'MenuItem'
+  MenuItem: 'MenuItem',
+  AuditLog: 'AuditLog'
 };
 
 /**
