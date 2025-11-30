@@ -40,7 +40,7 @@ Estos patrones son **opcionales** y deben aplicarse solo cuando la complejidad d
 
 Las siguientes plantillas deben ser personalizadas para cada proyecto específico:
 
-- **[Plantilla de Modelo de Datos](./data-model.template.md)**: Plantilla para documentar las entidades de la base de datos, relaciones y reglas de negocio.
+- **[Plantilla de Modelo de Datos](./data-model.md)**: Plantilla para documentar las entidades de la base de datos, relaciones y reglas de negocio.
 - **[Plantilla de Especificación de API](./api-spec.template.yml)**: Plantilla OpenAPI 3.0 para documentar el contrato de la API REST del proyecto.
 - **[Guía de Desarrollo](./development_guide.md)**: Plantilla de guía para configurar el entorno de desarrollo y ejecutar el proyecto.
 
