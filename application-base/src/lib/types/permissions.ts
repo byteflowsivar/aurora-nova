@@ -96,6 +96,10 @@ export const SYSTEM_PERMISSIONS = {
   // System permissions
   SYSTEM_ADMIN: 'system:admin',
   SYSTEM_CONFIG: 'system:config',
+
+  // Audit permissions
+  AUDIT_VIEW: 'audit:view',
+  AUDIT_MANAGE: 'audit:manage',
 } as const
 
 export type SystemPermission = typeof SYSTEM_PERMISSIONS[keyof typeof SYSTEM_PERMISSIONS]
