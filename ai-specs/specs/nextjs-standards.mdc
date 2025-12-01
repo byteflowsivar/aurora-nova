@@ -112,10 +112,12 @@ Este proyecto adopta una arquitectura unificada donde tanto el frontend como el 
 
 ### Regla de Comunicación Frontend-API
 
-**Regla fundamental:** Todos los componentes del frontend que necesiten interactuar con la lógica de negocio o la base de datos **deben** hacerlo exclusivamente a través de las Rutas de API internas del proyecto (`/api/...`). Está prohibido que los componentes de frontend (especialmente los del lado del cliente) accedan directamente a la base de datos o a servicios externos.
+**Regla fundamental:** Todos los componentes, **incluyendo Server Components**, deben obtener sus datos a través de llamadas HTTP a las API Routes del proyecto. Se prohíbe la importación y el uso directo de servicios o repositorios desde los componentes de página (`page.tsx`) o cualquier otro componente de React.
+
+Este enfoque "headless" asegura una arquitectura desacoplada y prepara la aplicación para futuras integraciones (ej. una app móvil consumiendo la misma API).
 
 ```
-[Componente Frontend (Cliente)] -> [Llamada HTTP a /api/recurso] -> [Ruta de API (Servidor)] -> [Lógica de Negocio/Prisma] -> [Base de Datos]
+[Componente (Server/Client)] -> [Llamada HTTP a /api/recurso] -> [Ruta de API] -> [Servicio] -> [Repositorio] -> [Base de Datos]
 ```
 
 ## Estructura del Proyecto (App Router)
