@@ -99,8 +99,8 @@ export async function GET(request: NextRequest) {
     const limitParam = searchParams.get('limit');
     const offsetParam = searchParams.get('offset');
 
-    let limit = limitParam ? parseInt(limitParam, 10) : 50;
-    let offset = offsetParam ? parseInt(offsetParam, 10) : 0;
+    const limit = limitParam ? parseInt(limitParam, 10) : 50;
+    const offset = offsetParam ? parseInt(offsetParam, 10) : 0;
 
     // Validar paginación
     if (isNaN(limit) || limit < 1) {
@@ -117,9 +117,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    let effectiveLimit = limit;
     // Limitar max 100 resultados por request
-    if (limit > 100) {
-      limit = 100;
+    if (effectiveLimit > 100) {
+      effectiveLimit = 100;
     }
 
     // Obtener logs con filtros
@@ -132,7 +133,7 @@ export async function GET(request: NextRequest) {
       requestId,
       startDate,
       endDate,
-      limit,
+      limit: effectiveLimit,
       offset,
     });
 
@@ -158,11 +159,14 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    structuredLogger.error('Error retrieving audit logs via API', {
-      module: 'audit',
-      action: 'api_get_logs_failed',
-      error,
-    });
+    structuredLogger.error(
+      'Error retrieving audit logs via API',
+      error instanceof Error ? error : new Error(String(error)), // Ensure error is an Error object
+      {
+        module: 'audit',
+        action: 'api_get_logs_failed',
+      }
+    );
 
     return NextResponse.json(
       { error: 'Error al obtener logs de auditoría' },

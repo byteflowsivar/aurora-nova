@@ -26,7 +26,7 @@ const GLOBAL_EVENT_BUS_KEY = '__AURORA_EVENT_BUS_INSTANCE__'; // Usar una clave 
 
 // Aumentamos el ámbito global para añadir nuestra instancia singleton
 declare global {
-  // eslint-disable-next-line no-var
+  
   var __AURORA_EVENT_BUS_INSTANCE__: EventBus | undefined;
 }
 

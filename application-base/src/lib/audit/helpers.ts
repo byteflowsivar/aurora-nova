@@ -83,11 +83,16 @@ export async function getAuditContext(userId?: string): Promise<AuditContext> {
     };
   } catch (error) {
     // En caso de error (ej. no estamos en un request context), retornar valores por defecto
-    structuredLogger.warn('Failed to get audit context', {
-      module: 'audit',
-      action: 'get_context_failed',
-      error,
-    });
+    structuredLogger.warn(
+      'Failed to get audit context',
+      {
+        module: 'audit',
+        action: 'get_context_failed',
+        metadata: {
+          errorMessage: error instanceof Error ? error.message : String(error),
+        },
+      }
+    );
 
     return {
       userId,
@@ -217,14 +222,17 @@ export async function auditOperation<T>(
       },
     });
 
-    structuredLogger.error('Audit operation failed', {
-      module: options.module,
-      action: options.action,
-      userId: options.userId,
-      requestId: options.requestId || context.requestId,
-      duration,
-      error,
-    });
+    structuredLogger.error(
+      'Audit operation failed',
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        module: options.module,
+        action: options.action,
+        userId: options.userId,
+        requestId: options.requestId || context.requestId,
+        duration,
+      }
+    );
 
     // Re-lanzar el error para que el caller pueda manejarlo
     throw error;
@@ -279,9 +287,11 @@ export async function auditEntityChange(
   structuredLogger.info('Entity change audited', {
     module: options.module,
     action: options.action,
-    entityType: options.entityType,
-    entityId: options.entityId,
     userId: options.userId,
     requestId: options.requestId || context.requestId,
+    metadata: {
+        entityType: options.entityType,
+        entityId: options.entityId,
+    }
   });
 }

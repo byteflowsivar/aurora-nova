@@ -52,16 +52,16 @@ export class AuditService {
           entityId: input.entityId ?? null,
           oldValues: input.oldValues
             ? (input.oldValues as Prisma.InputJsonValue)
-            : null,
+            : undefined,
           newValues: input.newValues
             ? (input.newValues as Prisma.InputJsonValue)
-            : null,
+            : undefined,
           ipAddress: input.ipAddress ?? null,
           userAgent: input.userAgent ?? null,
           requestId: input.requestId ?? null,
           metadata: input.metadata
             ? (input.metadata as Prisma.InputJsonValue)
-            : null,
+            : undefined,
         },
       });
 

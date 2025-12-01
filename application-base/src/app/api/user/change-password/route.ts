@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       SystemEvent.PASSWORD_CHANGED,
       {
         userId: session?.user.id || '',
-        email: session?.user.email!,
+        email: session.user.email || '',
         changedBy: 'self'
       },
       { userId: session?.user.id }

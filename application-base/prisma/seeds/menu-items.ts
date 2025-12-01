@@ -119,6 +119,21 @@ export async function seedMenuItems() {
 
   console.log('  ✓ Created: Permisos (level 2, child of Administración)')
 
+  // Auditoria
+  const audit_menu = await prisma.menuItem.create({
+    data: {
+      title: 'Auditoria',
+      href: '/audit',
+      icon: 'Key',
+      order: 4,
+      isActive: true,
+      permissionId: 'audit:list', // Requiere permiso
+      parentId: adminGroup.id // Referencia al ID generado
+    }
+  })
+
+  console.log('  ✓ Created: Auditoria (level 2, child of Administración)')
+
   // ============================================================================
   // Resumen
   // ============================================================================
