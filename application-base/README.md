@@ -1,387 +1,186 @@
-# Aurora Nova
+# Documentación de la Aplicación Base - Aurora Nova
 
-Este es un proyecto [Next.js](https://nextjs.org) para Aurora Nova, un sistema de gestión de usuarios con control de acceso basado en roles (RBAC).
+Este documento sirve como la guía central para entender, operar y desarrollar sobre la aplicación base de Aurora Nova. Está dirigido tanto a administradores del sistema como a desarrolladores.
 
-## Acerca de este proyecto
+## 🗂️ Índice
 
-Aurora Nova es una aplicación web moderna construida con Next.js, TypeScript y PostgreSQL. Proporciona un sistema seguro y flexible para la gestión de usuarios, roles y permisos.
+### 👨‍💼 Para Administradores y Usuarios Avanzados
+1. [Conceptos Fundamentales](#1-conceptos-fundamentales)
+   - Roles de Usuario
+   - Permisos
+2. [Flujos de Autenticación](#2-flujos-de-autenticación)
+   - Registro y Login
+   - Recuperación de Contraseña
+3. [Funcionalidades Clave](#3-funcionalidades-clave)
+   - Gestión de Usuarios y Roles (RBAC)
+   - Sistema de Auditoría
+   - Menú de Navegación Dinámico
+4. [Configuración Inicial](#4-configuración-inicial)
+   - Creación del Super Administrador
 
-### Características
+### 👩‍💻 Para Desarrolladores
+1. [Arquitectura y Stack Tecnológico](#5-arquitectura-y-stack-tecnológico)
+2. [Estructura del Proyecto](#6-estructura-del-proyecto)
+3. [Sistemas Principales (Deep Dive)](#7-sistemas-principales-deep-dive)
+   - Sistema de Autenticación Híbrido
+   - Sistema de Logging Estructurado
+   - Sistema de Eventos (Event-Driven)
+   - Sistema de Auditoría
+4. [Base de Datos](#8-base-de-datos)
+   - Esquema Prisma
+   - Migraciones y Seeding
+5. [Testing](#9-testing)
+6. [Scripts y Flujos de Trabajo](#10-scripts-y-flujos-de-trabajo)
 
-*   **Gestión de Usuarios**: Crea, lee, actualiza y elimina usuarios.
-*   **Control de Acceso Basado en Roles (RBAC)**: Define roles y asigna permisos a los mismos.
-*   **Menú Dinámico**: Sistema de navegación configurable desde base de datos con control de permisos.
-*   **Autenticación Segura**: Utiliza `next-auth` para una autenticación segura.
-*   **Interfaz de Usuario Moderna**: Construida con `shadcn/ui` para una interfaz de usuario limpia y responsiva.
+---
 
-## Configuración de Menús Dinámicos
+## 👨‍💼 Para Administradores y Usuarios Avanzados
 
-Aurora Nova utiliza un sistema de menú dinámico basado en base de datos que permite configurar la navegación sin modificar el código. Los menús se filtran automáticamente según los permisos del usuario.
+Esta sección explica las funcionalidades desde una perspectiva de uso y gestión.
 
-### Estructura del Menú
+### 1. Conceptos Fundamentales
 
-El sistema soporta menús jerárquicos de 2 niveles:
+El sistema se basa en un modelo de Control de Acceso Basado en Roles (RBAC).
 
-```
-Nivel 1 (Root Items)
-├── Item Directo (con href) → Navega a una pantalla
-└── Item Grupo (sin href) → Solo agrupa items
-    ├── Nivel 2: Item Directo (con href)
-    ├── Nivel 2: Item Directo (con href)
-    └── Nivel 2: Item Directo (con href)
-```
+#### Roles de Usuario
+Los roles agrupan un conjunto de permisos. Un usuario puede tener múltiples roles. El sistema incluye tres roles por defecto:
+- **Super Administrador**: Acceso total y sin restricciones a todo el sistema. Este rol posee todos los permisos existentes y futuros.
+- **Administrador**: Puede gestionar usuarios y roles, pero con permisos limitados. No puede acceder a configuraciones críticas del sistema.
+- **Usuario**: Rol base con permisos de solo lectura para la mayoría de los módulos. Es el rol por defecto para nuevos usuarios.
 
-### Modelo de Datos
+#### Permisos
+Los permisos son la unidad más granular de autorización. Siguen una convención `módulo:acción` (ej. `user:create`, `role:delete`). Un permiso autoriza a un usuario a realizar una acción específica. Los permisos no se asignan directamente a los usuarios, sino a los roles.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `id` | String | Identificador único (CUID) |
-| `title` | String | Título mostrado en el UI |
-| `href` | String? | Ruta de navegación (null para grupos) |
-| `icon` | String? | Nombre del ícono de lucide-react |
-| `order` | Int | Orden de visualización |
-| `isActive` | Boolean | Activar/desactivar sin eliminar |
-| `permissionId` | String? | Permiso requerido (null = visible para todos) |
-| `parentId` | String? | ID del item padre (null = nivel 1) |
+### 2. Flujos de Autenticación
 
-### Cómo Agregar Nuevos Items al Menú
+#### Registro y Login
+- Los usuarios se registran con su nombre, email y contraseña.
+- Al registrarse, se les asigna automáticamente el rol de "Usuario".
+- El login se realiza con email y contraseña. El sistema verifica las credenciales y, si son correctas, crea una sesión segura.
 
-Cuando agregues una nueva funcionalidad al sistema, necesitarás agregar el item correspondiente al menú. Tienes tres opciones:
+#### Recuperación de Contraseña
+1. **Solicitud**: El usuario introduce su email en la página de "Olvidé mi contraseña".
+2. **Email**: El sistema envía un correo electrónico con un enlace único y seguro para restablecer la contraseña.
+3. **Restablecimiento**: El usuario sigue el enlace, que lo lleva a una página donde puede establecer una nueva contraseña.
+4. **Seguridad**: Por seguridad, al cambiar la contraseña, todas las demás sesiones activas del usuario en otros dispositivos se cierran automáticamente.
 
-#### Opción 1: Prisma Studio (Recomendado para desarrollo)
+### 3. Funcionalidades Clave
 
+#### Gestión de Usuarios y Roles (RBAC)
+La aplicación proporciona interfaces de usuario intuitivas para:
+- **Usuarios**: Listar, crear, editar y eliminar usuarios.
+- **Roles**: Listar, crear, editar y eliminar roles.
+- **Asignación**: Desde la vista de un usuario, se pueden asignar y remover roles. Desde la vista de un rol, se pueden asignar y remover permisos.
+
+#### Sistema de Auditoría
+Para garantizar la trazabilidad y el cumplimiento, el sistema registra automáticamente todas las acciones críticas. Cada registro de auditoría contiene:
+- **Qué** acción se realizó (ej. `login`, `user_update`).
+- **Quién** la realizó (qué usuario).
+- **Cuándo** se realizó (timestamp).
+- **Dónde** (Dirección IP, User Agent).
+- **Contexto adicional** (ej. los datos que cambiaron en una actualización).
+
+Los administradores con el permiso `audit:view` pueden consultar este registro a través de una interfaz dedicada.
+
+#### Menú de Navegación Dinámico
+El menú lateral de la aplicación no está codificado, sino que se genera dinámicamente desde la base de datos. Cada ítem del menú puede estar asociado a un permiso, lo que significa que **el menú se adapta automáticamente a lo que el usuario tiene permitido ver**.
+
+### 4. Configuración Inicial
+
+#### Creación del Super Administrador
+En una instalación nueva, la base de datos está vacía. El primer paso es crear el usuario "Super Administrador" que tendrá control total. Para ello, se debe ejecutar un script:
 ```bash
-npx prisma studio
+# Desde la carpeta application-base/
+npm run db:create-super-admin
 ```
-
-1. Abre la tabla `MenuItem`
-2. Click en "Add record"
-3. Completa los campos:
-   - `id`: Un identificador único (ej: `menu-reports`)
-   - `title`: "Reportes"
-   - `href`: "/reports"
-   - `icon`: "BarChart3" (nombre del ícono de [lucide.dev](https://lucide.dev))
-   - `order`: 5 (define la posición)
-   - `isActive`: true
-   - `permissionId`: "report:list" (si requiere permiso, o null)
-   - `parentId`: null (nivel 1) o ID del padre (nivel 2)
-4. Click en "Save 1 change"
-
-#### Opción 2: Modificar Seeds (Recomendado para versionamiento)
-
-Edita `prisma/seeds/menu-items.ts`:
-
-```typescript
-const menuItems = [
-  // ... items existentes
-
-  // Nuevo item de nivel 1
-  {
-    id: 'menu-reports',
-    title: 'Reportes',
-    href: '/reports',
-    icon: 'BarChart3',
-    order: 5,
-    isActive: true,
-    permissionId: 'report:list', // Requiere permiso
-    parentId: null, // Nivel 1
-  },
-
-  // O agregar a un grupo existente (nivel 2)
-  {
-    id: 'menu-analytics',
-    title: 'Analytics',
-    href: '/analytics',
-    icon: 'TrendingUp',
-    order: 4,
-    isActive: true,
-    permissionId: 'analytics:view',
-    parentId: 'menu-admin-group', // Hijo del grupo Administración
-  },
-];
-```
-
-Luego ejecuta:
-```bash
-npm run db:reset  # En desarrollo
-# o
-npm run db:seed   # Si solo quieres ejecutar seeds
-```
-
-#### Opción 3: SQL Directo (Producción)
-
-```sql
--- Agregar item de nivel 1
-INSERT INTO menu_item (id, title, href, icon, "order", is_active, permission_id, parent_id, created_at, updated_at)
-VALUES (
-  'menu-reports',
-  'Reportes',
-  '/reports',
-  'BarChart3',
-  5,
-  true,
-  'report:list',
-  NULL,
-  NOW(),
-  NOW()
-);
-
--- Agregar item de nivel 2 (hijo de un grupo)
-INSERT INTO menu_item (id, title, href, icon, "order", is_active, permission_id, parent_id, created_at, updated_at)
-VALUES (
-  'menu-analytics',
-  'Analytics',
-  '/analytics',
-  'TrendingUp',
-  4,
-  true,
-  'analytics:view',
-  'menu-admin-group',
-  NOW(),
-  NOW()
-);
-```
-
-### Control de Permisos
-
-#### Items sin permiso (públicos)
-```typescript
-{
-  permissionId: null, // Visible para todos los usuarios autenticados
-}
-```
-
-#### Items con permiso (restringidos)
-```typescript
-{
-  permissionId: 'report:list', // Solo visible si el usuario tiene este permiso
-}
-```
-
-**Importante:** No olvides crear el permiso correspondiente en la tabla `permission` si aún no existe:
-
-```sql
-INSERT INTO permission (id, module, description, created_at, updated_at)
-VALUES ('report:list', 'Reports', 'Ver listado de reportes', NOW(), NOW());
-```
-
-O en los seeds de permisos (`scripts/seed.ts`):
-
-```typescript
-const permissions = [
-  // ... permisos existentes
-  { id: 'report:list', module: 'Reports', description: 'Ver listado de reportes' },
-];
-```
-
-### Íconos Disponibles
-
-El sistema usa íconos de [Lucide React](https://lucide.dev). Algunos íconos comunes:
-
-- `LayoutDashboard` - Dashboard
-- `Users` - Usuarios
-- `Shield` - Roles/Seguridad
-- `Key` - Permisos
-- `Settings` - Configuración
-- `BarChart3` - Reportes/Gráficas
-- `FileText` - Documentos
-- `Calendar` - Calendario
-- `Mail` - Correos
-
-Consulta la lista completa en [lucide.dev/icons](https://lucide.dev/icons).
-
-### Ejemplo Completo: Agregar Módulo de Reportes
-
-```typescript
-// 1. Agregar permisos en scripts/seed.ts
-const permissions = [
-  // ... permisos existentes
-  { id: 'report:list', module: 'Reports', description: 'Ver reportes' },
-  { id: 'report:export', module: 'Reports', description: 'Exportar reportes' },
-];
-
-// 2. Agregar items de menú en prisma/seeds/menu-items.ts
-const menuItems = [
-  // ... items existentes
-
-  // Grupo de Reportes
-  {
-    id: 'menu-reports-group',
-    title: 'Reportes',
-    href: null, // Es un grupo, no navega
-    icon: 'BarChart3',
-    order: 3,
-    isActive: true,
-    permissionId: null, // El grupo es visible, los hijos requieren permisos
-    parentId: null,
-  },
-
-  // Reporte de Ventas
-  {
-    id: 'menu-sales-report',
-    title: 'Ventas',
-    href: '/reports/sales',
-    icon: 'TrendingUp',
-    order: 1,
-    isActive: true,
-    permissionId: 'report:list',
-    parentId: 'menu-reports-group',
-  },
-
-  // Reporte de Usuarios
-  {
-    id: 'menu-users-report',
-    title: 'Usuarios',
-    href: '/reports/users',
-    icon: 'Users',
-    order: 2,
-    isActive: true,
-    permissionId: 'report:list',
-    parentId: 'menu-reports-group',
-  },
-];
-
-// 3. Ejecutar seeds
-// npm run db:reset
-```
-
-### API Endpoints (Avanzado)
-
-Si necesitas gestionar menús programáticamente:
-
-```typescript
-// Obtener menú del usuario actual
-GET /api/menu
-
-// Administración (requiere permiso menu:manage)
-GET    /api/admin/menu           // Listar todos
-POST   /api/admin/menu           // Crear item
-PATCH  /api/admin/menu/[id]      // Actualizar
-DELETE /api/admin/menu/[id]      // Eliminar
-POST   /api/admin/menu/reorder   // Reordenar
-```
-
-### Troubleshooting
-
-**Problema:** El menú no se actualiza después de agregar un item
-- **Solución:** Cierra sesión y vuelve a iniciar sesión (o reinicia el servidor dev)
-
-**Problema:** El item no aparece en el menú
-- **Verificar:** Que el usuario tenga el permiso requerido
-- **Verificar:** Que `isActive` sea `true`
-- **Verificar:** Que el `parentId` apunte a un item existente
-
-**Problema:** El ícono no se muestra
-- **Solución:** Verifica que el nombre del ícono esté correcto en [lucide.dev](https://lucide.dev)
-- **Ejemplo:** Usa `BarChart3` en lugar de `BarChart` o `bar-chart-3`
-
-## Primeros pasos
-
-### Prerrequisitos
-
-*   [Node.js](https://nodejs.org) (v20.x o superior)
-*   [npm](https://www.npmjs.com) (v9.x o superior)
-*   [Docker](https://www.docker.com) y [Docker Compose](https://docs.docker.com/compose/)
-
-### 1. Clonar el repositorio
-
-```bash
-git clone <URL_DEL_REPOSITORIO>
-cd aurora-nova/app
-```
-
-### 2. Instalar dependencias
-
-```bash
-npm install
-```
-
-### 3. Configurar la base de datos
-
-Este proyecto usa Docker para ejecutar una base de datos PostgreSQL. Inicia el contenedor de la base de datos con:
-
-```bash
-docker-compose up -d
-```
-
-### 4. Configurar variables de entorno
-
-Copia el archivo `.env.example` a `.env.local` y completa las variables de entorno requeridas.
-
-```bash
-cp .env.example .env.local
-```
-
-### 5. Ejecutar migraciones y seed de la base de datos
-
-```bash
-npm run db:deploy
-npm run db:seed
-```
-
-### 6. Ejecutar el servidor de desarrollo
-
-```bash
-npm run dev
-```
-
-Abre [http://localhost:3000](http://localhost:3000) en tu navegador para ver el resultado.
-
-## Construyendo y Ejecutando con Docker
-
-Este proyecto incluye un `Dockerfile` para construir y ejecutar la aplicación en un contenedor.
-
-### Construir la imagen Docker
-
-Para construir la imagen Docker, ejecuta el siguiente comando en el directorio `app`:
-
-Si necesitas especificar argumentos de construcción, usa `docker buildx build`:
-```bash
-docker buildx build \
---build-arg NEXTAUTH_URL="http://app:3000" \
---build-arg AUTH_TRUST_HOST=true \
---build-arg AUTH_URL="http://app:3000" \
---build-arg APP_URL="http://app:3000" \
--t byteflowsivar/aurora-nova:0.0.3 .
-```
-
-Alternativamente, para una construcción estándar:
-```bash
-docker build -t aurora-nova .
-```
-
-### Ejecutar el contenedor Docker
-
-Una vez que la imagen ha sido construida, puedes ejecutarla en un contenedor:
-
-```bash
-docker run -p 3000:3000 aurora-nova
-```
-
-Esto iniciará la aplicación en `http://localhost:3000`.
-
-**Nota:** Para que la aplicación se conecte a la base de datos, necesitas proporcionar las variables de entorno necesarias al contenedor. Puedes hacer esto usando la bandera `-e` en el comando `docker run`, o usando un `--env-file`.
-
-Por ejemplo:
-```bash
-docker run -p 3000:3000 \
-  -e DATABASE_URL="postgresql://<user>:<password>@<host>:<port>/<database_name>" \
-  -e NEXTAUTH_SECRET="your_super_secret" \
-  -e NEXTAUTH_URL="http://localhost:3000" \
-  aurora-nova
-```
-
-## Aprende más
-
-Para aprender más sobre Next.js, echa un vistazo a los siguientes recursos:
-
-- [Documentación de Next.js](https://nextjs.org/docs) - aprende sobre las características y la API de Next.js.
-- [Aprende Next.js](https://nextjs.org/learn) - un tutorial interactivo de Next.js.
-
-Puedes consultar [el repositorio de Next.js en GitHub](https://github.com/vercel/next.js) - ¡tus comentarios y contribuciones son bienvenidos!
-
-## Despliegue en Vercel
-
-La forma más fácil de desplegar tu aplicación Next.js es usar la [Plataforma Vercel](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) de los creadores de Next.js.
-
-Consulta nuestra [documentación de despliegue de Next.js](https://nextjs.org/docs/app/building-your-application/deploying) para más detalles.
+El script solicitará el nombre, email y contraseña para este usuario. **Este comando solo puede ejecutarse una vez sobre una base de datos vacía.**
+
+---
+
+## 👩‍💻 Para Desarrolladores
+
+Esta sección detalla la implementación técnica y las convenciones para extender la aplicación.
+
+### 5. Arquitectura y Stack Tecnológico
+- **Framework**: Next.js 16 (App Router)
+- **Lenguaje**: TypeScript
+- **Base de Datos**: PostgreSQL
+- **ORM**: Prisma
+- **Autenticación**: Auth.js (NextAuth.js) v5
+- **UI**: Tailwind CSS con shadcn/ui
+- **Testing**: Vitest para tests unitarios y de integración.
+- **Logging**: Pino para logging estructurado.
+- **Eventos**: Node.js EventEmitter para arquitectura event-driven.
+- **Validación**: Zod para validación de esquemas.
+
+### 6. Estructura del Proyecto
+El código fuente se encuentra en `src/` y sigue una estructura modular y orientada a funcionalidades:
+- `src/app/`: Rutas de la aplicación (App Router).
+- `src/components/`: Componentes React, organizados por funcionalidad.
+- `src/lib/`: Lógica de negocio principal.
+  - `lib/auth/`: Configuración de Auth.js y sistema híbrido.
+  - `lib/prisma/`: Conexión de Prisma y queries reutilizables.
+  - `lib/logger/`: Sistema de logging estructurado.
+  - `lib/events/`: Sistema de bus de eventos.
+  - `lib/audit/`: Sistema de auditoría.
+- `src/actions/`: Server Actions de Next.js.
+- `src/types/`: Definiciones de tipos TypeScript.
+- `src/__tests__/`: Todos los tests automatizados.
+
+### 7. Sistemas Principales (Deep Dive)
+
+#### Sistema de Autenticación Híbrido
+- **Estrategia**: `jwt` en Auth.js.
+- **JWT Callback**: Al iniciar sesión, se genera un JWT y simultáneamente se crea un registro en la tabla `session` de la base de datos con el `sessionToken`, IP y User-Agent.
+- **Session Callback**: La información del token (incluyendo `sessionToken` y permisos) se adjunta al objeto `session`.
+- **Ventaja**: Las peticiones se validan rápidamente con el JWT, pero se mantiene la capacidad de invalidar sesiones desde el servidor eliminando el registro en la tabla `session`.
+
+#### Sistema de Logging Estructurado
+- **Librería**: Pino, un logger de alto rendimiento para Node.js.
+- **Trazabilidad**: Un middleware en `src/proxy.ts` inyecta un `x-request-id` en cada petición. Este ID se propaga a todos los logs generados durante el ciclo de vida de esa petición, permitiendo una correlación completa.
+- **Contexto Automático**: Los helpers `getLogContext` y `getApiLogContext` enriquecen los logs con información de la sesión (userId, sessionId) y del request.
+- **Sanitización**: El logger redacta automáticamente campos sensibles (como `password`, `token`) para evitar fugas de información.
+- **Guía Completa**: Para una guía detallada sobre cómo implementar el logging en tu código, consulta la **[Guía de Logging Estandarizado](./docs/LOGGING_GUIDE.md)**.
+
+#### Sistema de Eventos (Event-Driven)
+- **Implementación**: Basado en `EventEmitter` de Node.js, implementado como un singleton en `src/lib/events/event-bus.ts`.
+- **Flujo**:
+  1. Una acción principal (ej. `registerUser`) emite un evento (ej. `SystemEvent.USER_REGISTERED`).
+  2. Los "listeners" suscritos a ese evento se ejecutan de forma asíncrona.
+- **Listeners**:
+  - `EmailEventListener`: Envía emails transaccionales (bienvenida, reset de password).
+  - `AuditEventListener`: Crea registros de auditoría automáticamente.
+- **Ventaja**: Desacopla la lógica. Para añadir una nueva acción (ej. enviar una notificación a Slack al registrarse un usuario), solo se necesita crear un nuevo listener, sin modificar el código de registro original.
+- **Guía Completa**: Para una guía detallada sobre cómo utilizar y extender este sistema, consulta la **[Guía de Arquitectura Dirigida por Eventos](./docs/EVENT_DRIVEN_ARCHITECTURE.md)**.
+
+#### Sistema de Auditoría
+- **Implementación**: Combina un listener de eventos (para auditoría automática) con helpers manuales para casos de uso específicos.
+- **Auditoría Automática**: El `AuditEventListener` se suscribe a los eventos del sistema (ej. `USER_UPDATED`) para registrar la mayoría de las acciones de forma automática y consistente.
+- **Auditoría Manual**: Para acciones que no emiten eventos (ej. procesos en lote), se proporcionan helpers como `auditOperation` y `auditEntityChange`.
+- **API**: Un endpoint `GET /api/audit` permite consultar los logs con filtros y paginación, protegido por el permiso `audit:view`.
+- **Guía Completa**: Para aprender a integrar nuevas acciones en el sistema de auditoría, consulta la **[Guía del Sistema de Auditoría](./docs/AUDIT_SYSTEM_GUIDE.md)**.
+
+### 8. Base de Datos
+
+- **ORM**: Prisma. El esquema se define en `prisma/schema.prisma`.
+- **Migraciones**: Se gestionan con `prisma migrate`. Cada cambio en el esquema genera un nuevo archivo de migración SQL en `prisma/migrations/`.
+- **Seeding**: El script `scripts/seed.ts` puebla la base de datos con datos iniciales indispensables (permisos, roles por defecto, menú). Se ejecuta con `npm run db:seed`.
+
+### 9. Testing
+- **Framework**: Vitest.
+- **Entorno**: JSDOM para simular un entorno de navegador.
+- **Mocks**: Se utiliza `vitest-mock-extended` para mockear el cliente de Prisma, y mocks manuales para módulos de Next.js (`next/navigation`).
+- **Estructura**: Los tests están en `src/__tests__/`, separados por `unit`, `integration` y (futuro) `e2e`.
+
+### 10. Scripts y Flujos de Trabajo
+Desde la carpeta `application-base/`, los siguientes scripts son fundamentales:
+- `npm run dev`: Inicia el servidor de desarrollo con Turbopack.
+- `npm run build`: Compila la aplicación para producción.
+- `npm run db:migrate`: Aplica nuevas migraciones a la base de datos.
+- `npm run db:seed`: Puebla la base de datos con datos iniciales (roles, permisos, etc.).
+- `npm run db:create-super-admin`: Script para crear el primer usuario administrador en una instalación limpia.
+- `npm run test:run`: Ejecuta toda la suite de tests.
+- `npm run test:coverage`: Ejecuta tests y genera un reporte de cobertura.
+
+### 11. Hoja de Ruta (Roadmap)
+Para ver las funcionalidades y mejoras planificadas para el futuro de esta base de aplicación, consulta nuestra **[Hoja de Ruta (Roadmap)](./docs/ROADMAP.md)**.
