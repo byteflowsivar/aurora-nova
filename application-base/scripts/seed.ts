@@ -27,6 +27,8 @@ const permissions = [
   { id: 'role:delete', module: 'Roles', description: 'Eliminar roles' },
   { id: 'role:list', module: 'Roles', description: 'Listar todos los roles' },
   { id: 'role:assign', module: 'Roles', description: 'Asignar roles a usuarios' },
+  { id: 'user:assign-roles', module: 'Users', description: 'Asignar roles a usuarios' },
+  { id: 'role:assign-permissions', module: 'Roles', description: 'Asignar permisos a roles' },
 
   // Permisos de permisos (meta-permisos)
   { id: 'permission:create', module: 'Permissions', description: 'Crear nuevos permisos' },
@@ -37,6 +39,10 @@ const permissions = [
 
   // Permisos de menú
   { id: 'menu:manage', module: 'Menu', description: 'Gestionar items del menú' },
+
+  // Permisos de auditoría
+  { id: 'audit:view', module: 'Audit', description: 'Ver registros de auditoría' },
+  { id: 'audit:manage', module: 'Audit', description: 'Gestionar auditoría y registros' },
 ];
 
 // Datos de roles base

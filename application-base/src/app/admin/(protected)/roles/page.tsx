@@ -19,6 +19,7 @@ import { RoleDialog } from "./components/role-dialog"
 import { DeleteRoleDialog } from "./components/delete-role-dialog"
 import { ManageRolePermissionsDialog } from "./components/manage-role-permissions-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
+import { API_ROUTES } from "@/modules/shared/constants/api-routes"
 
 interface Role {
   id: string
@@ -40,7 +41,7 @@ export default function RolesPage() {
 
   const fetchRoles = React.useCallback(async () => {
     try {
-      const response = await fetch("/api/roles")
+      const response = await fetch(API_ROUTES.ADMIN_ROLES)
       if (!response.ok) throw new Error("Error al cargar roles")
       const data = await response.json()
       setRoles(data)

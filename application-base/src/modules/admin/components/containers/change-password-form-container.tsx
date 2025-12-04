@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { changePasswordSchema } from '@/modules/shared/validations';
 import type { ChangePasswordData } from '@/modules/admin/types';
+import { API_ROUTES } from '@/modules/shared/constants/api-routes';
 import { Loader2, Lock, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { logoutUser } from '@/actions/auth';
 
@@ -57,7 +58,7 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/user/change-password', {
+      const response = await fetch(API_ROUTES.CUSTOMER_CHANGE_PASSWORD, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

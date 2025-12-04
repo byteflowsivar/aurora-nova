@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma/connection"
+import { requirePermission } from "@/lib/server/require-permission"
+import { SYSTEM_PERMISSIONS } from "@/modules/admin/types/permissions"
+import { UnauthenticatedError, PermissionDeniedError } from "@/lib/server/require-permission"
 
 // GET /api/users/[id]/permissions - Obtener permisos del usuario (a través de sus roles)
 export async function GET(
@@ -8,14 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      )
-    }
+    await requirePermission(SYSTEM_PERMISSIONS.USER_READ)
 
     const { id } = await params
 
@@ -106,6 +101,12 @@ export async function GET(
       totalRoles: userRoles.length,
     })
   } catch (error) {
+    if (error instanceof UnauthenticatedError) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+    }
+    if (error instanceof PermissionDeniedError) {
+      return NextResponse.json({ error: "No tienes permisos para realizar esta acción" }, { status: 403 })
+    }
     console.error("Error fetching user permissions:", error)
     return NextResponse.json(
       { error: "Error al obtener permisos del usuario" },

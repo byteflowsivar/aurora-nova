@@ -12,6 +12,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
+import { API_ROUTES } from "@/modules/shared/constants/api-routes"
 
 interface DeleteUserDialogProps {
   open: boolean
@@ -38,7 +39,7 @@ export function DeleteUserDialog({
     setLoading(true)
 
     try {
-      const response = await fetch(`/api/users/${user.id}`, {
+      const response = await fetch(API_ROUTES.ADMIN_USER(user.id), {
         method: "DELETE",
       })
 

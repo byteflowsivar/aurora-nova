@@ -41,7 +41,7 @@ export async function seedMenuItems() {
   const dashboard = await prisma.menuItem.create({
     data: {
       title: 'Dashboard',
-      href: '/dashboard',
+      href: '/admin/dashboard',
       icon: 'LayoutDashboard',
       order: 1,
       isActive: true,
@@ -78,7 +78,7 @@ export async function seedMenuItems() {
   const users = await prisma.menuItem.create({
     data: {
       title: 'Usuarios',
-      href: '/users',
+      href: '/admin/users',
       icon: 'Users',
       order: 1,
       isActive: true,
@@ -93,7 +93,7 @@ export async function seedMenuItems() {
   const roles = await prisma.menuItem.create({
     data: {
       title: 'Roles',
-      href: '/roles',
+      href: '/admin/roles',
       icon: 'Shield',
       order: 2,
       isActive: true,
@@ -108,7 +108,7 @@ export async function seedMenuItems() {
   const permissions_menu = await prisma.menuItem.create({
     data: {
       title: 'Permisos',
-      href: '/permissions',
+      href: '/admin/permissions',
       icon: 'Key',
       order: 3,
       isActive: true,
@@ -123,11 +123,11 @@ export async function seedMenuItems() {
   const audit_menu = await prisma.menuItem.create({
     data: {
       title: 'Auditoria',
-      href: '/audit',
-      icon: 'Key',
+      href: '/admin/audit',
+      icon: 'FileText',
       order: 4,
       isActive: true,
-      permissionId: 'audit:list', // Requiere permiso
+      permissionId: 'audit:view', // Requiere permiso
       parentId: adminGroup.id // Referencia al ID generado
     }
   })
@@ -141,13 +141,14 @@ export async function seedMenuItems() {
   const totalItems = await prisma.menuItem.count()
   console.log(`\n✅ Menu items seeded successfully! Total items: ${totalItems}`)
   console.log('   - Level 1 (root): 2 items (Dashboard + Administración group)')
-  console.log('   - Level 2 (children): 3 items (Usuarios, Roles, Permisos)')
+  console.log('   - Level 2 (children): 4 items (Usuarios, Roles, Permisos, Auditoria)')
 
   return {
     dashboard,
     adminGroup,
     users,
     roles,
-    permissions: permissions_menu
+    permissions: permissions_menu,
+    audit: audit_menu
   }
 }

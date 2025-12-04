@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Separator } from "@/components/ui/separator"
+import { API_ROUTES } from "@/modules/shared/constants/api-routes"
 
 interface Permission {
   id: string
@@ -28,7 +29,7 @@ export default function PermissionsPage() {
   React.useEffect(() => {
     const fetchPermissions = async () => {
       try {
-        const response = await fetch("/api/permissions")
+        const response = await fetch(API_ROUTES.ADMIN_PERMISSIONS)
         if (!response.ok) throw new Error("Error al cargar permisos")
         const permissionsData = await response.json()
         setData(permissionsData)
