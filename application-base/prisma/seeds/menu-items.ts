@@ -41,7 +41,7 @@ export async function seedMenuItems() {
   const dashboard = await prisma.menuItem.create({
     data: {
       title: 'Dashboard',
-      href: '/dashboard',
+      href: '/admin/dashboard',
       icon: 'LayoutDashboard',
       order: 1,
       isActive: true,
@@ -78,7 +78,7 @@ export async function seedMenuItems() {
   const users = await prisma.menuItem.create({
     data: {
       title: 'Usuarios',
-      href: '/users',
+      href: '/admin/users',
       icon: 'Users',
       order: 1,
       isActive: true,
@@ -93,7 +93,7 @@ export async function seedMenuItems() {
   const roles = await prisma.menuItem.create({
     data: {
       title: 'Roles',
-      href: '/roles',
+      href: '/admin/roles',
       icon: 'Shield',
       order: 2,
       isActive: true,
@@ -108,7 +108,7 @@ export async function seedMenuItems() {
   const permissions_menu = await prisma.menuItem.create({
     data: {
       title: 'Permisos',
-      href: '/permissions',
+      href: '/admin/permissions',
       icon: 'Key',
       order: 3,
       isActive: true,
@@ -123,7 +123,7 @@ export async function seedMenuItems() {
   const audit_menu = await prisma.menuItem.create({
     data: {
       title: 'Auditoria',
-      href: '/audit',
+      href: '/admin/audit',
       icon: 'FileText',
       order: 4,
       isActive: true,
