@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma/connection"
 import { hash } from "bcryptjs"
 import { z } from "zod"
+import { requirePermission } from "@/lib/server/require-permission"
+import { SYSTEM_PERMISSIONS } from "@/modules/admin/types/permissions"
+import { UnauthenticatedError, PermissionDeniedError } from "@/lib/server/require-permission"
 
 // Schema de validación para crear usuario
 const createUserSchema = z.object({
@@ -15,14 +17,8 @@ const createUserSchema = z.object({
 // GET /api/users - Listar usuarios
 export async function GET() {
   try {
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      )
-    }
+    // Verificar permiso
+    await requirePermission(SYSTEM_PERMISSIONS.USER_LIST)
 
     // Obtener usuarios con sus roles
     const users = await prisma.user.findMany({
@@ -69,6 +65,18 @@ export async function GET() {
 
     return NextResponse.json(transformedUsers)
   } catch (error) {
+    if (error instanceof UnauthenticatedError) {
+      return NextResponse.json(
+        { error: "No autenticado" },
+        { status: 401 }
+      )
+    }
+    if (error instanceof PermissionDeniedError) {
+      return NextResponse.json(
+        { error: "No tienes permisos para realizar esta acción" },
+        { status: 403 }
+      )
+    }
     console.error("Error fetching users:", error)
     return NextResponse.json(
       { error: "Error al obtener usuarios" },
@@ -80,14 +88,8 @@ export async function GET() {
 // POST /api/users - Crear usuario
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      )
-    }
+    // Verificar permiso
+    await requirePermission(SYSTEM_PERMISSIONS.USER_CREATE)
 
     const body = await request.json()
 
@@ -174,6 +176,18 @@ export async function POST(request: NextRequest) {
       roles: [],
     }, { status: 201 })
   } catch (error) {
+    if (error instanceof UnauthenticatedError) {
+      return NextResponse.json(
+        { error: "No autenticado" },
+        { status: 401 }
+      )
+    }
+    if (error instanceof PermissionDeniedError) {
+      return NextResponse.json(
+        { error: "No tienes permisos para realizar esta acción" },
+        { status: 403 }
+      )
+    }
     console.error("Error creating user:", error)
     return NextResponse.json(
       { error: "Error al crear usuario" },

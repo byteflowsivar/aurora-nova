@@ -76,6 +76,7 @@ export const SYSTEM_PERMISSIONS = {
   USER_DELETE: 'user:delete',
   USER_LIST: 'user:list',
   USER_MANAGE: 'user:manage',
+  USER_ASSIGN_ROLES: 'user:assign-roles',
 
   // Role permissions
   ROLE_CREATE: 'role:create',
@@ -84,6 +85,8 @@ export const SYSTEM_PERMISSIONS = {
   ROLE_DELETE: 'role:delete',
   ROLE_LIST: 'role:list',
   ROLE_MANAGE: 'role:manage',
+  ROLE_ASSIGN: 'role:assign',
+  ROLE_ASSIGN_PERMISSIONS: 'role:assign-permissions',
 
   // Permission permissions
   PERMISSION_CREATE: 'permission:create',

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma/connection"
 import { z } from "zod"
+import { requirePermission } from "@/lib/server/require-permission"
+import { SYSTEM_PERMISSIONS } from "@/modules/admin/types/permissions"
+import { UnauthenticatedError, PermissionDeniedError } from "@/lib/server/require-permission"
 
 // Schema de validación para actualizar usuario
 const updateUserSchema = z.object({
@@ -16,14 +19,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      )
-    }
+    // Verificar permiso
+    await requirePermission(SYSTEM_PERMISSIONS.USER_READ)
 
     const { id } = await params
 
@@ -73,6 +70,18 @@ export async function GET(
       roles: user.userRoles.map((ur) => ur.role),
     })
   } catch (error) {
+    if (error instanceof UnauthenticatedError) {
+      return NextResponse.json(
+        { error: "No autenticado" },
+        { status: 401 }
+      )
+    }
+    if (error instanceof PermissionDeniedError) {
+      return NextResponse.json(
+        { error: "No tienes permisos para realizar esta acción" },
+        { status: 403 }
+      )
+    }
     console.error("Error fetching user:", error)
     return NextResponse.json(
       { error: "Error al obtener usuario" },
@@ -87,14 +96,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      )
-    }
+    // Verificar permiso
+    await requirePermission(SYSTEM_PERMISSIONS.USER_UPDATE)
 
     const { id } = await params
     const body = await request.json()
@@ -193,6 +196,18 @@ export async function PUT(
       roles: updatedUser.userRoles.map((ur) => ur.role),
     })
   } catch (error) {
+    if (error instanceof UnauthenticatedError) {
+      return NextResponse.json(
+        { error: "No autenticado" },
+        { status: 401 }
+      )
+    }
+    if (error instanceof PermissionDeniedError) {
+      return NextResponse.json(
+        { error: "No tienes permisos para realizar esta acción" },
+        { status: 403 }
+      )
+    }
     console.error("Error updating user:", error)
     return NextResponse.json(
       { error: "Error al actualizar usuario" },
@@ -207,19 +222,15 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth()
+    // Verificar permiso
+    await requirePermission(SYSTEM_PERMISSIONS.USER_DELETE)
 
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      )
-    }
+    const session = await auth()
 
     const { id } = await params
 
     // No permitir eliminar el propio usuario
-    if (session.user.id === id) {
+    if (session?.user?.id === id) {
       return NextResponse.json(
         { error: "No puedes eliminar tu propio usuario" },
         { status: 400 }
@@ -245,6 +256,18 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    if (error instanceof UnauthenticatedError) {
+      return NextResponse.json(
+        { error: "No autenticado" },
+        { status: 401 }
+      )
+    }
+    if (error instanceof PermissionDeniedError) {
+      return NextResponse.json(
+        { error: "No tienes permisos para realizar esta acción" },
+        { status: 403 }
+      )
+    }
     console.error("Error deleting user:", error)
     return NextResponse.json(
       { error: "Error al eliminar usuario" },

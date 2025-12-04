@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma/connection"
 import { z } from "zod"
+import { requirePermission } from "@/lib/server/require-permission"
+import { SYSTEM_PERMISSIONS } from "@/modules/admin/types/permissions"
+import { UnauthenticatedError, PermissionDeniedError } from "@/lib/server/require-permission"
 
 const createRoleSchema = z.object({
   name: z.string().min(1, "El nombre es requerido").max(50, "El nombre debe tener máximo 50 caracteres"),
@@ -11,14 +13,7 @@ const createRoleSchema = z.object({
 // GET /api/roles - Listar roles
 export async function GET() {
   try {
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      )
-    }
+    await requirePermission(SYSTEM_PERMISSIONS.ROLE_LIST)
 
     const roles = await prisma.role.findMany({
       select: {
@@ -51,6 +46,12 @@ export async function GET() {
 
     return NextResponse.json(transformedRoles)
   } catch (error) {
+    if (error instanceof UnauthenticatedError) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+    }
+    if (error instanceof PermissionDeniedError) {
+      return NextResponse.json({ error: "No tienes permisos para realizar esta acción" }, { status: 403 })
+    }
     console.error("Error fetching roles:", error)
     return NextResponse.json(
       { error: "Error al obtener roles" },
@@ -62,14 +63,7 @@ export async function GET() {
 // POST /api/roles - Crear rol
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      )
-    }
+    await requirePermission(SYSTEM_PERMISSIONS.ROLE_CREATE)
 
     const body = await request.json()
 
@@ -121,6 +115,12 @@ export async function POST(request: NextRequest) {
       usersCount: 0,
     }, { status: 201 })
   } catch (error) {
+    if (error instanceof UnauthenticatedError) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+    }
+    if (error instanceof PermissionDeniedError) {
+      return NextResponse.json({ error: "No tienes permisos para realizar esta acción" }, { status: 403 })
+    }
     console.error("Error creating role:", error)
     return NextResponse.json(
       { error: "Error al crear rol" },

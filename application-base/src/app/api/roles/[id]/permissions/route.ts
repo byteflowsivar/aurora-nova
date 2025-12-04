@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma/connection"
 import { z } from "zod"
+import { requirePermission } from "@/lib/server/require-permission"
+import { SYSTEM_PERMISSIONS } from "@/modules/admin/types/permissions"
+import { UnauthenticatedError, PermissionDeniedError } from "@/lib/server/require-permission"
 
 const assignPermissionSchema = z.object({
   permissionId: z.string().min(1, "ID de permiso inválido"),
@@ -13,14 +15,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      )
-    }
+    await requirePermission(SYSTEM_PERMISSIONS.ROLE_READ)
 
     const { id } = await params
 
@@ -44,6 +39,12 @@ export async function GET(
       assignedAt: rp.createdAt,
     })))
   } catch (error) {
+    if (error instanceof UnauthenticatedError) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+    }
+    if (error instanceof PermissionDeniedError) {
+      return NextResponse.json({ error: "No tienes permisos para realizar esta acción" }, { status: 403 })
+    }
     console.error("Error fetching role permissions:", error)
     return NextResponse.json(
       { error: "Error al obtener permisos del rol" },
@@ -58,14 +59,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      )
-    }
+    await requirePermission(SYSTEM_PERMISSIONS.ROLE_ASSIGN_PERMISSIONS)
 
     const { id } = await params
     const body = await request.json()
@@ -132,6 +126,12 @@ export async function POST(
 
     return NextResponse.json({ success: true }, { status: 201 })
   } catch (error) {
+    if (error instanceof UnauthenticatedError) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+    }
+    if (error instanceof PermissionDeniedError) {
+      return NextResponse.json({ error: "No tienes permisos para realizar esta acción" }, { status: 403 })
+    }
     console.error("Error assigning permission:", error)
     return NextResponse.json(
       { error: "Error al asignar permiso" },
@@ -146,14 +146,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      )
-    }
+    await requirePermission(SYSTEM_PERMISSIONS.ROLE_ASSIGN_PERMISSIONS)
 
     const { id } = await params
     const { searchParams } = new URL(request.url)
@@ -183,6 +176,12 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    if (error instanceof UnauthenticatedError) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+    }
+    if (error instanceof PermissionDeniedError) {
+      return NextResponse.json({ error: "No tienes permisos para realizar esta acción" }, { status: 403 })
+    }
     console.error("Error removing permission:", error)
     return NextResponse.json(
       { error: "Error al remover permiso" },

@@ -27,6 +27,8 @@ const permissions = [
   { id: 'role:delete', module: 'Roles', description: 'Eliminar roles' },
   { id: 'role:list', module: 'Roles', description: 'Listar todos los roles' },
   { id: 'role:assign', module: 'Roles', description: 'Asignar roles a usuarios' },
+  { id: 'user:assign-roles', module: 'Users', description: 'Asignar roles a usuarios' },
+  { id: 'role:assign-permissions', module: 'Roles', description: 'Asignar permisos a roles' },
 
   // Permisos de permisos (meta-permisos)
   { id: 'permission:create', module: 'Permissions', description: 'Crear nuevos permisos' },
