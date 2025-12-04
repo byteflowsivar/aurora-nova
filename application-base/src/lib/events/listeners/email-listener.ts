@@ -20,7 +20,7 @@ import { env } from '@/lib/env';
  * Listener para enviar emails basados en eventos del sistema
  */
 export class EmailEventListener {
-  private templatesPath = path.join(process.cwd(), 'templates', 'email');
+  private templatesPath = path.join(process.cwd(), 'templates', 'admin', 'email');
 
   /**
    * Registrar todos los listeners de email
