@@ -1,8 +1,76 @@
 # Plan de Trabajo: Refactorización a Zonas Pública y de Administración
 
 **Proyecto:** Aurora Nova - Application Base
-**Fecha**: 2025-11-30
-**Estado**: 📝 Pendiente
+**Fecha de Creación**: 2025-11-30
+**Última Actualización**: 2025-12-04
+**Estado**: 🚀 En Progreso - Fases 3a-3e Completadas
+
+---
+
+## 📊 Estado de Progreso
+
+### ✅ Completado (Fases 3a-3e)
+
+**Arquitectura Modular - Refactorización de Módulos Admin y Shared:**
+
+1. **Fase 3a - Organización de Hooks** ✓
+   - Movidos hooks de autenticación y permisos a `/src/modules/shared/hooks/`
+   - Movidos hooks específicos de auditoría a `/src/modules/admin/hooks/`
+   - Implementados nuevos hooks: `useAnyPermission`, `useAllPermissions`, `useIsAdmin`
+   - Creados índices con re-exports
+
+2. **Fase 3b - Organización de Tipos** ✓
+   - Movidos tipos compartidos (auth, session, action-response) a `/src/modules/shared/types/`
+   - Movidos tipos específicos de admin (permissions, menu, profile) a `/src/modules/admin/types/`
+   - Actualizado 20+ imports en toda la aplicación
+
+3. **Fase 3c - Organización de Servicios** ✓
+   - Movidos servicios de auditoría a `/src/modules/admin/services/`
+   - Movidos servicios de API y email a `/src/modules/shared/api/`
+   - Resueltos conflictos de tipos duplicados
+
+4. **Fase 3d - Organización de Queries Prisma** ✓
+   - Movidas queries de usuarios y sesiones a `/src/modules/shared/api/`
+   - Movidas queries de permisos y menú a `/src/modules/admin/services/`
+
+5. **Fase 3e - Organización de Utilidades y Validaciones** ✓
+   - Movidas utilidades de permisos a `/src/modules/admin/utils/`
+   - Movidas utilidades de sesión a `/src/modules/shared/utils/`
+   - Movidas validaciones a `/src/modules/shared/validations/`
+   - Resuelto conflicto de exports (changePasswordSchema)
+   - Separación cliente/servidor en barrel files
+
+**Estadísticas:**
+- ✓ 40+ imports actualizados
+- ✓ 13+ archivos y directorios eliminados de `/src/lib/`
+- ✓ Build exitoso (29 rutas)
+- ✓ Lint sin errores
+- ✓ TypeScript validado
+- ✓ Merge exitoso a rama `main`
+
+---
+
+### ⏳ Pendiente - Próximas Fases
+
+#### Fase 4 - Revisar y Organizar API REST Endpoints ⚠️
+**Estado**: No iniciado
+**Descripción**:
+- Reorganizar y separar endpoints API por contextos (public, customer, admin)
+- Revisar estructura actual de `/src/app/api/`
+- Implementar separación lógica según el plan de Paso 5.2
+- Validar protecciones y autorización en cada endpoint
+
+**Archivos afectados**: `/src/app/api/**`
+
+#### Fase 5 - Revisar y Organizar Plantillas Mustache ⚠️
+**Estado**: No iniciado
+**Descripción**:
+- Auditoría de plantillas Mustache en `/templates/`
+- Separación de plantillas por contexto (si aplica)
+- Validación de variables disponibles
+- Organización y documentación
+
+**Archivos afectados**: `/templates/**`
 
 ---
 
@@ -484,3 +552,76 @@ Para mantener la organización y seguridad, las rutas de API se organizarán ló
     -   Acceso a `/account/settings` para un usuario normal.
     -   Login como admin y acceso completo a `/admin/*`.
     -   Visualización de páginas 404 y de error personalizadas.
+
+---
+
+## 📝 Notas Para Continuar (Próxima Sesión)
+
+### Contexto de Retorno
+Las Fases 3a-3e (Arquitectura Modular) han sido completadas exitosamente. La rama `core-auth` ha sido mergeada a `main`. El siguiente paso es continuar con la organización de API endpoints y plantillas Mustache.
+
+### Checklist Para Mañana
+
+#### Antes de Iniciar:
+- [ ] Verificar rama actual: `git status`
+- [ ] Actualizar rama main: `git pull origin main`
+- [ ] Confirmar que última versión incluye los cambios de arquitectura modular
+- [ ] Ejecutar `npm run build` y `npm run lint` para validar estado actual
+
+#### Fase 4 - API REST Endpoints:
+**Ruta**: `/src/app/api/`
+**Objetivo**: Organizar endpoints por contextos (public, customer, admin)
+
+**Tareas**:
+1. Listar y auditar todos los endpoints actuales
+2. Clasificar cada endpoint por contexto:
+   - Public (sin autenticación)
+   - Customer (usuario autenticado)
+   - Admin (usuario + permisos administrativos)
+3. Reorganizar directorios según estructura propuesta
+4. Validar y reforzar seguridad en cada endpoint
+5. Actualizar imports en archivos que consumen los endpoints
+
+**Endpoints Actuales Conocidos**:
+- `/api/auth/**` (Public)
+- `/api/permissions/**` (Admin)
+- `/api/roles/**` (Admin)
+- `/api/menu/**` (Admin + Public)
+- `/api/users/**` (Admin)
+- `/api/audit/**` (Admin)
+- `/api/user/profile/**` (Customer)
+- `/api/user/change-password/**` (Customer)
+- `/api/health/**` (Public)
+
+#### Fase 5 - Plantillas Mustache:
+**Ruta**: `/templates/`
+**Objetivo**: Auditar, organizar y documentar plantillas
+
+**Tareas**:
+1. Listar todas las plantillas en `/templates/`
+2. Identificar el propósito de cada plantilla
+3. Verificar variables disponibles y validación
+4. Organizar por contexto (si aplica)
+5. Documentar variables requeridas por plantilla
+
+### Rama de Trabajo Sugerida
+Para mañana, crear rama: `git checkout -b feature/api-organization`
+Después de Fase 4, crear: `git checkout -b feature/templates-organization`
+
+### Referencias Útiles
+- Documento Plan (este archivo): `/docs/feature/REFACTOR_PUBLIC_ADMIN_SPLIT.md`
+- Especificación de Pasos 5.2: Ver sección "Estrategia de Separación de API Routes"
+- Último Commit de Módulos: `5c03ae6` - Separación completa de módulos Admin y Shared
+- Rama Main (Actualizada): Verificar que incluya merge de core-auth
+
+### Notas Técnicas
+- Los servicios y utilidades ya están organizados en módulos
+- Los imports están actualizados con path aliases `@/modules/`
+- Build y Lint pasan sin errores
+- No hay dependencias circulares conocidas en la arquitectura actual
+
+### Próximos Pasos Después de Fase 5
+1. Validación integral del sistema completo
+2. Testing de flujos público → admin
+3. Documentación de arquitectura final
+4. Merge a main cuando esté listo
