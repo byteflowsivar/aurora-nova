@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
+import { API_ROUTES } from "@/modules/shared/constants/api-routes"
 
 interface UserDialogProps {
   open: boolean
@@ -58,7 +59,7 @@ export function UserDialog({ open, onOpenChange, user, onSuccess }: UserDialogPr
     setLoading(true)
 
     try {
-      const url = user ? `/api/users/${user.id}` : "/api/users"
+      const url = user ? API_ROUTES.ADMIN_USER(user.id) : API_ROUTES.ADMIN_USERS
       const method = user ? "PUT" : "POST"
 
       const body = user

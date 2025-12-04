@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { toast } from "sonner"
+import { API_ROUTES } from "@/modules/shared/constants/api-routes"
 
 interface Permission {
   id: string
@@ -55,14 +56,14 @@ export function ManageRolePermissionsDialog({
     setLoading(true)
     try {
       // Cargar permisos asignados al rol
-      const rolePermissionsRes = await fetch(`/api/roles/${roleId}/permissions`)
+      const rolePermissionsRes = await fetch(API_ROUTES.ADMIN_ROLE_PERMISSIONS(roleId))
       if (rolePermissionsRes.ok) {
         const rolePermissions = await rolePermissionsRes.json()
         setAssignedPermissions(rolePermissions)
       }
 
       // Cargar todos los permisos disponibles
-      const allPermissionsRes = await fetch("/api/permissions")
+      const allPermissionsRes = await fetch(API_ROUTES.ADMIN_PERMISSIONS)
       if (allPermissionsRes.ok) {
         const data = await allPermissionsRes.json()
         setAllPermissions(data.permissions || [])
@@ -82,7 +83,7 @@ export function ManageRolePermissionsDialog({
   const handleAssignPermission = async (permissionId: string) => {
     setAssigningId(permissionId)
     try {
-      const response = await fetch(`/api/roles/${roleId}/permissions`, {
+      const response = await fetch(API_ROUTES.ADMIN_ROLE_PERMISSIONS(roleId), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ permissionId }),
@@ -108,7 +109,7 @@ export function ManageRolePermissionsDialog({
     setRemovingId(permissionId)
     try {
       const response = await fetch(
-        `/api/roles/${roleId}/permissions?permissionId=${permissionId}`,
+        `${API_ROUTES.ADMIN_ROLE_PERMISSIONS(roleId)}?permissionId=${permissionId}`,
         { method: "DELETE" }
       )
 

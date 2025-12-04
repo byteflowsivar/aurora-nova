@@ -1,5 +1,5 @@
-
 import { useState, useEffect } from 'react';
+import { API_ROUTES } from "@/modules/shared/constants/api-routes"
 import { AuditLogFilters, AuditLogResult } from '@/modules/admin/services/audit-types';
 
 interface UseAuditLogsProps {
@@ -48,7 +48,7 @@ export function useAuditLogs({ page = 1, limit = 10, filters = {} }: UseAuditLog
           offset: offset.toString(),
         });
 
-        const response = await fetch(`/api/audit?${queryParams.toString()}`);
+        const response = await fetch(`${API_ROUTES.ADMIN_AUDIT}?${queryParams.toString()}`);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch audit logs: ${response.statusText}`);

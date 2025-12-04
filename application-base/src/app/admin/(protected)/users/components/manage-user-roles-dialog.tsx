@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { toast } from "sonner"
+import { API_ROUTES } from "@/modules/shared/constants/api-routes"
 
 interface Role {
   id: string
@@ -53,14 +54,14 @@ export function ManageUserRolesDialog({
     setLoading(true)
     try {
       // Cargar roles asignados al usuario
-      const userRolesRes = await fetch(`/api/users/${userId}/roles`)
+      const userRolesRes = await fetch(API_ROUTES.ADMIN_USER_ROLES(userId))
       if (userRolesRes.ok) {
         const userRoles = await userRolesRes.json()
         setAssignedRoles(userRoles)
       }
 
       // Cargar todos los roles disponibles
-      const allRolesRes = await fetch("/api/roles")
+      const allRolesRes = await fetch(API_ROUTES.ADMIN_ROLES)
       if (allRolesRes.ok) {
         const data = await allRolesRes.json()
         setAllRoles(data)
@@ -80,7 +81,7 @@ export function ManageUserRolesDialog({
   const handleAssignRole = async (roleId: string) => {
     setAssigningId(roleId)
     try {
-      const response = await fetch(`/api/users/${userId}/roles`, {
+      const response = await fetch(API_ROUTES.ADMIN_USER_ROLES(userId), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ roleId }),
@@ -106,7 +107,7 @@ export function ManageUserRolesDialog({
     setRemovingId(roleId)
     try {
       const response = await fetch(
-        `/api/users/${userId}/roles?roleId=${roleId}`,
+        `${API_ROUTES.ADMIN_USER_ROLES(userId)}?roleId=${roleId}`,
         { method: "DELETE" }
       )
 

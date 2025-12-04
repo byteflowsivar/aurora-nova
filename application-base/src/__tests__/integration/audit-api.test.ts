@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { GET } from '@/app/api/audit/route';
+import { GET } from '@/app/api/admin/audit/route';
 import { NextRequest } from 'next/server';
 
 // Mock dependencies
@@ -35,7 +35,7 @@ describe('GET /api/audit', () => {
       const { auth } = await import('@/lib/auth');
       vi.mocked(auth).mockResolvedValue(null);
 
-      const request = new NextRequest('http://localhost:3000/api/audit');
+      const request = new NextRequest('http://localhost:3000/api/admin/audit');
       const response = await GET(request);
 
       expect(response.status).toBe(401);
@@ -47,7 +47,7 @@ describe('GET /api/audit', () => {
       const { auth } = await import('@/lib/auth');
       vi.mocked(auth).mockResolvedValue({ user: null } as any);
 
-      const request = new NextRequest('http://localhost:3000/api/audit');
+      const request = new NextRequest('http://localhost:3000/api/admin/audit');
       const response = await GET(request);
 
       expect(response.status).toBe(401);
@@ -67,7 +67,7 @@ describe('GET /api/audit', () => {
 
       vi.mocked(hasPermission).mockResolvedValue(false);
 
-      const request = new NextRequest('http://localhost:3000/api/audit');
+      const request = new NextRequest('http://localhost:3000/api/admin/audit');
       const response = await GET(request);
 
       expect(response.status).toBe(403);
@@ -124,7 +124,7 @@ describe('GET /api/audit', () => {
 
       vi.mocked(auditService.getLogs).mockResolvedValue(mockResult as any);
 
-      const request = new NextRequest('http://localhost:3000/api/audit');
+      const request = new NextRequest('http://localhost:3000/api/admin/audit');
       const response = await GET(request);
 
       expect(response.status).toBe(200);
@@ -158,7 +158,7 @@ describe('GET /api/audit', () => {
       });
 
       const request = new NextRequest(
-        'http://localhost:3000/api/audit?userId=user-123&module=auth&action=login&limit=20&offset=10'
+        'http://localhost:3000/api/admin/audit?userId=user-123&module=auth&action=login&limit=20&offset=10'
       );
       const response = await GET(request);
 
@@ -193,7 +193,7 @@ describe('GET /api/audit', () => {
       const endDate = '2025-11-30T23:59:59Z';
 
       const request = new NextRequest(
-        `http://localhost:3000/api/audit?startDate=${startDate}&endDate=${endDate}`
+        `http://localhost:3000/api/admin/audit?startDate=${startDate}&endDate=${endDate}`
       );
       const response = await GET(request);
 
@@ -219,7 +219,7 @@ describe('GET /api/audit', () => {
       });
 
       const request = new NextRequest(
-        'http://localhost:3000/api/audit?limit=500'
+        'http://localhost:3000/api/admin/audit?limit=500'
       );
       const response = await GET(request);
 
@@ -244,7 +244,7 @@ describe('GET /api/audit', () => {
       });
 
       const request = new NextRequest(
-        'http://localhost:3000/api/audit?entityType=User&entityId=user-123'
+        'http://localhost:3000/api/admin/audit?entityType=User&entityId=user-123'
       );
       const response = await GET(request);
 
@@ -270,7 +270,7 @@ describe('GET /api/audit', () => {
       });
 
       const request = new NextRequest(
-        'http://localhost:3000/api/audit?requestId=req-123'
+        'http://localhost:3000/api/admin/audit?requestId=req-123'
       );
       const response = await GET(request);
 
@@ -297,7 +297,7 @@ describe('GET /api/audit', () => {
 
     it('should return 400 for invalid startDate', async () => {
       const request = new NextRequest(
-        'http://localhost:3000/api/audit?startDate=invalid-date'
+        'http://localhost:3000/api/admin/audit?startDate=invalid-date'
       );
       const response = await GET(request);
 
@@ -308,7 +308,7 @@ describe('GET /api/audit', () => {
 
     it('should return 400 for invalid endDate', async () => {
       const request = new NextRequest(
-        'http://localhost:3000/api/audit?endDate=not-a-date'
+        'http://localhost:3000/api/admin/audit?endDate=not-a-date'
       );
       const response = await GET(request);
 
@@ -319,7 +319,7 @@ describe('GET /api/audit', () => {
 
     it('should return 400 for invalid limit', async () => {
       const request = new NextRequest(
-        'http://localhost:3000/api/audit?limit=invalid'
+        'http://localhost:3000/api/admin/audit?limit=invalid'
       );
       const response = await GET(request);
 
@@ -330,7 +330,7 @@ describe('GET /api/audit', () => {
 
     it('should return 400 for negative limit', async () => {
       const request = new NextRequest(
-        'http://localhost:3000/api/audit?limit=-10'
+        'http://localhost:3000/api/admin/audit?limit=-10'
       );
       const response = await GET(request);
 
@@ -341,7 +341,7 @@ describe('GET /api/audit', () => {
 
     it('should return 400 for invalid offset', async () => {
       const request = new NextRequest(
-        'http://localhost:3000/api/audit?offset=abc'
+        'http://localhost:3000/api/admin/audit?offset=abc'
       );
       const response = await GET(request);
 
@@ -352,7 +352,7 @@ describe('GET /api/audit', () => {
 
     it('should return 400 for negative offset', async () => {
       const request = new NextRequest(
-        'http://localhost:3000/api/audit?offset=-5'
+        'http://localhost:3000/api/admin/audit?offset=-5'
       );
       const response = await GET(request);
 
@@ -381,7 +381,7 @@ describe('GET /api/audit', () => {
         new Error('Database error')
       );
 
-      const request = new NextRequest('http://localhost:3000/api/audit');
+      const request = new NextRequest('http://localhost:3000/api/admin/audit');
       const response = await GET(request);
 
       expect(response.status).toBe(500);

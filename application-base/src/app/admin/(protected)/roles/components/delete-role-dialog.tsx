@@ -12,6 +12,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
+import { API_ROUTES } from "@/modules/shared/constants/api-routes"
 
 interface DeleteRoleDialogProps {
   open: boolean
@@ -38,7 +39,7 @@ export function DeleteRoleDialog({
     setLoading(true)
 
     try {
-      const response = await fetch(`/api/roles/${role.id}`, {
+      const response = await fetch(API_ROUTES.ADMIN_ROLE(role.id), {
         method: "DELETE",
       })
 

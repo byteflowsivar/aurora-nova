@@ -29,6 +29,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { updateProfileSchema } from '@/modules/shared/validations';
 import type { UserProfile, UpdateProfileData } from '@/modules/admin/types';
+import { API_ROUTES } from '@/modules/shared/constants/api-routes';
 import { Loader2, User } from 'lucide-react';
 
 interface ProfileFormProps {
@@ -52,7 +53,7 @@ export function ProfileForm({ user, onSuccess }: ProfileFormProps) {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/user/profile', {
+      const response = await fetch(API_ROUTES.CUSTOMER_PROFILE, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

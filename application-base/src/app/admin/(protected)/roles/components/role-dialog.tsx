@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
+import { API_ROUTES } from "@/modules/shared/constants/api-routes"
 
 interface RoleDialogProps {
   open: boolean
@@ -52,7 +53,7 @@ export function RoleDialog({ open, onOpenChange, role, onSuccess }: RoleDialogPr
     setLoading(true)
 
     try {
-      const url = role ? `/api/roles/${role.id}` : "/api/roles"
+      const url = role ? API_ROUTES.ADMIN_ROLE(role.id) : API_ROUTES.ADMIN_ROLES
       const method = role ? "PUT" : "POST"
 
       const response = await fetch(url, {

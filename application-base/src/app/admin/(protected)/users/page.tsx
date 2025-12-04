@@ -20,6 +20,7 @@ import { UserDialog } from "./components/user-dialog"
 import { DeleteUserDialog } from "./components/delete-user-dialog"
 import { ManageUserRolesDialog } from "./components/manage-user-roles-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
+import { API_ROUTES } from "@/modules/shared/constants/api-routes"
 
 interface User {
   id: string
@@ -48,7 +49,7 @@ export default function UsersPage() {
 
   const fetchUsers = React.useCallback(async () => {
     try {
-      const response = await fetch("/api/users")
+      const response = await fetch(API_ROUTES.ADMIN_USERS)
       if (!response.ok) throw new Error("Error al cargar usuarios")
       const data = await response.json()
       setUsers(data)
