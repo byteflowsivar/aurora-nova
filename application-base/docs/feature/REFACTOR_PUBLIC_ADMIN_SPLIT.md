@@ -11,14 +11,16 @@
 ### Objetivo
 Refactorizar la aplicación para establecer una arquitectura de zonas explícita, mejorando la separación de incumbencias, la seguridad y la experiencia de usuario. Las zonas serán:
 1.  **Zona Pública**: Para visitantes no autenticados.
-2.  **Zona de Cliente**: Para usuarios autenticados no-administradores (ej. "Mi Cuenta").
-3.  **Panel de Administración**: Un área `/admin` estrictamente protegida para la gestión del sistema.
+2.  **Zona de Cliente**: Para usuarios autenticados con rol "Usuario" en la parte pública (ej. "Mi Cuenta").
+3.  **Panel de Administración**: Un área `/admin` estrictamente protegida para la gestión del sistema, accesible solo para roles administrativos.
 
 ### Entregables Clave
 -   Estructura de rutas basada en grupos.
 -   Layout público con cabecera y modal de login social.
--   Sistema de menús multi-contexto (`ADMIN_PANEL`, `PUBLIC_SITE`).
+-   Sistema de menús multi-contexto (`ADMIN_PANEL`, `PUBLIC_SITE`, `CUSTOMER_PORTAL`).
 -   Manejo de errores global con páginas personalizadas.
+-   **Estrategia de protección de rutas validada**: Se confirma que la implementación existente de **`proxy.ts`** para la autenticación global (comprobación de sesión y redirección) está alineada con las mejores prácticas de Next.js 16. La **autorización granular** (verificación de permisos específicos) continuará manejándose en los **Server Components (Layouts)**, lo que asegura una seguridad robusta y modular.
+-   **Separación lógica de API Routes** por zonas (pública, cliente, administración).
 -   Actualización de estándares de desarrollo para reflejar la nueva arquitectura.
 
 ---
@@ -35,53 +37,101 @@ Refactorizar la aplicación para establecer una arquitectura de zonas explícita
 
 ### Paso 2: Implementar Layout Público y Autenticación Social
 
-1.  **Crear el Layout Público**:
-    Crea el archivo `application-base/src/app/(public)/layout.tsx` con una estructura que incluya una cabecera y el contenido principal.
+1.  **Crear el Layout Público (`src/app/(public)/layout.tsx`)**:
+    Este layout será una adaptación del `application-base/src/app/(protected)/layout.tsx`. Deberá obtener el estado de la sesión y pasar la información necesaria a `AppSidebar` para la renderización condicional. A diferencia del layout protegido, este **no redirigirá** si el usuario no está autenticado, sino que adaptará su interfaz.
 
     ```tsx
     // src/app/(public)/layout.tsx
-    import { PublicHeader } from '@/components/layout/public-header';
+    import { auth } from "@/lib/auth";
+    import { AppSidebar } from "@/components/layout/app-sidebar";
+    import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+    import { Separator } from "@/components/ui/separator";
+    import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb";
+    import { getMenuServer } from "@/lib/menu/get-menu-server";
+    import { Toaster } from "@/components/ui/sonner";
+    import { MenuContext, MenuType } from "@/lib/prisma/generated"; // Importar enums
+    import type { Session } from 'next-auth'; // Importar tipo de sesión
 
-    export default function PublicLayout({
+    export default async function PublicLayout({
       children,
     }: {
       children: React.ReactNode;
     }) {
+      const session: Session | null = await auth();
+      
+      let menuItems = [];
+      if (session?.user) {
+        // Si hay sesión, cargar el menú del portal de cliente
+        menuItems = await getMenuServer(session.user.id, MenuContext.CUSTOMER_PORTAL, MenuType.SIDEBAR);
+      } else {
+        // Si no hay sesión, cargar un menú público base (que podría incluir una opción de login)
+        menuItems = await getMenuServer(null, MenuContext.PUBLIC_SITE, MenuType.SIDEBAR);
+      }
+
       return (
-        <div className="flex min-h-screen flex-col">
-          <PublicHeader />
-          <main className="flex-1">{children}</main>
-          {/* Aquí podría ir un footer público en el futuro */}
-        </div>
+        <SidebarProvider>
+          {/* Se pasará la sesión y los menuItems a AppSidebar */}
+          <AppSidebar menuItems={menuItems} session={session} />
+          <SidebarInset>
+            <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+              <SidebarTrigger className="-ml-1" />
+              <Separator orientation="vertical" className="mr-2 h-4" />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>Aurora Nova</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </header>
+            <div className="flex flex-1 flex-col gap-4 p-4">
+              {children}
+            </div>
+          </SidebarInset>
+          <Toaster />
+        </SidebarProvider>
       );
     }
     ```
 
-2.  **Crear el Componente de Cabecera Pública**:
-    Este componente contendrá el botón que activa el modal de login.
+2.  **Crear o Adaptar Componentes de la Interfaz Pública**:
+    *   **Adaptar `AppSidebar`**: El componente `application-base/src/components/layout/app-sidebar.tsx` necesitará ser modificado para aceptar la prop `session` y renderizar condicionalmente las opciones de "Iniciar Sesión" (si `session` es `null`) o el menú de perfil/gestión de cuenta (si `session` existe). Esto podría implicar la creación de un `SidebarFooter` o un componente similar dentro de `AppSidebar` para manejar esta lógica.
+    *   **`SocialLoginModal`**: Este modal seguirá siendo necesario y probablemente se activará desde un botón "Iniciar Sesión" dentro de la `AppSidebar` cuando el usuario no esté autenticado.
+
+3.  **Crear el Modal de Login Social**:
+    Este componente usará el `Dialog` de `shadcn/ui` y los métodos de `next-auth`.
 
     ```tsx
-    // src/components/layout/public-header.tsx
-    'use client'; // Necesita ser cliente por el modal interactivo
+    // src/components/auth/social-login-modal.tsx
+    'use client';
+    import { signIn } from 'next-auth/react';
     import { Button } from '@/components/ui/button';
-    import { SocialLoginModal } from '@/components/auth/social-login-modal';
-    import { useState } from 'react';
+    import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+    // Asumimos que tienes iconos para Google y Facebook
+    // import { GoogleIcon, FacebookIcon } from '@/components/ui/icons';
 
-    export function PublicHeader() {
-      const [isModalOpen, setIsModalOpen] = useState(false);
-
+    export function SocialLoginModal({ open, onOpenChange }) {
       return (
-        <>
-          <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-14 items-center">
-              <span className="font-bold">Aurora Nova</span>
-              <div className="flex flex-1 items-center justify-end space-x-4">
-                <Button onClick={() => setIsModalOpen(true)}>Iniciar Sesión</Button>
-              </div>
+        <Dialog open={open} onOpenChange={onOpenChange}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Iniciar Sesión</DialogTitle>
+              <DialogDescription>
+                Elige un método para continuar.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col space-y-4 pt-4">
+              <Button variant="outline" onClick={() => signIn('google')}>
+                {/* <GoogleIcon className="mr-2 h-5 w-5" /> */}
+                Continuar con Google
+              </Button>
+              <Button variant="outline" disabled>
+                {/* <FacebookIcon className="mr-2 h-5 w-5" /> */}
+                Continuar con Facebook (Próximamente)
+              </Button>
             </div>
-          </header>
-          <SocialLoginModal open={isModalOpen} onOpenChange={setIsModalOpen} />
-        </>
+          </DialogContent>
+        </Dialog>
       );
     }
     ```
@@ -251,10 +301,12 @@ enum MenuType {
 4.  **Mover y renombrar layout**: Mover `(protected)/layout.tsx` a `(admin)/layout.tsx`.
 5.  **Eliminar `(protected)`**: `rm -rf application-base/src/app/\(protected\)`
 
-### Paso 5: Fortalecer la Seguridad del Layout de Administración
+### Paso 5: Fortalecer la Seguridad del Layout de Administración (Autorización Granular)
 
 1.  **Modificar `application-base/src/app/(admin)/layout.tsx`**:
-    El layout ahora debe verificar el rol y solicitar el menú correcto.
+    La protección de rutas para la zona administrativa se basa en dos capas:
+    *   **Autenticación Global**: Gestionada por `proxy.ts`, que asegura que el usuario tenga una sesión activa antes de acceder a cualquier ruta protegida (incluyendo `/admin/*`).
+    *   **Autorización Granular**: Se realiza en este Server Component (`layout.tsx`), verificando los permisos específicos del usuario para acceder a las funcionalidades administrativas.
 
     ```tsx
     // src/app/(admin)/layout.tsx
@@ -269,12 +321,16 @@ enum MenuType {
     
     export default async function AdminLayout({ children }: { children: React.ReactNode }) {
       const session = await auth();
+      // Aunque proxy.ts ya redirige si no hay sesión, esta verificación adicional aquí es un buen respaldo
+      // y clarifica la intención de seguridad del layout.
       if (!session?.user) redirect("/auth/signin");
     
       try {
-        // Verificar que el usuario tenga permisos de administrador
+        // Verificar que el usuario tenga permisos de administrador.
+        // Si no los tiene, se lanzará una excepción que será capturada, mostrando NotAuthorized.
         await requireAnyPermission(['user:list', 'role:list', 'system:admin']);
       } catch (error) {
+        // En caso de no tener permisos suficientes, se muestra un componente indicando acceso denegado.
         return <NotAuthorized />;
       }
     
@@ -288,6 +344,81 @@ enum MenuType {
       );
     }
     ```
+    **Nota sobre Protección de Rutas**: `proxy.ts` gestiona la capa de autenticación a nivel global (comprobando `session?.user`). Los Server Components de los layouts complementan esta seguridad realizando comprobaciones de autorización granular (permisos específicos para la ruta) y manejando la experiencia de usuario (redirecciones o visualización de `NotAuthorized`).
+
+### Paso 5.1: Implementar Layout y Protección para la Zona de Cliente
+
+1.  **Crear el Layout de Cliente**:
+    Crea el archivo `application-base/src/app/(customer)/account/layout.tsx`. Este layout debe tener una estructura similar al público, pero diseñada para usuarios logueados.
+
+    ```tsx
+    // src/app/(customer)/account/layout.tsx
+    import { auth } from "@/lib/auth";
+    import { redirect } from "next/navigation";
+    import { PublicHeader } from '@/components/layout/public-header'; // O una cabecera de cliente específica
+    import { NotAuthorized } from "@/components/auth/not-authorized";
+    // Si necesitas un menú específico para el cliente, puedes importarlo aquí
+    // import { getMenuServer } from "@/lib/menu/get-menu-server";
+    // import { MenuContext, MenuType } from "@/lib/prisma/generated";
+    
+    export default async function CustomerAccountLayout({ children }: { children: React.ReactNode }) {
+      const session = await auth();
+      // Si no hay sesión, redirigir a la página de inicio de sesión pública
+      if (!session?.user) redirect("/auth/signin");
+    
+      // Opcional: Verificar el rol "Usuario" o permisos específicos para esta zona
+      // try {
+      //   await requireAnyPermission(['customer:access', 'user:profile']);
+      // } catch (error) {
+      //   return <NotAuthorized />;
+      // }
+    
+      // Si el rol "Usuario" es mandatorio para esta zona, se podría verificar aquí
+      // const isUserRole = session.user.roles?.includes('Usuario'); // Asumiendo que el rol se inyecta en la sesión
+      // if (!isUserRole) {
+      //   return <NotAuthorized message="Acceso denegado: Se requiere rol de Usuario." />;
+      // }
+
+      return (
+        <div className="flex min-h-screen flex-col">
+          <PublicHeader /> {/* O un CustomerHeader específico si es necesario */}
+          <main className="flex-1 container mx-auto py-8">{children}</main>
+          {/* Aquí podría ir un footer de cliente */}
+        </div>
+      );
+    }
+    ```
+    **Nota**: La página `settings` actual (que estaba en `src/app/(protected)/settings`) se moverá a `src/app/(admin)/admin/settings` como parte del panel administrativo. La zona `(customer)/account` está pensada para funcionalidades del usuario público logueado.
+
+### Paso 5.2: Estrategia de Separación de API Routes
+
+Para mantener la organización y seguridad, las rutas de API se organizarán lógicamente por zonas dentro del directorio `src/app/api/`. Esto permite aplicar seguridad y lógica específica a cada grupo de APIs.
+
+1.  **Reestructurar `src/app/api/`**:
+    *   **API Públicas**: Se moverán a `src/app/api/(public)/`. Por ejemplo, APIs de autenticación, o datos públicos.
+    *   **API de Cliente**: Se moverán a `src/app/api/(customer)/account/` o `src/app/api/(customer)/profile/`. Estas requerirán autenticación de usuario (`session.user`).
+    *   **API de Administración**: Se moverán a `src/app/api/(admin)/`. Estas requerirán autenticación de usuario y permisos específicos de administrador.
+
+    Ejemplo de estructura:
+    ```
+    src/app/api/
+    ├── (public)/
+    │   ├── auth/
+    │   │   └── route.ts
+    │   └── products/
+    │       └── route.ts
+    ├── (customer)/
+    │   ├── account/
+    │   │   └── route.ts
+    │   └── orders/
+    │       └── route.ts
+    └── (admin)/
+        ├── users/
+        │   └── route.ts
+        └── roles/
+            └── route.ts
+    ```
+    **Nota**: Esta separación es lógica. La implementación de la autorización (ej. `requireAnyPermission` o `auth()`) se realizará en cada archivo `route.ts` según sea necesario.
 
 ### Paso 6: Implementar Manejo de Errores Global
 

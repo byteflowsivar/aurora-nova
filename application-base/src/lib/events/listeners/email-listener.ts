@@ -125,7 +125,7 @@ export class EmailEventListener {
         'utf8'
       );
 
-      const resetUrl = `${env.NEXTAUTH_URL}/auth/reset-password?token=${payload.token}`;
+      const resetUrl = `${env.NEXTAUTH_URL}/admin/auth/reset-password?token=${payload.token}`;
       const expiresIn = Math.round(
         (payload.expiresAt.getTime() - Date.now()) / (1000 * 60)
       );

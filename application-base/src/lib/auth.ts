@@ -185,7 +185,7 @@ export const {
     }
   },
   pages: {
-    signIn: '/auth/signin',
+    signIn: '/admin/auth/signin',
     error: '/auth/error',
   },
   debug: process.env.NODE_ENV === 'development',

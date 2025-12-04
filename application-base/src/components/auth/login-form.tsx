@@ -13,7 +13,6 @@ import type { LoginInput } from "@/lib/validations/auth"
 export function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
 
   const [formData, setFormData] = useState<LoginInput>({
     email: "",
@@ -33,8 +32,9 @@ export function LoginForm() {
       const result = await loginUser(formData)
 
       if (result.success) {
-        // Login exitoso, redirigir al dashboard o callback URL
-        router.push(callbackUrl)
+        // Login exitoso, redirigir usando redirectUrl del servidor
+        const redirectUrl = result.data?.redirectUrl || searchParams.get("callbackUrl") || "/admin/dashboard"
+        router.push(redirectUrl)
         router.refresh()
       } else {
         // Mostrar errores
@@ -201,7 +201,7 @@ export function LoginForm() {
 
         <div className="mt-6 text-center text-sm">
           <a
-            href="/auth/forgot-password"
+            href="/admin/auth/forgot-password"
             className="font-medium text-blue-600 hover:text-blue-500"
           >
             ¿Olvidaste tu contraseña?

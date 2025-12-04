@@ -84,12 +84,12 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
           const logoutResult = await logoutUser();
 
           if (logoutResult.success) {
-            // Redirigir al login
-            router.push('/auth/signin');
+            // Redirigir al login administrativo
+            router.push('/admin/auth/signin');
             router.refresh();
           } else {
             // Si falla el logout, forzar recarga completa
-            window.location.href = '/auth/signin';
+            window.location.href = '/admin/auth/signin';
           }
         }, 2500);
       } else {

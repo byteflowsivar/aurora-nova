@@ -7,7 +7,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/co
 import { getMenuServer } from "@/lib/menu/get-menu-server"
 import { Toaster } from "@/components/ui/sonner"
 
-export default async function ProtectedLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
@@ -15,7 +15,7 @@ export default async function ProtectedLayout({
   const session = await auth()
 
   if (!session?.user) {
-    redirect("/auth/signin")
+    redirect("/admin/auth/signin")
   }
 
   const menuItems = await getMenuServer()

@@ -70,7 +70,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
           Tu contraseña ha sido cambiada. Ahora puedes iniciar sesión con tu nueva contraseña.
         </p>
         <Button asChild className="mt-4">
-          <Link href="/auth/signin">Ir a Inicio de Sesión</Link>
+          <Link href="/admin/auth/signin">Ir a Inicio de Sesión</Link>
         </Button>
       </div>
     );

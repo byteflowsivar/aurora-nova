@@ -56,7 +56,7 @@ function ResetPasswordContent() {
           El enlace de reinicio de contraseña no es válido o ha expirado. Por favor, solicita uno nuevo.
         </p>
         <Button asChild className="mt-4">
-          <Link href="/auth/forgot-password">Solicitar nuevo enlace</Link>
+          <Link href="/admin/auth/forgot-password">Solicitar nuevo enlace</Link>
         </Button>
       </div>
     );

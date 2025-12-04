@@ -28,11 +28,11 @@ import {
 // Rutas públicas que no requieren autenticación
 const publicRoutes = [
   "/",
-  "/auth/signin",
+  "/admin/auth/signin",
+  "/admin/auth/forgot-password",
+  "/admin/auth/reset-password",
   "/auth/signup",
   "/auth/error",
-  "/auth/forgot-password",
-  "/auth/reset-password",
 ]
 
 // Rutas de la API de autenticación que deben ser accesibles
@@ -83,9 +83,9 @@ export default async function proxy(request: NextRequest) {
   // Para todas las demás rutas, se requiere autenticación.
   const session = await auth()
 
-  // Si no hay sesión (JWT inválido o expirado), redirigir a la página de login
+  // Si no hay sesión (JWT inválido o expirado), redirigir a la página de login administrativo
   if (!session?.user) {
-    const signInUrl = new URL("/auth/signin", request.url)
+    const signInUrl = new URL("/admin/auth/signin", request.url)
     signInUrl.searchParams.set("callbackUrl", pathname)
     const response = NextResponse.redirect(signInUrl)
     response.headers.set(REQUEST_ID_HEADER, requestId)

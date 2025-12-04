@@ -22,7 +22,7 @@ export default async function SettingsPage() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    redirect('/auth/signin');
+    redirect('/admin/auth/signin');
   }
 
   const profile = await getUserProfile(session.user.id);

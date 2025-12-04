@@ -125,7 +125,7 @@ export function AppSidebar({ menuItems }: { menuItems: MenuItemType[] }) {
     try {
       const result = await logoutUser()
       if (result.success) {
-        router.push("/auth/signin")
+        router.push("/admin/auth/signin")
         router.refresh()
       } else {
         console.error("Error al cerrar sesión:", result.error)

@@ -20,8 +20,8 @@ export function LogoutButton() {
       const result = await logoutUser()
 
       if (result.success) {
-        // Redirigir al login después del logout
-        router.push("/auth/signin")
+        // Redirigir al login administrativo después del logout
+        router.push("/admin/auth/signin")
         router.refresh()
       } else {
         console.error("Error al cerrar sesión:", result.error)

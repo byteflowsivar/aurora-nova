@@ -109,6 +109,9 @@ Este proyecto adopta una arquitectura unificada donde tanto el frontend como el 
 
 - El **Frontend** se construye con componentes de React que se renderizan en el servidor o en el cliente.
 - El **Backend** se implementa como **Rutas de API** dentro del directorio `src/app/api/`.
+- **Protección de Rutas**:
+    - **Autenticación Global**: Gestionada por `proxy.ts` (reemplazo de `middleware.ts` en Next.js 16 para Node.js runtime) que verifica la sesión del usuario a nivel global y redirige si es necesario.
+    - **Autorización Granular**: Se maneja en los **Server Components (Layouts y Pages)**, donde se verifican los permisos específicos del usuario para acceder a un recurso o funcionalidad, utilizando funciones como `requireAnyPermission`.
 
 ### Regla de Comunicación Frontend-API
 
@@ -148,6 +151,7 @@ mi-proyecto/
 │   │   └── [recurso]-service.ts
 │   ├── repositories/          # Lógica de acceso a datos
 │   │   └── [recurso]-repository.ts
+│   ├── proxy.ts               # Manejo de autenticación global y redirecciones (Next.js 16+)
 │   └── styles/
 │       └── globals.css
 ├── .env.local
@@ -310,6 +314,7 @@ Las rutas de API en `src/app/api/` manejan las peticiones HTTP y aplican la arqu
 ### Estructura y Lógica
 
 - **Archivos `route.ts`**: Cada ruta se define en un archivo `route.ts`.
+- **Organización por Grupos**: Se recomienda usar los grupos de rutas de Next.js (ej. `(public)`, `(admin)`, `(customer)`) dentro de `src/app/api/` para organizar lógicamente los endpoints por zona de acceso. Esto mejora la claridad, mantenibilidad y permite aplicar patrones de seguridad consistentes por grupo.
 - **Funciones por Verbo HTTP**: Exportar funciones `async` nombradas según el verbo HTTP (`GET`, `POST`, `PUT`, `DELETE`).
 - **Validación de Datos**: Usar librerías como **Zod** para validar la entrada de las peticiones.
 - **Separación de Lógica**: Las rutas delegan toda la lógica de negocio a la capa de servicio.

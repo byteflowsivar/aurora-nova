@@ -10,10 +10,10 @@ export default async function Home() {
   const session = await auth()
 
   if (session?.user) {
-    // Usuario autenticado, redirigir al dashboard
-    redirect("/dashboard")
+    // Usuario autenticado, redirigir al dashboard de administración
+    redirect("/admin/dashboard")
   } else {
-    // Usuario no autenticado, redirigir al login
-    redirect("/auth/signin")
+    // Usuario no autenticado, redirigir al login administrativo
+    redirect("/admin/auth/signin")
   }
 }

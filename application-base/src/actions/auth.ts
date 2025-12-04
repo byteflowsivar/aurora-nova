@@ -179,8 +179,8 @@ export async function registerUser(
  * })
  *
  * if (result.success) {
- *   // Redirigir al dashboard
- *   redirect(result.data.redirectUrl || "/dashboard")
+ *   // Redirigir al dashboard administrativo
+ *   redirect(result.data.redirectUrl || "/admin/dashboard")
  * }
  * ```
  */
@@ -235,7 +235,7 @@ export async function loginUser(
     return successResponse(
       {
         success: true,
-        redirectUrl: "/dashboard",
+        redirectUrl: "/admin/dashboard",
       },
       "Sesión iniciada exitosamente"
     )
@@ -305,8 +305,8 @@ export async function loginUser(
  * const result = await logoutUser()
  *
  * if (result.success) {
- *   // Redirigir al login
- *   redirect("/auth/signin")
+ *   // Redirigir al login administrativo
+ *   redirect("/admin/auth/signin")
  * }
  * ```
  */
