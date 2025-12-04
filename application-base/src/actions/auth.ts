@@ -11,14 +11,14 @@
 
 import { signIn, signOut, auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma/connection"
-import { deleteSession } from "@/lib/prisma/session-queries"
+import { deleteSession } from "@/modules/shared/api"
 import {
   loginSchema,
   type LoginInput,
   registerSchema,
-} from "@/lib/validations/auth"
-import type { ActionResponse } from "@/types/action-response"
-import { successResponse, errorResponse } from "@/types/action-response"
+} from "@/modules/shared/validations"
+import type { ActionResponse } from "@/modules/shared/types"
+import { successResponse, errorResponse } from "@/modules/shared/types"
 import { AuthError } from "next-auth"
 import { headers } from "next/headers"
 import { hash } from "bcryptjs"
@@ -179,8 +179,8 @@ export async function registerUser(
  * })
  *
  * if (result.success) {
- *   // Redirigir al dashboard
- *   redirect(result.data.redirectUrl || "/dashboard")
+ *   // Redirigir al dashboard administrativo
+ *   redirect(result.data.redirectUrl || "/admin/dashboard")
  * }
  * ```
  */
@@ -235,7 +235,7 @@ export async function loginUser(
     return successResponse(
       {
         success: true,
-        redirectUrl: "/dashboard",
+        redirectUrl: "/admin/dashboard",
       },
       "Sesión iniciada exitosamente"
     )
@@ -305,8 +305,8 @@ export async function loginUser(
  * const result = await logoutUser()
  *
  * if (result.success) {
- *   // Redirigir al login
- *   redirect("/auth/signin")
+ *   // Redirigir al login administrativo
+ *   redirect("/admin/auth/signin")
  * }
  * ```
  */

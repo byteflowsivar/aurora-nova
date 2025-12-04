@@ -5,8 +5,8 @@
 
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { changeUserPassword } from '@/lib/prisma/user-queries';
-import { changePasswordSchema } from '@/lib/validations/profile-schema';
+import { changeUserPassword } from '@/modules/shared/api';
+import { changePasswordSchema } from '@/modules/shared/validations';
 import { z } from 'zod';
 import { eventBus, SystemEvent } from "@/lib/events"
 

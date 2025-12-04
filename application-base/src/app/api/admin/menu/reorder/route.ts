@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/server/require-permission';
-import { reorderMenuItems } from '@/lib/prisma/menu-queries';
+import { reorderMenuItems } from '@/modules/admin/services';
 import { z } from 'zod';
 import { invalidateMenuCache } from '@/lib/menu/menu-cache';
 

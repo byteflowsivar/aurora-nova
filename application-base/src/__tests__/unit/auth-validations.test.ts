@@ -9,7 +9,7 @@ import {
   loginSchema,
   type RegisterInput,
   type LoginInput,
-} from '@/lib/validations/auth'
+} from '@/modules/shared/validations'
 
 
 describe('auth-validations', () => {

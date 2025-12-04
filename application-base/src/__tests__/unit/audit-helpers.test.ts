@@ -7,8 +7,8 @@ import {
   getAuditContext,
   auditOperation,
   auditEntityChange,
-} from '@/lib/audit/helpers';
-import { auditService } from '@/lib/audit/audit-service';
+} from '@/modules/admin/services/helpers';
+import { auditService } from '@/modules/admin/services/audit-service';
 
 // Mock next/headers
 vi.mock('next/headers', () => ({

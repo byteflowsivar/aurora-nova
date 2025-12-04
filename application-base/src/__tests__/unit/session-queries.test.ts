@@ -5,8 +5,8 @@
 
 import { describe, it, expect, beforeEach } from 'vitest'
 import { prismaMock, resetPrismaMock } from '../mocks/prisma'
-import { createSession, isSessionValid } from '@/lib/prisma/session-queries'
-import type { CreateSessionData } from '@/lib/types/session'
+import { createSession, isSessionValid } from '@/modules/shared/api'
+import type { CreateSessionData } from '@/modules/shared/types'
 
 describe('session-queries', () => {
   beforeEach(() => {

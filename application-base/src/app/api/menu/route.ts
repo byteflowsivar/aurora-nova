@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { getMenuForUser } from '@/lib/prisma/menu-queries';
+import { getMenuForUser } from '@/modules/admin/services';
 
 export async function GET() {
   const session = await auth();

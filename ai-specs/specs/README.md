@@ -58,6 +58,27 @@ Estándares para mantener documentación:
 
 ---
 
+### 🎯 Específicos del Proyecto (Aurora Nova)
+
+#### **`project-architecture.mdc`** ⭐ NUEVO
+Arquitectura modular específica de Aurora Nova:
+- **Separación de módulos**: Admin / Public / Shared
+- **Patrón Container/Presentation**: Smart vs Dumb components
+- **Protección de rutas**: Autenticación global + validación por layout
+- **Estructura de carpetas**: Cómo organizar componentes, servicios, hooks
+- **Ejemplos prácticos**: Cómo agregar funcionalidades
+- **Crecimiento futuro**: Roadmap de evolución arquitectónica
+
+**Cuándo usar**:
+- ✅ En TODOS los desarrollos de Aurora Nova
+- ✅ Antes de crear nuevos componentes
+- ✅ Cuando agregues funcionalidades a Admin o Public
+- ✅ Para entender la separación de responsabilidades
+
+**Complementa**: `nextjs-standards.mdc` (patrones genéricos)
+
+---
+
 ### 🚀 Arquitecturas Avanzadas (Opcionales)
 
 #### **`advanced-architecture.mdc`**
@@ -143,7 +164,15 @@ Contiene especificaciones de arquitecturas anteriores que ya no se utilizan:
 
 ## 🚀 Flujo de Trabajo Recomendado
 
-### Para un Nuevo Proyecto
+### Para Aurora Nova (Proyecto Existente)
+
+1. **Leer** `base-standards.mdc` - Principios fundamentales
+2. **Leer** `nextjs-standards.mdc` - Estándares Next.js genéricos
+3. **Leer** `project-architecture.mdc` ⭐ - **CRÍTICO**: Arquitectura modular del proyecto
+4. **Leer** `mcp-integration.mdc` - Si usas agentes de IA
+5. **Desarrollar** siguiendo ambos estándares (genéricos + específicos)
+
+### Para un Nuevo Proyecto Generic
 
 1. **Configura el agente de IA** con `base-standards.mdc`
 2. **Referencia** `nextjs-standards.mdc` para arquitectura
@@ -279,6 +308,7 @@ Estos estándares son parte del proyecto [nombre del proyecto] y están bajo la 
 
 ---
 
-**Última Actualización**: 2025-11-29
+**Última Actualización**: 2025-12-04
 **Versión de Next.js**: 16+
 **Compatibilidad**: Next.js 16+ con App Router
+**Nuevos**: `project-architecture.mdc` - Arquitectura modular de Aurora Nova

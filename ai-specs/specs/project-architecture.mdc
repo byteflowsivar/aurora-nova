@@ -1,0 +1,752 @@
+---
+description: Arquitectura modular de Aurora Nova con separación de zonas (Admin, Public, Shared) y patrón Container/Presentation. Define la estructura, patrones de componentes y directrices para desarrollo.
+globs: ["src/modules/**/*", "src/app/**/*", "src/components/**/*"]
+alwaysApply: true
+---
+
+# Arquitectura Modular de Aurora Nova
+
+## Tabla de Contenidos
+
+- [Relación con Estándares Base](#relación-con-estándares-base)
+- [Visión General](#visión-general)
+- [Estructura de Módulos](#estructura-de-módulos)
+- [Descripción de Zonas](#descripción-de-zonas)
+- [Patrón Container/Presentation](#patrón-containerpresentation)
+- [Protección de Rutas](#protección-de-rutas)
+- [Patrones de Componentes](#patrones-de-componentes)
+- [Crecimiento Futuro](#crecimiento-futuro)
+- [Ejemplos Prácticos](#ejemplos-prácticos)
+
+---
+
+## Relación con Estándares Base
+
+**⚠️ IMPORTANTE**: Este documento es **complementario** a los estándares definidos en `base-standards.mdc`.
+
+**Cadena de lectura obligatoria** para trabajar en Aurora Nova:
+
+1. **[base-standards.mdc](./base-standards.mdc)** - Principios fundamentales de desarrollo (tareas pequeñas, TDD, seguridad de tipos, etc.)
+2. **[nextjs-standards.mdc](./nextjs-standards.mdc)** - Estándares genéricos de Next.js 16+ (arquitectura en capas, patrón repositorio, etc.)
+3. **[project-architecture.mdc](./project-architecture.mdc)** ← **TÚ ESTÁS AQUÍ** - Decisiones arquitectónicas específicas de Aurora Nova (módulos, Container/Presentation)
+
+**¿Por qué esta estructura?**
+- `base-standards.mdc` y `nextjs-standards.mdc` son **genéricos y reutilizables** en otros proyectos
+- `project-architecture.mdc` es **específico de Aurora Nova** y complementa los estándares base
+- Cualquier agente de IA que inicie por `base-standards.mdc` encontrará la referencia a este documento
+
+---
+
+## Visión General
+
+Aurora Nova está estructurada en **módulos independientes** por zona de acceso, permitiendo que equipos de desarrollo trabajen en paralelo con total independencia. Cada zona tiene su propia estructura, componentes y lógica, minimizando el acoplamiento.
+
+### Principios Rectores
+
+1. **Independencia**: Cada zona evolucionan con ritmos y requisitos diferentes
+2. **Reutilización**: Componentes presentacionales agnósticos se reutilizan en múltiples zonas
+3. **Mantenibilidad**: Separación clara de responsabilidades mediante Container/Presentation
+4. **Escalabilidad**: Estructura lista para crecimiento sin refactorizaciones mayores
+5. **Testing**: Componentes presentacionales fáciles de testear, lógica de contenedores aislable
+
+---
+
+## Estructura de Módulos
+
+```
+src/
+├── modules/
+│   ├── admin/                    # 🔐 Zona administrativa
+│   │   ├── components/
+│   │   │   ├── containers/       # Smart components (contienen lógica admin)
+│   │   │   │   ├── AppSidebarContainer.tsx
+│   │   │   │   ├── LoginFormContainer.tsx
+│   │   │   │   ├── UserManagementContainer.tsx
+│   │   │   │   └── ...
+│   │   │   └── presentational/   # Dumb components (sin lógica)
+│   │   │       ├── LoginForm.tsx
+│   │   │       ├── UserMenu.tsx
+│   │   │       ├── DashboardStats.tsx
+│   │   │       └── ...
+│   │   ├── pages/                # Páginas admin
+│   │   ├── hooks/                # Hooks específicos de admin
+│   │   ├── services/             # Lógica de negocio admin
+│   │   ├── types/                # Tipos y interfaces admin
+│   │   └── layout/               # Layout admin
+│   │
+│   ├── public/                   # 🌐 Zona pública
+│   │   ├── components/
+│   │   │   ├── containers/       # Smart components (lógica pública)
+│   │   │   │   ├── PublicNavbarContainer.tsx
+│   │   │   │   ├── SocialLoginContainer.tsx
+│   │   │   │   └── ...
+│   │   │   └── presentational/   # Componentes reutilizables
+│   │   │       ├── LoginForm.tsx # Mismo LoginForm que admin
+│   │   │       ├── Navbar.tsx
+│   │   │       └── ...
+│   │   ├── pages/
+│   │   ├── hooks/
+│   │   ├── services/
+│   │   ├── types/
+│   │   └── layout/
+│   │
+│   └── shared/                   # 📦 Código compartido
+│       ├── components/
+│       │   ├── ui/               # shadcn/ui, Button, Card, etc. (agnósticos)
+│       │   ├── layout/
+│       │   └── utils/
+│       ├── hooks/                # Hooks genéricos
+│       ├── utils/                # Funciones de utilidad
+│       ├── types/                # Tipos globales
+│       └── api/                  # Clientes HTTP, fetchers
+│
+├── app/                          # Next.js App Router
+│   ├── admin/
+│   │   ├── layout.tsx            # Layout base (sin validación)
+│   │   ├── auth/
+│   │   │   ├── signin/page.tsx
+│   │   │   ├── forgot-password/page.tsx
+│   │   │   └── reset-password/page.tsx
+│   │   └── (protected)/          # Route group
+│   │       ├── layout.tsx        # Valida sesión
+│   │       ├── dashboard/page.tsx
+│   │       ├── users/page.tsx
+│   │       ├── roles/page.tsx
+│   │       ├── permissions/page.tsx
+│   │       ├── settings/page.tsx
+│   │       └── audit/page.tsx
+│   │
+│   └── (public)/                 # Route group (próxima fase)
+│       ├── layout.tsx
+│       ├── page.tsx              # Home público
+│       ├── products/page.tsx
+│       └── about/page.tsx
+│
+├── api/
+│   ├── (admin)/
+│   │   ├── users/route.ts
+│   │   ├── roles/route.ts
+│   │   └── ...
+│   ├── (public)/
+│   │   ├── products/route.ts
+│   │   └── ...
+│   └── (shared)/
+│       ├── auth/route.ts
+│       └── ...
+```
+
+---
+
+## Descripción de Zonas
+
+### 🔐 Zona Admin (`modules/admin/`)
+
+**Propósito:** Gestión y administración del sistema (usuarios, roles, permisos, auditoría)
+
+**Características:**
+- ✅ Autenticación requerida
+- ✅ Validación de permisos granular
+- ✅ URLs: `/admin/*`
+- ✅ Layout: `src/app/admin/(protected)/layout.tsx`
+- ✅ Componentes específicos (AppSidebar, AdminDashboard, etc.)
+
+**Equipo:** Backend + Devops, Desarrollador Senior Admin
+
+**Ritmo:** Actualizaciones menos frecuentes, cambios estructurales importantes
+
+---
+
+### 🌐 Zona Pública (`modules/public/`)
+
+**Propósito:** Interfaz para visitantes y clientes (sin login o con login social)
+
+**Características:**
+- ✅ Accesible sin autenticación
+- ✅ Login social (Google, Facebook)
+- ✅ URLs: `/` y `/(public)/*`
+- ✅ Layout: `src/app/(public)/layout.tsx` (sin validación de sesión)
+- ✅ Componentes como Navbar, ProductCatalog, etc.
+
+**Equipo:** Frontend, UX/Design, Product
+
+**Ritmo:** Actualizaciones frecuentes, iteraciones ágiles
+
+---
+
+### 📦 Zona Compartida (`modules/shared/`)
+
+**Propósito:** Componentes y utilidades reutilizables entre zonas
+
+**Contenido:**
+- **`components/ui/`**: Botones, Cards, Inputs, Modales (sin lógica)
+- **`hooks/`**: useForm, useDebounce, useAuth, etc.
+- **`api/`**: Cliente HTTP, fetchers globales
+- **`utils/`**: Funciones de formateo, validación, helpers
+- **`types/`**: Tipos TypeScript globales
+
+---
+
+## Patrón Container/Presentation
+
+Este patrón separa la **lógica** (Container) de la **presentación** (Presentation), permitiendo reutilización y testing independiente.
+
+### Componente Presentacional (Dumb)
+
+```typescript
+// modules/shared/components/LoginForm.tsx
+import { Button } from '@/modules/shared/components/ui/button'
+import { Input } from '@/modules/shared/components/ui/input'
+
+interface LoginFormProps {
+  email: string
+  password: string
+  errors?: Record<string, string[]>
+  isLoading?: boolean
+  onEmailChange: (value: string) => void
+  onPasswordChange: (value: string) => void
+  onSubmit: (e: React.FormEvent) => void
+  onForgotPassword: () => void
+}
+
+export function LoginForm({
+  email,
+  password,
+  errors,
+  isLoading,
+  onEmailChange,
+  onPasswordChange,
+  onSubmit,
+  onForgotPassword,
+}: LoginFormProps) {
+  return (
+    <form onSubmit={onSubmit} className="space-y-6">
+      <div>
+        <label htmlFor="email">Email</label>
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => onEmailChange(e.target.value)}
+          disabled={isLoading}
+          error={errors?.email?.[0]}
+        />
+      </div>
+
+      <div>
+        <label htmlFor="password">Contraseña</label>
+        <Input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => onPasswordChange(e.target.value)}
+          disabled={isLoading}
+          error={errors?.password?.[0]}
+        />
+      </div>
+
+      <Button type="submit" disabled={isLoading} fullWidth>
+        {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+      </Button>
+
+      <button
+        type="button"
+        onClick={onForgotPassword}
+        className="text-sm text-blue-600"
+      >
+        ¿Olvidaste tu contraseña?
+      </button>
+    </form>
+  )
+}
+```
+
+**Características:**
+- ✅ Sin `"use client"` (Server Component compatible)
+- ✅ Recibe **todos los datos como props**
+- ✅ Recibe **callbacks como props** (onSubmit, onChange, etc.)
+- ✅ NO conoce URLs, rutas ni lógica de negocio
+- ✅ Fácil de testear (propiedades predecibles)
+- ✅ Reutilizable en Admin y Public con comportamientos distintos
+
+---
+
+### Contenedor Admin (Smart)
+
+```typescript
+// modules/admin/components/containers/LoginFormContainer.tsx
+"use client"
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { LoginForm } from '@/modules/shared/components/LoginForm'
+import { loginUser } from '@/actions/auth'
+import type { LoginInput } from '@/lib/validations/auth'
+
+export function AdminLoginFormContainer() {
+  const router = useRouter()
+  const [formData, setFormData] = useState<LoginInput>({
+    email: '',
+    password: '',
+  })
+  const [errors, setErrors] = useState<Record<string, string[]>>({})
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+
+    try {
+      const result = await loginUser(formData)
+
+      if (result.success) {
+        // Redirigir a /admin/dashboard (lógica admin)
+        router.push(result.data?.redirectUrl || '/admin/dashboard')
+        router.refresh()
+      } else {
+        setErrors(result.fieldErrors || {})
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleForgotPassword = () => {
+    // Redirigir a ruta admin (lógica admin)
+    router.push('/admin/auth/forgot-password')
+  }
+
+  return (
+    <LoginForm
+      email={formData.email}
+      password={formData.password}
+      errors={errors}
+      isLoading={isLoading}
+      onEmailChange={(email) => setFormData({ ...formData, email })}
+      onPasswordChange={(password) => setFormData({ ...formData, password })}
+      onSubmit={handleSubmit}
+      onForgotPassword={handleForgotPassword}
+    />
+  )
+}
+```
+
+**Características:**
+- ✅ `"use client"` (necesita interactividad)
+- ✅ **Contiene lógica específica de Admin**:
+  - URLs admin: `/admin/dashboard`, `/admin/auth/forgot-password`
+  - Actions de autenticación admin
+  - Redirecciones admin-específicas
+- ✅ Maneja estado local
+- ✅ Llama al componente presentacional con props
+
+---
+
+### Contenedor Público (Smart - Futuro)
+
+```typescript
+// modules/public/components/containers/PublicLoginFormContainer.tsx
+"use client"
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { LoginForm } from '@/modules/shared/components/LoginForm'
+import { loginWithSocial } from '@/modules/public/services/auth'
+
+export function PublicLoginFormContainer() {
+  const router = useRouter()
+  const [formData, setFormData] = useState({ email: '', password: '' })
+  const [errors, setErrors] = useState<Record<string, string[]>>({})
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+
+    try {
+      const result = await loginWithSocial(formData)
+
+      if (result.success) {
+        // Redirigir a /account/dashboard (lógica pública)
+        router.push('/account/dashboard')
+        router.refresh()
+      } else {
+        setErrors(result.fieldErrors || {})
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleForgotPassword = () => {
+    // Redirigir a ruta pública (lógica pública)
+    router.push('/auth/forgot-password')
+  }
+
+  return (
+    <LoginForm
+      email={formData.email}
+      password={formData.password}
+      errors={errors}
+      isLoading={isLoading}
+      onEmailChange={(email) => setFormData({ ...formData, email })}
+      onPasswordChange={(password) => setFormData({ ...formData, password })}
+      onSubmit={handleSubmit}
+      onForgotPassword={handleForgotPassword}
+    />
+  )
+}
+```
+
+**Diferencias Clave:**
+- URLs públicas: `/account/dashboard`, `/auth/forgot-password`
+- Servicio de autenticación distinto: `loginWithSocial`
+- Lógica específica de zona pública
+- **Mismo componente presentacional LoginForm**
+
+---
+
+## Protección de Rutas
+
+### Nivel 1: Autenticación Global (proxy.ts)
+
+```typescript
+// src/proxy.ts
+const publicRoutes = [
+  "/",                                // Home (puede redirigir)
+  "/admin/auth/signin",               // Login admin
+  "/admin/auth/forgot-password",      // Recuperar password admin
+  "/admin/auth/reset-password",       // Reiniciar password admin
+  "/auth/signup",                     // Signup público (futuro)
+  "/auth/error",                      // Página de error
+]
+
+// Cualquier otra ruta → requiere autenticación
+// Sin sesión → redirige a /admin/auth/signin
+```
+
+### Nivel 2: Validación por Grupo (layout.tsx)
+
+**Para zona Admin protegida:**
+
+```typescript
+// src/app/admin/(protected)/layout.tsx
+import { auth } from "@/lib/auth"
+import { redirect } from "next/navigation"
+import { requireAnyPermission } from "@/lib/server/require-permission"
+import { NotAuthorized } from "@/components/auth/not-authorized"
+
+export default async function AdminLayout({ children }) {
+  const session = await auth()
+
+  if (!session?.user) {
+    redirect("/admin/auth/signin")  // Ya redirigido por proxy
+  }
+
+  try {
+    await requireAnyPermission(['system:admin'])
+  } catch (error) {
+    return <NotAuthorized />
+  }
+
+  return children
+}
+```
+
+**Para zona Pública (sin protección):**
+
+```typescript
+// src/app/(public)/layout.tsx
+export default function PublicLayout({ children }) {
+  // Sin validación de sesión
+  // Accesible para todos
+  return children
+}
+```
+
+---
+
+## Patrones de Componentes
+
+### 1. Componentes Presentacionales Simples
+
+```typescript
+// Ubicación: modules/shared/components/ui/Button.tsx
+interface ButtonProps {
+  children: React.ReactNode
+  onClick?: () => void
+  disabled?: boolean
+  variant?: 'primary' | 'secondary'
+  className?: string
+}
+
+export function Button({ children, variant = 'primary', ...props }: ButtonProps) {
+  const variantClasses = {
+    primary: 'bg-blue-600 hover:bg-blue-700',
+    secondary: 'bg-gray-200 hover:bg-gray-300',
+  }
+
+  return (
+    <button
+      className={`px-4 py-2 rounded ${variantClasses[variant]} ${props.className || ''}`}
+      {...props}
+    >
+      {children}
+    </button>
+  )
+}
+```
+
+### 2. Hooks Compartidos
+
+```typescript
+// Ubicación: modules/shared/hooks/useForm.ts
+import { useState, useCallback } from 'react'
+
+export function useForm<T extends Record<string, any>>(initialValues: T) {
+  const [values, setValues] = useState(initialValues)
+  const [errors, setErrors] = useState<Record<string, string[]>>({})
+
+  const handleChange = useCallback((field: string, value: any) => {
+    setValues(prev => ({ ...prev, [field]: value }))
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
+    }
+  }, [errors])
+
+  return { values, errors, setErrors, handleChange }
+}
+```
+
+### 3. Services Específicos de Zona
+
+```typescript
+// Ubicación: modules/admin/services/user-service.ts
+import { api } from '@/modules/shared/api/client'
+
+export const adminUserService = {
+  async getAll() {
+    return api.get('/api/admin/users')
+  },
+
+  async create(data: CreateUserInput) {
+    return api.post('/api/admin/users', data)
+  },
+
+  async delete(id: string) {
+    return api.delete(`/api/admin/users/${id}`)
+  },
+}
+```
+
+---
+
+## Crecimiento Futuro
+
+### Fase Actual (Hecho ✅)
+```
+Admin
+├── Components (Presentacionales + Containers)
+├── Pages
+└── Services
+
+Shared
+├── UI Components
+├── Hooks
+└── Utils
+```
+
+### Fase 2 (Próxima - Public)
+```
+Public
+├── Components (Presentacionales + Containers)
+├── Pages
+├── Services
+└── Hooks
+
++
+Auth (Shared - actualizado)
+├── Actions
+├── Types
+└── Validations
+```
+
+### Fase 3 (Si crece más)
+```
+Customer Portal
+├── Components
+├── Pages
+├── Services
+└── Types
+
++
+Mobile App
+├── API client compatible
+└── Reutiliza modules/shared
+```
+
+---
+
+## Ejemplos Prácticos
+
+### Agregando Nueva Funcionalidad a Admin
+
+**Paso 1:** Crear componente presentacional
+
+```typescript
+// modules/shared/components/UserCard.tsx
+export interface UserCardProps {
+  id: string
+  name: string
+  email: string
+  role: string
+  onEdit: (id: string) => void
+  onDelete: (id: string) => void
+}
+
+export function UserCard({
+  id,
+  name,
+  email,
+  role,
+  onEdit,
+  onDelete,
+}: UserCardProps) {
+  return (
+    <div className="p-4 border rounded">
+      <h3>{name}</h3>
+      <p>{email}</p>
+      <p className="text-sm text-gray-500">{role}</p>
+      <div className="flex gap-2 mt-4">
+        <button onClick={() => onEdit(id)}>Editar</button>
+        <button onClick={() => onDelete(id)}>Eliminar</button>
+      </div>
+    </div>
+  )
+}
+```
+
+**Paso 2:** Crear contenedor para Admin
+
+```typescript
+// modules/admin/components/containers/UserListContainer.tsx
+"use client"
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { UserCard } from '@/modules/shared/components/UserCard'
+import { adminUserService } from '@/modules/admin/services/user-service'
+
+export function AdminUserListContainer() {
+  const router = useRouter()
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    adminUserService.getAll().then(setUsers).finally(() => setLoading(false))
+  }, [])
+
+  const handleEdit = (id: string) => {
+    router.push(`/admin/users/${id}/edit`)  // Ruta admin
+  }
+
+  const handleDelete = async (id: string) => {
+    await adminUserService.delete(id)
+    setUsers(users.filter(u => u.id !== id))
+  }
+
+  if (loading) return <div>Cargando...</div>
+
+  return (
+    <div className="grid gap-4">
+      {users.map(user => (
+        <UserCard
+          key={user.id}
+          {...user}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      ))}
+    </div>
+  )
+}
+```
+
+**Paso 3:** Usar en página Admin
+
+```typescript
+// src/app/admin/(protected)/users/page.tsx
+import { AdminUserListContainer } from '@/modules/admin/components/containers/UserListContainer'
+
+export default function AdminUsersPage() {
+  return (
+    <div>
+      <h1>Gestión de Usuarios</h1>
+      <AdminUserListContainer />
+    </div>
+  )
+}
+```
+
+---
+
+## Resumen de Convenciones
+
+| Aspecto | Ubicación | Descripción |
+|---------|-----------|------------|
+| **Componentes Presentacionales** | `modules/shared/components/` | Agnósticos, reutilizables, sin lógica |
+| **Contenedores Admin** | `modules/admin/components/containers/` | Lógica admin, URLs admin, redirecciones |
+| **Contenedores Público** | `modules/public/components/containers/` | Lógica pública, URLs públicas, redirecciones |
+| **Páginas Admin** | `src/app/admin/(protected)/**/page.tsx` | Páginas administrativas protegidas |
+| **Páginas Públicas** | `src/app/(public)/**/page.tsx` | Páginas públicas sin protección |
+| **Services Admin** | `modules/admin/services/` | Lógica de negocio admin |
+| **Services Public** | `modules/public/services/` | Lógica de negocio público |
+| **Hooks Compartidos** | `modules/shared/hooks/` | useForm, useDebounce, etc. |
+| **UI Components** | `modules/shared/components/ui/` | Button, Input, Card, Dialog, etc. |
+| **API Client** | `modules/shared/api/` | Cliente HTTP compartido |
+
+---
+
+## Migración Gradual
+
+Como esta arquitectura se implementa **ahora antes de construir Public**, no hay migración necesaria. El código Admin existente puede ser movido a esta estructura en paralelo mientras se desarrolla Public de forma independiente.
+
+**Timeline sugerido:**
+1. Documentar esta arquitectura ✅ (actual)
+2. Mantener Admin funcionando mientras se reorganiza gradualmente
+3. Iniciar módulo Public con la estructura correcta desde el inicio
+4. Refactorizar Admin solo si es necesario
+
+---
+
+## Alineación con Estándares Base
+
+Esta arquitectura modular complementa los estándares definidos en `base-standards.mdc` y `nextjs-standards.mdc`:
+
+### Principios de base-standards.mdc que aplicamos aquí
+
+| Principio | Aplicación en Aurora Nova |
+|-----------|--------------------------|
+| **Tareas pequeñas, una a la vez** | Estructura modular permite que teams trabajen independientemente en Admin/Public sin conflictos |
+| **Desarrollo Dirigido por Pruebas (TDD)** | Componentes presentacionales agnósticos son fáciles de testear sin dependencias |
+| **Seguridad de Tipos** | Cada módulo define sus propios tipos, evitando contaminación cross-module |
+| **Nomenclatura Clara** | Estructura clara: `containers/` vs `presentational/` hace obvio el propósito de cada componente |
+| **Detección de Patrones** | Container/Presentation es un patrón identificado y documentado para evitar repetición |
+
+### Estándares Next.js que respetamos
+
+- **Arquitectura en Capas**: Los contenedores actúan como "Controllers", delegando a services y hooks
+- **Patrón Repositorio**: Services en cada módulo encapsulan acceso a APIs
+- **Comunicación Frontend-API**: Componentes presentacionales NO acceden directamente a base de datos
+- **Protección de Rutas**: `proxy.ts` + layouts implementan autenticación global + autorización granular
+
+### Extensible a Arquitecturas Avanzadas (Futuro)
+
+Si en el futuro Aurora Nova requiere patrones de `advanced-architecture.mdc`:
+- La estructura modular es **compatible con DDD** (cada módulo podría ser un bounded context)
+- Preparada para **Event-Driven Architecture** (events entre módulos Admin/Public)
+- Pronta para **Feature Flags** (activar/desactivar features por zona)
+

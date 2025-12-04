@@ -18,6 +18,13 @@ Este no es un plan de trabajo estricto, sino una colección de ideas que se prio
 
 Estas son funcionalidades que complementan directamente las implementaciones actuales y aportan un alto valor inmediato.
 
+### Arquitectura de App Pública y Panel de Administración
+- **Objetivo**: Refactorizar la estructura de rutas para separar formalmente la aplicación en una zona **pública** y un **panel de administración** (`/admin`).
+- **Detalles**:
+  - Implementar una separación a nivel de rutas y middleware.
+  - Adaptar el sistema de menú dinámico para soportar múltiples menús (`PANEL_ADMIN`, `PUBLIC_SITE`) mediante la adición de un campo de `contexto` y `tipo` en la base de datos, permitiendo una gestión centralizada pero con una presentación diferenciada.
+- **Beneficios**: Mejora radical en la separación de incumbencias, seguridad, experiencia de usuario y escalabilidad.
+
 ### Interfaz del Sistema de Auditoría
 - **Dashboards de Auditoría**: Crear visualizaciones y métricas clave sobre la actividad del sistema (ej. logins por día, acciones más comunes, etc.).
 - **Exportación de Logs**: Implementar la funcionalidad para que los administradores puedan exportar los registros de auditoría en formatos como CSV o JSON para análisis externo o cumplimiento.

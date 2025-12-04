@@ -1,6 +1,6 @@
 import { DefaultSession, DefaultUser } from "next-auth";
 import { JWT as DefaultJWT } from "next-auth/jwt";
-import type { UserRole } from '@/lib/types/auth';
+import type { UserRole } from '@/modules/shared/types';
 
 declare module "next-auth" {
   interface Session extends DefaultSession {

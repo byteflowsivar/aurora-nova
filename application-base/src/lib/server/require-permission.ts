@@ -11,8 +11,8 @@ import {
   hasPermission,
   hasAnyPermission,
   hasAllPermissions,
-} from "@/lib/utils/permission-utils"
-import type { SystemPermission } from "@/lib/types/permissions"
+} from "@/modules/admin/utils/permission-utils"
+import type { SystemPermission } from "@/modules/admin/types"
 
 // ============================================================================
 // TIPOS Y ERRORES
@@ -123,7 +123,7 @@ export async function getCurrentUserId(): Promise<string | null> {
  * }
  *
  * // Con SystemPermission para autocompletado
- * import { SYSTEM_PERMISSIONS } from '@/lib/types/permissions'
+ * import { SYSTEM_PERMISSIONS } from '@/modules/admin/types'
  * export async function deleteUser(id: string) {
  *   await requirePermission(SYSTEM_PERMISSIONS.USER_DELETE)
  *   // ...

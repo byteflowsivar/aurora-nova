@@ -31,6 +31,7 @@ Este documento sirve como la guía central para entender, operar y desarrollar s
    - Migraciones y Seeding
 5. [Testing](#9-testing)
 6. [Scripts y Flujos de Trabajo](#10-scripts-y-flujos-de-trabajo)
+7. [Hoja de Ruta (Roadmap)](#11-hoja-de-ruta-roadmap)
 
 ---
 
@@ -137,50 +138,39 @@ El código fuente se encuentra en `src/` y sigue una estructura modular y orient
 
 #### Sistema de Logging Estructurado
 - **Librería**: Pino, un logger de alto rendimiento para Node.js.
-- **Trazabilidad**: Un middleware en `src/proxy.ts` inyecta un `x-request-id` en cada petición. Este ID se propaga a todos los logs generados durante el ciclo de vida de esa petición, permitiendo una correlación completa.
-- **Contexto Automático**: Los helpers `getLogContext` y `getApiLogContext` enriquecen los logs con información de la sesión (userId, sessionId) y del request.
-- **Sanitización**: El logger redacta automáticamente campos sensibles (como `password`, `token`) para evitar fugas de información.
-- **Guía Completa**: Para una guía detallada sobre cómo implementar el logging en tu código, consulta la **[Guía de Logging Estandarizado](./docs/LOGGING_GUIDE.md)**.
+- **Trazabilidad**: Un middleware en `src/proxy.ts` inyecta un `x-request-id` en cada petición, permitiendo una correlación completa de logs.
+- **Contexto Automático**: Los helpers `getLogContext` y `getApiLogContext` enriquecen los logs con información de la sesión y del request.
+- **Guía Completa**: Para una guía detallada sobre cómo implementar el logging, consulta la **[Guía de Logging Estandarizado](./docs/LOGGING_GUIDE.md)**.
 
 #### Sistema de Eventos (Event-Driven)
 - **Implementación**: Basado en `EventEmitter` de Node.js, implementado como un singleton en `src/lib/events/event-bus.ts`.
-- **Flujo**:
-  1. Una acción principal (ej. `registerUser`) emite un evento (ej. `SystemEvent.USER_REGISTERED`).
-  2. Los "listeners" suscritos a ese evento se ejecutan de forma asíncrona.
-- **Listeners**:
-  - `EmailEventListener`: Envía emails transaccionales (bienvenida, reset de password).
-  - `AuditEventListener`: Crea registros de auditoría automáticamente.
-- **Ventaja**: Desacopla la lógica. Para añadir una nueva acción (ej. enviar una notificación a Slack al registrarse un usuario), solo se necesita crear un nuevo listener, sin modificar el código de registro original.
-- **Guía Completa**: Para una guía detallada sobre cómo utilizar y extender este sistema, consulta la **[Guía de Arquitectura Dirigida por Eventos](./docs/EVENT_DRIVEN_ARCHITECTURE.md)**.
+- **Flujo**: Las acciones principales emiten eventos (ej. `USER_REGISTERED`), y los "listeners" suscritos reaccionan a ellos de forma asíncrona (ej. para enviar emails o auditar).
+- **Ventaja**: Desacopla la lógica y mejora la extensibilidad.
+- **Guía Completa**: Para aprender a usar y extender este sistema, consulta la **[Guía de Arquitectura Dirigida por Eventos](./docs/EVENT_DRIVEN_ARCHITECTURE.md)**.
 
 #### Sistema de Auditoría
 - **Implementación**: Combina un listener de eventos (para auditoría automática) con helpers manuales para casos de uso específicos.
-- **Auditoría Automática**: El `AuditEventListener` se suscribe a los eventos del sistema (ej. `USER_UPDATED`) para registrar la mayoría de las acciones de forma automática y consistente.
-- **Auditoría Manual**: Para acciones que no emiten eventos (ej. procesos en lote), se proporcionan helpers como `auditOperation` y `auditEntityChange`.
-- **API**: Un endpoint `GET /api/audit` permite consultar los logs con filtros y paginación, protegido por el permiso `audit:view`.
+- **Auditoría Automática**: El `AuditEventListener` se suscribe a los eventos del sistema para registrar la mayoría de las acciones de forma automática.
 - **Guía Completa**: Para aprender a integrar nuevas acciones en el sistema de auditoría, consulta la **[Guía del Sistema de Auditoría](./docs/AUDIT_SYSTEM_GUIDE.md)**.
 
 ### 8. Base de Datos
-
 - **ORM**: Prisma. El esquema se define en `prisma/schema.prisma`.
-- **Migraciones**: Se gestionan con `prisma migrate`. Cada cambio en el esquema genera un nuevo archivo de migración SQL en `prisma/migrations/`.
-- **Seeding**: El script `scripts/seed.ts` puebla la base de datos con datos iniciales indispensables (permisos, roles por defecto, menú). Se ejecuta con `npm run db:seed`.
+- **Migraciones**: Se gestionan con `prisma migrate`.
+- **Seeding**: El script `scripts/seed.ts` puebla la base de datos con datos iniciales (roles, permisos).
 
 ### 9. Testing
-- **Framework**: Vitest.
-- **Entorno**: JSDOM para simular un entorno de navegador.
-- **Mocks**: Se utiliza `vitest-mock-extended` para mockear el cliente de Prisma, y mocks manuales para módulos de Next.js (`next/navigation`).
-- **Estructura**: Los tests están en `src/__tests__/`, separados por `unit`, `integration` y (futuro) `e2e`.
+- **Framework**: Vitest, configurado para un entorno JSDOM.
+- **Mocks**: Se utiliza `vitest-mock-extended` para mockear el cliente de Prisma.
+- **Estructura**: Los tests residen en `src/__tests__/`, organizados por `unit` e `integration`.
 
 ### 10. Scripts y Flujos de Trabajo
 Desde la carpeta `application-base/`, los siguientes scripts son fundamentales:
-- `npm run dev`: Inicia el servidor de desarrollo con Turbopack.
+- `npm run dev`: Inicia el servidor de desarrollo.
 - `npm run build`: Compila la aplicación para producción.
 - `npm run db:migrate`: Aplica nuevas migraciones a la base de datos.
-- `npm run db:seed`: Puebla la base de datos con datos iniciales (roles, permisos, etc.).
-- `npm run db:create-super-admin`: Script para crear el primer usuario administrador en una instalación limpia.
+- `npm run db:seed`: Puebla la base de datos con datos iniciales.
+- `npm run db:create-super-admin`: Script para crear el primer usuario administrador.
 - `npm run test:run`: Ejecuta toda la suite de tests.
-- `npm run test:coverage`: Ejecuta tests y genera un reporte de cobertura.
 
 ### 11. Hoja de Ruta (Roadmap)
 Para ver las funcionalidades y mejoras planificadas para el futuro de esta base de aplicación, consulta nuestra **[Hoja de Ruta (Roadmap)](./docs/ROADMAP.md)**.
