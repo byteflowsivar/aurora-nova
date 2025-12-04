@@ -25,6 +25,15 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@/modules/shared/*": [
+        "./src/modules/shared/*"
+      ],
+      "@/modules/admin/*": [
+        "./src/modules/admin/*"
+      ],
+      "@/modules/public/*": [
+        "./src/modules/public/*"
       ]
     }
   },

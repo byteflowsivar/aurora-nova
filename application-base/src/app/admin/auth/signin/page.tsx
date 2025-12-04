@@ -5,7 +5,7 @@
 
 import { Metadata } from "next"
 import { Suspense } from "react"
-import { LoginForm } from "@/components/auth/login-form"
+import { LoginForm } from "@/modules/shared/components/presentational"
 
 export const metadata: Metadata = {
   title: "Iniciar Sesión | Aurora Nova",

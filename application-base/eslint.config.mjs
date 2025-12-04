@@ -12,6 +12,8 @@ export default [
       'coverage/**',
       'next-env.d.ts',
       'src/lib/prisma/generated/**',
+      'src/__tests__/**',
+      'prisma/seeds/**',
     ],
   },
 

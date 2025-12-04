@@ -21,9 +21,9 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma/connection"
 import { getUserByEmail, getUserWithCredentials } from "@/lib/prisma/queries"
-import { createSession } from "@/lib/prisma/session-queries"
-import { getUserPermissions } from "@/lib/prisma/permission-queries"
-import { generateSessionToken, getSessionExpiry } from "@/lib/utils/session-utils"
+import { createSession } from "@/modules/shared/api"
+import { getUserPermissions } from "@/modules/admin/services"
+import { generateSessionToken, getSessionExpiry } from "@/modules/shared/utils"
 import bcrypt from "bcryptjs"
 import logger from "@/lib/logger";
 import { eventBus, SystemEvent } from "@/lib/events";

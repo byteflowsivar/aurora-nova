@@ -8,7 +8,7 @@
 
 import { eventBus } from '../event-bus';
 import { SystemEvent } from '../types';
-import { auditService } from '@/lib/audit/audit-service';
+import { auditService } from '@/modules/admin/services/audit-service';
 import { structuredLogger } from '@/lib/logger/structured-logger';
 
 /**

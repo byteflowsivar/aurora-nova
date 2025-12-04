@@ -23,7 +23,7 @@ vi.mock('@/lib/prisma/permission-queries', () => ({
   userHasAllPermissions: vi.fn(),
 }))
 
-import * as permissionQueries from '@/lib/prisma/permission-queries'
+import * as permissionQueries from '@/modules/admin/services'
 
 describe('permission-utils', () => {
   beforeEach(() => {

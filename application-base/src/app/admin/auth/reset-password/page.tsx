@@ -1,7 +1,7 @@
 // /application-base/src/app/auth/reset-password/page.tsx
 'use client'; // Convertimos la página en un Client Component
 
-import { ResetPasswordForm } from '@/components/auth/reset-password-form';
+import { ResetPasswordForm } from '@/modules/shared/components/presentational';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Suspense, useEffect, useState } from 'react';

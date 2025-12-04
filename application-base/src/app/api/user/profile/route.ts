@@ -6,8 +6,8 @@
 
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { getUserProfile, updateUserProfile } from '@/lib/prisma/user-queries';
-import { updateProfileSchema } from '@/lib/validations/profile-schema';
+import { getUserProfile, updateUserProfile } from '@/modules/shared/api';
+import { updateProfileSchema } from '@/modules/shared/validations';
 import { z } from 'zod';
 
 /**

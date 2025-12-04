@@ -30,7 +30,15 @@ Estos estándares aplican a **todos los proyectos** Next.js:
 - **[Integración MCP](./mcp-integration.mdc)**: Guía completa para configurar y usar MCP (Model Context Protocol) con agentes de IA en Next.js 16+.
 - **[Estándares de Documentación](./documentation-standards.mdc)**: Estructura, formato y directrices para mantener la documentación técnica y las especificaciones de IA.
 
-## 3.1. Arquitecturas Avanzadas (Opcionales)
+## 3.1. Específico de Aurora Nova (Obligatorio para este Proyecto)
+
+**NOTA IMPORTANTE**: Aurora Nova tiene decisiones arquitectónicas específicas que complementan los estándares core. Consulta estos documentos:
+
+- **[Arquitectura de Aurora Nova](./project-architecture.mdc)** ⭐ **CRÍTICO**: Estructura modular por zonas (Admin / Public / Shared), patrón Container/Presentation, protección de rutas y patrones de componentes específicos del proyecto. **Este documento es obligatorio para todos los desarrollos en Aurora Nova.**
+
+---
+
+## 3.2. Arquitecturas Avanzadas (Opcionales)
 
 Estos patrones son **opcionales** y deben aplicarse solo cuando la complejidad del proyecto lo justifique:
 

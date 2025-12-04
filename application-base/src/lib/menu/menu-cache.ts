@@ -1,5 +1,5 @@
-import type { MenuItem } from '@/lib/types/menu';
-import { getMenuForUser } from '@/lib/prisma/menu-queries';
+import type { MenuItem } from '@/modules/admin/types';
+import { getMenuForUser } from '@/modules/admin/services';
 
 const menuCache = new Map<string, { menu: MenuItem[]; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutos

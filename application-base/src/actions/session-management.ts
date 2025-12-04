@@ -18,9 +18,9 @@ import {
   deleteOtherUserSessions,
   deleteAllUserSessions,
   countActiveSessions,
-} from "@/lib/prisma/session-queries"
-import { parseUserAgent } from "@/lib/utils/session-utils"
-import type { SessionDetails, SessionOperationResult } from "@/lib/types/session"
+} from "@/modules/shared/api"
+import { parseUserAgent } from "@/modules/shared/utils"
+import type { SessionDetails, SessionOperationResult } from "@/modules/shared/types"
 
 // ============================================================================
 // LISTAR SESIONES

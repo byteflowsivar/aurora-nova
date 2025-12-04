@@ -15,7 +15,7 @@ import {
   getAllPermissions,
   getPermissionsByModule,
   permissionExists,
-} from '@/lib/prisma/permission-queries'
+} from '@/modules/admin/services'
 
 describe('permission-queries', () => {
   beforeEach(() => {

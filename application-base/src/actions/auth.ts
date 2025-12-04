@@ -11,14 +11,14 @@
 
 import { signIn, signOut, auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma/connection"
-import { deleteSession } from "@/lib/prisma/session-queries"
+import { deleteSession } from "@/modules/shared/api"
 import {
   loginSchema,
   type LoginInput,
   registerSchema,
-} from "@/lib/validations/auth"
-import type { ActionResponse } from "@/types/action-response"
-import { successResponse, errorResponse } from "@/types/action-response"
+} from "@/modules/shared/validations"
+import type { ActionResponse } from "@/modules/shared/types"
+import { successResponse, errorResponse } from "@/modules/shared/types"
 import { AuthError } from "next-auth"
 import { headers } from "next/headers"
 import { hash } from "bcryptjs"

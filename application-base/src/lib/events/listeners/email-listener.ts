@@ -9,7 +9,7 @@
 
 import { eventBus } from '../event-bus';
 import { SystemEvent } from '../types';
-import { activeEmailService } from '@/lib/email/email-service';
+import { activeEmailService } from '@/modules/shared/api/email-service';
 import { structuredLogger } from '@/lib/logger/structured-logger';
 import Mustache from 'mustache';
 import fs from 'fs/promises';

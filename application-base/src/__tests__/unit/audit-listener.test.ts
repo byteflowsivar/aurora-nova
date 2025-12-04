@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { AuditEventListener } from '@/lib/events/listeners/audit-listener';
 import { eventBus } from '@/lib/events/event-bus';
 import { SystemEvent } from '@/lib/events/types';
-import { auditService } from '@/lib/audit/audit-service';
+import { auditService } from '@/modules/admin/services/audit-service';
 
 // Mock audit service
 vi.mock('@/lib/audit/audit-service', () => ({

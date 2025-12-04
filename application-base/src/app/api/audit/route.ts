@@ -8,9 +8,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { hasPermission } from '@/lib/utils/permission-utils';
-import { auditService } from '@/lib/audit/audit-service';
-import { SYSTEM_PERMISSIONS } from '@/lib/types/permissions';
+import { hasPermission } from '@/modules/admin/utils/permission-utils';
+import { auditService } from '@/modules/admin/services/audit-service';
+import { SYSTEM_PERMISSIONS } from '@/modules/admin/types';
 import { structuredLogger } from '@/lib/logger/structured-logger';
 
 /**

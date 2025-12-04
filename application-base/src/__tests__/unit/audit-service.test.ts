@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { AuditService } from '@/lib/audit/audit-service';
+import { AuditService } from '@/modules/admin/services/audit-service';
 import { prisma } from '@/lib/prisma/connection';
 
 // Mock Prisma

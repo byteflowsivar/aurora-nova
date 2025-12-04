@@ -13,17 +13,17 @@ import {
   userHasAllPermissions,
   getUserPermissionsDetailed,
   getUserRolesWithPermissions,
-} from '@/lib/prisma/permission-queries'
+} from '@/modules/admin/services/permission-queries'
 import {
   hasPermission,
   hasAnyPermission,
   hasAllPermissions,
-} from '@/lib/utils/permission-utils'
+} from '@/modules/admin/utils/permission-utils'
 import {
   checkPermission,
   checkAnyPermission,
   checkAllPermissions,
-} from '@/lib/utils/permission-utils'
+} from '@/modules/admin/utils/permission-utils'
 
 async function main() {
   console.log('🧪 Iniciando pruebas del sistema RBAC...\n')
