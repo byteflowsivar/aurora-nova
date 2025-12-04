@@ -124,10 +124,10 @@ export async function seedMenuItems() {
     data: {
       title: 'Auditoria',
       href: '/audit',
-      icon: 'Key',
+      icon: 'FileText',
       order: 4,
       isActive: true,
-      permissionId: 'audit:list', // Requiere permiso
+      permissionId: 'audit:view', // Requiere permiso
       parentId: adminGroup.id // Referencia al ID generado
     }
   })
@@ -141,13 +141,14 @@ export async function seedMenuItems() {
   const totalItems = await prisma.menuItem.count()
   console.log(`\n✅ Menu items seeded successfully! Total items: ${totalItems}`)
   console.log('   - Level 1 (root): 2 items (Dashboard + Administración group)')
-  console.log('   - Level 2 (children): 3 items (Usuarios, Roles, Permisos)')
+  console.log('   - Level 2 (children): 4 items (Usuarios, Roles, Permisos, Auditoria)')
 
   return {
     dashboard,
     adminGroup,
     users,
     roles,
-    permissions: permissions_menu
+    permissions: permissions_menu,
+    audit: audit_menu
   }
 }

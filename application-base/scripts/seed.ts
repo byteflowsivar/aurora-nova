@@ -39,6 +39,10 @@ const permissions = [
 
   // Permisos de menú
   { id: 'menu:manage', module: 'Menu', description: 'Gestionar items del menú' },
+
+  // Permisos de auditoría
+  { id: 'audit:view', module: 'Audit', description: 'Ver registros de auditoría' },
+  { id: 'audit:manage', module: 'Audit', description: 'Gestionar auditoría y registros' },
 ];
 
 // Datos de roles base
