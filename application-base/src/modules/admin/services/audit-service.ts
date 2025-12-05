@@ -48,6 +48,7 @@ export class AuditService {
           userId: input.userId ?? null,
           action: input.action,
           module: input.module,
+          area: input.area ?? null,
           entityType: input.entityType ?? null,
           entityId: input.entityId ?? null,
           oldValues: input.oldValues
@@ -73,6 +74,7 @@ export class AuditService {
         metadata: {
           auditAction: input.action,
           auditModule: input.module,
+          area: input.area,
           entityType: input.entityType,
           entityId: input.entityId,
         },
@@ -126,6 +128,10 @@ export class AuditService {
 
     if (filters.action) {
       where.action = filters.action;
+    }
+
+    if (filters.area) {
+      where.area = filters.area;
     }
 
     if (filters.entityType) {
@@ -185,6 +191,7 @@ export class AuditService {
         userId: log.userId,
         action: log.action,
         module: log.module,
+        area: log.area,
         entityType: log.entityType,
         entityId: log.entityId,
         oldValues: log.oldValues as Record<string, unknown> | null,

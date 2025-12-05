@@ -4,6 +4,9 @@ import { z } from "zod"
 import { requirePermission } from "@/lib/server/require-permission"
 import { SYSTEM_PERMISSIONS } from "@/modules/admin/types/permissions"
 import { UnauthenticatedError, PermissionDeniedError } from "@/lib/server/require-permission"
+import { auth } from "@/lib/auth"
+import { eventBus, SystemEvent } from "@/lib/events"
+import { EventArea } from "@/lib/events/event-area"
 
 const assignPermissionSchema = z.object({
   permissionId: z.string().min(1, "ID de permiso inválido"),
@@ -60,6 +63,7 @@ export async function POST(
 ) {
   try {
     await requirePermission(SYSTEM_PERMISSIONS.ROLE_ASSIGN_PERMISSIONS)
+    const session = await auth()
 
     const { id } = await params
     const body = await request.json()
@@ -124,6 +128,22 @@ export async function POST(
       },
     })
 
+    // Dispatch event for role permission assignment audit
+    await eventBus.dispatch(
+      SystemEvent.ROLE_PERMISSION_ASSIGNED,
+      {
+        roleId: id,
+        roleName: role.name,
+        permissionId: permissionId,
+        permissionName: permission.module,
+        assignedBy: session?.user?.id || 'system',
+      },
+      {
+        userId: session?.user?.id,
+        area: EventArea.ADMIN,
+      }
+    )
+
     return NextResponse.json({ success: true }, { status: 201 })
   } catch (error) {
     if (error instanceof UnauthenticatedError) {
@@ -147,6 +167,7 @@ export async function DELETE(
 ) {
   try {
     await requirePermission(SYSTEM_PERMISSIONS.ROLE_ASSIGN_PERMISSIONS)
+    const session = await auth()
 
     const { id } = await params
     const { searchParams } = new URL(request.url)
@@ -159,20 +180,50 @@ export async function DELETE(
       )
     }
 
+    // Obtener datos antes de eliminar para el evento
+    const rolePermissionData = await prisma.rolePermission.findUnique({
+      where: {
+        roleId_permissionId: {
+          roleId: id,
+          permissionId: permissionId,
+        },
+      },
+      include: {
+        role: true,
+        permission: true,
+      },
+    })
+
+    if (!rolePermissionData) {
+      return NextResponse.json(
+        { error: "Asignación no encontrada" },
+        { status: 404 }
+      )
+    }
+
     // Eliminar asignación
-    const deleted = await prisma.rolePermission.deleteMany({
+    await prisma.rolePermission.deleteMany({
       where: {
         roleId: id,
         permissionId: permissionId,
       },
     })
 
-    if (deleted.count === 0) {
-      return NextResponse.json(
-        { error: "Asignación no encontrada" },
-        { status: 404 }
-      )
-    }
+    // Dispatch event for role permission removal audit
+    await eventBus.dispatch(
+      SystemEvent.ROLE_PERMISSION_REMOVED,
+      {
+        roleId: id,
+        roleName: rolePermissionData.role.name,
+        permissionId: permissionId,
+        permissionName: rolePermissionData.permission.module,
+        removedBy: session?.user?.id || 'system',
+      },
+      {
+        userId: session?.user?.id,
+        area: EventArea.ADMIN,
+      }
+    )
 
     return NextResponse.json({ success: true })
   } catch (error) {

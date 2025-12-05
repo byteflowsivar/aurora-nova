@@ -265,7 +265,7 @@ export interface EventPayload {
  * Cada evento emitido incluye:
  * - event: El tipo de evento (de SystemEvent)
  * - payload: Los datos específicos del evento
- * - metadata: Contexto adicional (timestamp, requestId, userId)
+ * - metadata: Contexto adicional (timestamp, requestId, userId, area)
  */
 export interface BaseEvent<T extends SystemEvent> {
   /** Tipo de evento */
@@ -284,6 +284,9 @@ export interface BaseEvent<T extends SystemEvent> {
 
     /** ID del usuario que disparó el evento (si aplica) */
     userId?: string;
+
+    /** Área de la aplicación desde donde se generó el evento */
+    area?: string; // EventArea enum value
   };
 }
 

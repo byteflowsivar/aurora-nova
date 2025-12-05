@@ -5,6 +5,9 @@ import { z } from "zod"
 import { requirePermission } from "@/lib/server/require-permission"
 import { SYSTEM_PERMISSIONS } from "@/modules/admin/types/permissions"
 import { UnauthenticatedError, PermissionDeniedError } from "@/lib/server/require-permission"
+import { auth } from "@/lib/auth"
+import { eventBus, SystemEvent } from "@/lib/events"
+import { EventArea } from "@/lib/events/event-area"
 
 // Schema de validación para crear usuario
 const createUserSchema = z.object({
@@ -88,8 +91,9 @@ export async function GET() {
 // POST /api/users - Crear usuario
 export async function POST(request: NextRequest) {
   try {
-    // Verificar permiso
+    // Verificar permiso y obtener sesión
     await requirePermission(SYSTEM_PERMISSIONS.USER_CREATE)
+    const session = await auth()
 
     const body = await request.json()
 
@@ -162,6 +166,21 @@ export async function POST(request: NextRequest) {
 
       return newUser
     })
+
+    // Dispatch event for user creation audit
+    await eventBus.dispatch(
+      SystemEvent.USER_CREATED,
+      {
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+        createdBy: session?.user?.id || 'system',
+      },
+      {
+        userId: session?.user?.id,
+        area: EventArea.ADMIN,
+      }
+    )
 
     return NextResponse.json({
       id: user.id,

@@ -17,6 +17,7 @@
 import { EventEmitter } from 'events';
 import { structuredLogger } from '../logger/structured-logger';
 import type { SystemEvent, BaseEvent, EventPayload, EventListener } from './types';
+import { EventArea } from './event-area';
 
 // Usamos un Símbolo global para asegurar que la instancia sea verdaderamente un singleton
 // a través de las recargas de módulos en entornos de desarrollo.
@@ -76,7 +77,7 @@ class EventBus extends EventEmitter {
    *
    * @param event - El tipo de evento a despachar.
    * @param payload - Los datos del evento.
-   * @param metadata - Metadatos opcionales (por ejemplo, requestId, userId).
+   * @param metadata - Metadatos opcionales (por ejemplo, requestId, userId, area).
    */
   async dispatch<T extends SystemEvent>(
     event: T,
@@ -84,6 +85,7 @@ class EventBus extends EventEmitter {
     metadata?: {
       requestId?: string;
       userId?: string;
+      area?: EventArea;
     }
   ): Promise<void> {
     const eventData: BaseEvent<T> = {
@@ -103,6 +105,7 @@ class EventBus extends EventEmitter {
       metadata: {
         event,
         hasPayload: !!payload,
+        area: metadata?.area,
       },
     });
 

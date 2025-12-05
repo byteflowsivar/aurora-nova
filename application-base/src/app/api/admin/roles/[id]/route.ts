@@ -4,6 +4,9 @@ import { z } from "zod"
 import { requirePermission } from "@/lib/server/require-permission"
 import { SYSTEM_PERMISSIONS } from "@/modules/admin/types/permissions"
 import { UnauthenticatedError, PermissionDeniedError } from "@/lib/server/require-permission"
+import { auth } from "@/lib/auth"
+import { eventBus, SystemEvent } from "@/lib/events"
+import { EventArea } from "@/lib/events/event-area"
 
 const updateRoleSchema = z.object({
   name: z.string().min(1, "El nombre es requerido").max(50, "El nombre debe tener máximo 50 caracteres").optional(),
@@ -85,6 +88,7 @@ export async function PUT(
 ) {
   try {
     await requirePermission(SYSTEM_PERMISSIONS.ROLE_UPDATE)
+    const session = await auth()
 
     const { id } = await params
     const body = await request.json()
@@ -148,6 +152,27 @@ export async function PUT(
       },
     })
 
+    // Dispatch event for role update audit
+    await eventBus.dispatch(
+      SystemEvent.ROLE_UPDATED,
+      {
+        roleId: updatedRole.id,
+        oldValues: {
+          name: existingRole.name,
+          description: existingRole.description,
+        },
+        newValues: {
+          name: updatedRole.name,
+          description: updatedRole.description,
+        },
+        updatedBy: session?.user?.id || 'system',
+      },
+      {
+        userId: session?.user?.id,
+        area: EventArea.ADMIN,
+      }
+    )
+
     return NextResponse.json({
       id: updatedRole.id,
       name: updatedRole.name,
@@ -179,6 +204,7 @@ export async function DELETE(
 ) {
   try {
     await requirePermission(SYSTEM_PERMISSIONS.ROLE_DELETE)
+    const session = await auth()
 
     const { id } = await params
 
@@ -213,6 +239,20 @@ export async function DELETE(
     await prisma.role.delete({
       where: { id },
     })
+
+    // Dispatch event for role deletion audit
+    await eventBus.dispatch(
+      SystemEvent.ROLE_DELETED,
+      {
+        roleId: id,
+        name: role.name,
+        deletedBy: session?.user?.id || 'system',
+      },
+      {
+        userId: session?.user?.id,
+        area: EventArea.ADMIN,
+      }
+    )
 
     return NextResponse.json({ success: true })
   } catch (error) {
