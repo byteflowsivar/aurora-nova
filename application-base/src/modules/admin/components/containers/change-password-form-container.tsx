@@ -1,8 +1,129 @@
 'use client';
 
 /**
- * Formulario de Cambio de Contraseña
- * Permite cambiar la contraseña del usuario con validaciones de seguridad
+ * Componente ChangePasswordForm (Container)
+ *
+ * Formulario seguro para cambiar la contraseña del usuario.
+ * Valida requisitos de seguridad, revoca sesiones anteriores si es necesario.
+ *
+ * Este componente es responsable de:
+ * - Recolectar contraseña actual y nueva contraseña (2x para confirmar)
+ * - Validar requisitos de seguridad (8+ chars, mayús, número, especial)
+ * - Hacer POST a API para cambiar contraseña
+ * - Manejar revocación de sesiones (logout después del cambio)
+ * - Mostrar toggle de visibilidad para los 3 campos de contraseña
+ * - Mostrar lista de requisitos en UI
+ * - Manejar estados de loading y errores
+ *
+ * **Características**:
+ * - Integración con react-hook-form + Zod
+ * - Validación en tiempo real de requisitos
+ * - 3 campos de contraseña con toggle de visibilidad (Eye icon)
+ * - Lista visual de requisitos de contraseña
+ * - Loading state en botón durante envío
+ * - Toast notifications (éxito/error)
+ * - Revocación automática de sesiones después de cambio
+ * - Auto-logout si se revocan sesiones
+ * - Redirección a login tras logout
+ *
+ * @component
+ * @returns {JSX.Element} Card con formulario de cambio de contraseña
+ *
+ * @param {Object} props - Props del componente
+ * @param {() => void} [props.onSuccess] - Callback opcional tras cambio exitoso (no revocar sesiones)
+ *
+ * **Props Opcionales**:
+ * - `onSuccess` (function): Se ejecuta si cambio es exitoso pero NO revoca sesiones
+ *
+ * **Campos del Formulario**:
+ * 1. **Contraseña Actual** (requerido)
+ *    - Input password con toggle de visibilidad
+ *    - Validación: debe coincidir con la actual
+ *    - Requerido para confirmar identidad
+ * 2. **Nueva Contraseña** (requerido)
+ *    - Input password con toggle de visibilidad
+ *    - Validaciones estrictas:
+ *      - Mínimo 8 caracteres
+ *      - Al menos 1 mayúscula
+ *      - Al menos 1 número
+ *      - Al menos 1 carácter especial (!@#$%^&*)
+ * 3. **Confirmar Nueva Contraseña** (requerido)
+ *    - Input password con toggle de visibilidad
+ *    - Debe coincidir exactamente con "Nueva Contraseña"
+ *
+ * **Estados Internos**:
+ * - `isLoading`: Boolean indicando si está enviando al servidor
+ * - `showCurrentPassword`: Boolean para mostrar/ocultar contraseña actual
+ * - `showNewPassword`: Boolean para mostrar/ocultar nueva contraseña
+ * - `showConfirmPassword`: Boolean para mostrar/ocultar confirmación
+ * - `form`: Estado del formulario con react-hook-form
+ *
+ * **Flujo**:
+ * 1. Usuario ingresa contraseña actual (para verificación)
+ * 2. Usuario ingresa nueva contraseña (con requisitos mostrados)
+ * 3. Usuario confirma nueva contraseña
+ * 4. En submit:
+ *    - Valida datos localmente con changePasswordSchema
+ *    - POST a /api/customer/change-password con datos
+ *    - Si exitoso y NO revoca sesiones:
+ *      - toast success
+ *      - reset form
+ *      - callback onSuccess() si existe
+ *    - Si exitoso y REVOCA sesiones:
+ *      - toast success con mensaje especial (4s de duración)
+ *      - Espera 2.5s para que usuario lea
+ *      - Llama logoutUser() server action
+ *      - Redirecciona a /admin/auth/signin
+ *    - Si error: toast error con mensaje descriptivo
+ *
+ * **API Integration**:
+ * - Endpoint: POST /api/customer/change-password
+ * - Body: { currentPassword, newPassword, confirmPassword }
+ * - Response: { success: boolean, sessionsRevoked?: boolean, error?: string }
+ * - Auth: Requiere sesión autenticada
+ * - Razón de revocación: Cambio de contraseña invalidaría tokens por seguridad
+ *
+ * **Seguridad**:
+ * - Validación estricta de requisitos (8+ chars, mayús, número, especial)
+ * - Contraseña nueva no puede ser igual a la actual (validación en servidor)
+ * - Revocación de todas las sesiones después del cambio
+ * - Logout automático para forzar re-autenticación con nueva contraseña
+ * - Validación en servidor, no solo en cliente
+ * - No expone contraseñas en mensajes de error
+ *
+ * **Requisitos de Contraseña UI**:
+ * - Mostrados como checklist con iconos
+ * - Ayuda al usuario a cumplir requisitos antes de enviar
+ * - Visual feedback en tiempo real (si se implementa)
+ *
+ * **Casos de Uso**:
+ * - Página de configuración/seguridad del usuario
+ * - Cambio proactivo de contraseña por seguridad
+ * - Cambio forzado después de cierto tiempo
+ *
+ * **Notas**:
+ * - Los 3 inputs tienen toggle independiente de visibilidad
+ * - Sesiones se revocan para seguridad (invalidar tokens antiguos)
+ * - No es un "soft logout", es completo en servidor
+ * - Redirección a login es segura (router + refresh)
+ *
+ * @example
+ * ```tsx
+ * // En página de configuración/seguridad
+ * import { ChangePasswordForm } from '@/modules/admin/components/containers/change-password-form-container'
+ *
+ * export default function SecurityPage() {
+ *   return (
+ *     <div className="max-w-md">
+ *       <h1>Seguridad de Cuenta</h1>
+ *       <ChangePasswordForm />
+ *     </div>
+ *   )
+ * }
+ * ```
+ *
+ * @see {@link changePasswordSchema} para validaciones Zod
+ * @see {@link logoutUser} para la server action de logout
  */
 
 import { useState } from 'react';

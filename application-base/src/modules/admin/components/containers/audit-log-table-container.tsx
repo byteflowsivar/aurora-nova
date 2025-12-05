@@ -1,5 +1,136 @@
 'use client';
 
+/**
+ * Componente AuditLogTable (Container)
+ *
+ * Tabla para mostrar registros de auditoría con paginación, sorting y filtrado.
+ * Renderiza eventos de auditoría del sistema con información completa del usuario y acción.
+ *
+ * Este componente es responsable de:
+ * - Mostrar lista de eventos de auditoría en tabla
+ * - Cargar datos con useAuditLogs hook (con paginación)
+ * - Sincronizar paginación con URL search params
+ * - Renderizar columnas: fecha, usuario, acción, módulo, área, IP
+ * - Permitir dropdown actions por fila (para future features)
+ * - Mostrar skeleton loaders durante carga
+ * - Manejar paginación (Anterior/Siguiente)
+ * - Integración con TanStack React Table (v8)
+ *
+ * **Características**:
+ * - Tabla data-driven con TanStack React Table
+ * - Paginación manual (controlada por server)
+ * - Columnas con formateo personalizado (fechas, badges, áreas)
+ * - Dropdown menu en cada fila para future actions
+ * - Loading state con Skeleton loaders
+ * - Mensaje "No hay resultados" cuando está vacío
+ * - Botones Anterior/Siguiente deshabilitados según estado
+ * - Responsive y accesible
+ * - URL search params para estado de paginación/filtros
+ *
+ * @component
+ * @returns {JSX.Element} Tabla de auditoría con paginación
+ *
+ * **Props**: Ninguno (sin props requeridas)
+ *
+ * **Columnas de Tabla**:
+ * 1. **Fecha** (timestamp)
+ *    - Formateada con toLocaleString()
+ *    - Formato: "dd/mm/yyyy, HH:MM:SS"
+ *    - Ordenable (sorteable)
+ * 2. **Usuario** (user)
+ *    - Muestra email del usuario (fallback: name)
+ *    - Si es sistema: muestra "Sistema"
+ *    - Usuario completo del evento
+ * 3. **Acción** (action)
+ *    - Mostrado como Badge secondary
+ *    - Valores: LOGIN, CREATE, UPDATE, DELETE, etc
+ * 4. **Módulo** (module)
+ *    - Nombre del módulo (Auth, Roles, Users, etc)
+ * 5. **Área** (area)
+ *    - Con emojis y traducción:
+ *      - 👤 Admin
+ *      - 🛍️ Cliente
+ *      - 🌐 Público
+ *      - ⚙️ Sistema
+ *    - Si null: muestra "-"
+ * 6. **Dirección IP** (ipAddress)
+ *    - IP del cliente que ejecutó la acción
+ * 7. **Acciones** (dropdown menu)
+ *    - Botón MoreHorizontal con menu desplegable
+ *    - Option: "Ver Detalles" (future: modal con details)
+ *
+ * **Estados Internos**:
+ * - `sorting`: SortingState de TanStack para columnas ordenables
+ * - `pagination`: { pageIndex, pageSize } - estado de paginación
+ * - `page`: Number leído de URL params (defecto: 1)
+ * - `limit`: Number leído de URL params (defecto: 10)
+ * - `filters`: AuditLogFilters construida desde URL params
+ *
+ * **Flujo**:
+ * 1. Al montar: lee URL search params (page, limit, filtros)
+ * 2. Llama useAuditLogs hook con page, limit y filters
+ * 3. Hook retorna { data: auditLogResult, isLoading }
+ * 4. Si cargando: muestra Skeleton loaders
+ * 5. Si datos: renderiza tabla con TanStack React Table
+ * 6. En click Siguiente/Anterior: actualiza pagination state
+ * 7. Se puede sincronizar URL con estado (manual en parent)
+ *
+ * **URL Params Soportados**:
+ * - page: Página actual (1-indexed)
+ * - limit: Registros por página (defecto: 10)
+ * - userId: ID usuario a filtrar
+ * - action: Tipo de acción a filtrar
+ * - module: Módulo a filtrar
+ * - area: Área a filtrar
+ * - startDate: Fecha inicio en ISO format
+ * - endDate: Fecha fin en ISO format
+ *
+ * **Paginación**:
+ * - Manual (controlada por servidor, no cliente)
+ * - Botón Anterior/Siguiente
+ * - Se deshabilita según pageIndex
+ * - No hay inputs de salto a página
+ * - pageSize fijo desde URL (defecto: 10)
+ *
+ * **Loading State**:
+ * - Skeleton loaders de altura h-12
+ * - Cantidad = pageSize actual
+ * - Se muestra solo si isLoading && !data.length
+ * - Desaparece cuando hay datos
+ *
+ * **Casos de Uso**:
+ * - Página de auditoría/logs administrativos
+ * - Visualización de eventos del sistema
+ * - Investigación de acciones de usuarios
+ * - Compliance y seguridad
+ *
+ * **Notas**:
+ * - TanStack React Table v8 para estructura flexible
+ * - Paginación MANUAL (no client-side)
+ * - Sorting STATE pero sin implementación server-side actual
+ * - Dropdown actions preparado para future features
+ * - useAuditLogs hook hace la llamada API
+ *
+ * @example
+ * ```tsx
+ * // En página de auditoría
+ * import { AuditFilters } from '@/modules/admin/components/containers/audit-filters-container'
+ * import { AuditLogTable } from '@/modules/admin/components/containers/audit-log-table-container'
+ *
+ * export default function AuditPage() {
+ *   return (
+ *     <div className="space-y-6">
+ *       <AuditFilters />
+ *       <AuditLogTable />
+ *     </div>
+ *   )
+ * }
+ * ```
+ *
+ * @see {@link useAuditLogs} para el hook que obtiene datos
+ * @see {@link AuditFilters} para los filtros que controlan esta tabla
+ */
+
 import * as React from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
