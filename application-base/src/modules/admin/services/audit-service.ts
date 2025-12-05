@@ -130,6 +130,10 @@ export class AuditService {
       where.action = filters.action;
     }
 
+    if (filters.area) {
+      where.area = filters.area;
+    }
+
     if (filters.entityType) {
       where.entityType = filters.entityType;
     }

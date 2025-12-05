@@ -20,6 +20,7 @@ import { structuredLogger } from '@/lib/logger/structured-logger';
  * - userId: string (optional) - Filtrar por ID de usuario
  * - module: string (optional) - Filtrar por módulo (auth, users, roles, etc.)
  * - action: string (optional) - Filtrar por acción (login, create, update, etc.)
+ * - area: string (optional) - Filtrar por área (ADMIN, CUSTOMER, PUBLIC, SYSTEM)
  * - entityType: string (optional) - Filtrar por tipo de entidad (User, Role, etc.)
  * - entityId: string (optional) - Filtrar por ID de entidad específica
  * - requestId: string (optional) - Filtrar por request ID
@@ -70,6 +71,7 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId') || undefined;
     const module = searchParams.get('module') || undefined;
     const action = searchParams.get('action') || undefined;
+    const area = searchParams.get('area') || undefined;
     const entityType = searchParams.get('entityType') || undefined;
     const entityId = searchParams.get('entityId') || undefined;
     const requestId = searchParams.get('requestId') || undefined;
@@ -128,6 +130,7 @@ export async function GET(request: NextRequest) {
       userId,
       module,
       action,
+      area,
       entityType,
       entityId,
       requestId,
@@ -146,6 +149,7 @@ export async function GET(request: NextRequest) {
           userId,
           module,
           action,
+          area,
           entityType,
           entityId,
           requestId,
