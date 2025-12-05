@@ -1,6 +1,71 @@
 /**
- * User Profile Queries
- * Funciones para gestionar el perfil de usuario
+ * Módulo de Queries para Perfil de Usuario - Aurora Nova
+ *
+ * Proporciona funciones para gestionar perfiles de usuario incluyendo:
+ * - Obtención de perfil completo
+ * - Actualización segura de datos personales
+ * - Cambio seguro de contraseña
+ * - Verificación de credenciales
+ *
+ * **Características**:
+ * - Sincronización automática de campo `name` completo
+ * - Encriptación bcrypt para contraseñas (salt rounds: 10)
+ * - Transacciones para cambio de contraseña + revocación de sesiones
+ * - Validación de credenciales (OAuth vs password)
+ * - Manejo de errores descriptivo
+ *
+ * **Flujos Principales**:
+ *
+ * **1. VER PERFIL**:
+ * ```
+ * getUserProfile(userId) → UserProfile
+ * ```
+ *
+ * **2. ACTUALIZAR PERFIL**:
+ * ```
+ * updateUserProfile(userId, { firstName?, lastName?, image? })
+ * → Sincroniza nombre completo automáticamente
+ * ```
+ *
+ * **3. CAMBIAR CONTRASEÑA**:
+ * ```
+ * changeUserPassword(userId, currentPassword, newPassword)
+ * → Verifica actual, hashea nueva, revoca sesiones
+ * ```
+ *
+ * **Seguridad**:
+ * - Las contraseñas se hashean antes de guardar (nunca texto plano)
+ * - Cambio de contraseña revoca TODAS las sesiones (logout de todos los dispositivos)
+ * - Validación de credenciales existentes antes de cambiar
+ * - Soporte para cuentas OAuth (sin contraseña)
+ *
+ * **Ejemplo de Flujo Completo**:
+ * ```typescript
+ * // 1. Ver perfil del usuario
+ * const profile = await getUserProfile(userId)
+ * console.log(profile.name)  // "Juan Pérez"
+ *
+ * // 2. Actualizar datos personales
+ * const updated = await updateUserProfile(userId, {
+ *   firstName: 'Juan',
+ *   lastName: 'García'
+ * })
+ * // nombre completo actualizado automáticamente
+ *
+ * // 3. Cambiar contraseña
+ * const result = await changeUserPassword(
+ *   userId,
+ *   'currentPassword123',
+ *   'newPassword456'
+ * )
+ * if (result.success && result.sessionsRevoked) {
+ *   // Usuario desconectado en todos los dispositivos
+ * }
+ * ```
+ *
+ * @module shared/api/user-queries
+ * @see {@link @/lib/prisma/connection.ts} para conexión Prisma
+ * @see {@link UserProfile} para estructura de perfil
  */
 
 import { prisma } from '@/lib/prisma/connection';
@@ -27,8 +92,44 @@ export interface UpdateProfileInput {
 }
 
 /**
- * Obtiene el perfil completo del usuario actual
- * Incluye verificación si tiene credentials (no OAuth)
+ * Obtiene el perfil completo del usuario
+ *
+ * Retorna toda la información pública del usuario incluyendo:
+ * - Datos personales (nombres, email, avatar)
+ * - Metadata de cuenta (creación, última actualización, verificación email)
+ * - Información de credenciales (si tiene password registrada)
+ *
+ * **hasCredentials**:
+ * - `true`: Usuario registrado con email/password (puede cambiar contraseña)
+ * - `false`: Usuario solo con OAuth (sin password)
+ *
+ * **Ejemplo**:
+ * ```typescript
+ * const profile = await getUserProfile(userId)
+ * console.log(profile)
+ * // {
+ * //   id: 'user-123',
+ * //   email: 'juan@example.com',
+ * //   firstName: 'Juan',
+ * //   lastName: 'Pérez',
+ * //   name: 'Juan Pérez',
+ * //   image: 'https://...',
+ * //   emailVerified: Date,
+ * //   createdAt: Date,
+ * //   updatedAt: Date,
+ * //   hasCredentials: true
+ * // }
+ * ```
+ *
+ * **Throws**:
+ * - Error si usuario no existe
+ *
+ * @async
+ * @param {string} userId - ID del usuario
+ * @returns {Promise<UserProfile>} Perfil completo del usuario
+ *
+ * @see {@link updateUserProfile} para actualizar datos
+ * @see {@link userHasCredentials} para verificar si puede cambiar contraseña
  */
 export async function getUserProfile(userId: string): Promise<UserProfile> {
   const user = await prisma.user.findUnique({
@@ -61,8 +162,43 @@ export async function getUserProfile(userId: string): Promise<UserProfile> {
 }
 
 /**
- * Actualiza información personal del usuario
- * También sincroniza el campo 'name' para Auth.js
+ * Actualiza datos personales del perfil de usuario
+ *
+ * Permite actualizar firstName, lastName e image.
+ * **Sincroniza automáticamente** el campo `name` (nombre completo)
+ * para compatibilidad con Auth.js.
+ *
+ * **Comportamiento**:
+ * - Si firstName o lastName cambian, `name` se recalcula automáticamente
+ * - Si solo `image` cambia, `name` no se modifica
+ * - Obtiene valores actuales si no se proporcionan (para cálculo de `name`)
+ *
+ * **Ejemplo**:
+ * ```typescript
+ * // Actualizar solo nombre
+ * const updated = await updateUserProfile(userId, {
+ *   firstName: 'Juan Carlos'
+ * })
+ * // name se actualizará automáticamente a "Juan Carlos Pérez"
+ *
+ * // Actualizar múltiples campos
+ * const updated = await updateUserProfile(userId, {
+ *   firstName: 'Juan',
+ *   lastName: 'García',
+ *   image: 'https://new-avatar.jpg'
+ * })
+ * // name → "Juan García", image actualizado
+ * ```
+ *
+ * **Retorna**: Perfil actualizado completo (UserProfile)
+ *
+ * @async
+ * @param {string} userId - ID del usuario
+ * @param {UpdateProfileInput} data - { firstName?, lastName?, image? }
+ * @returns {Promise<UserProfile>} Perfil actualizado
+ *
+ * @see {@link getUserProfile} para obtener perfil actual
+ * @see {@link changeUserPassword} para cambiar contraseña
  */
 export async function updateUserProfile(
   userId: string,
@@ -112,7 +248,22 @@ export async function updateUserProfile(
 }
 
 /**
- * Verifica si el usuario tiene credentials (puede cambiar contraseña)
+ * Verifica si el usuario tiene credenciales de password registradas
+ *
+ * Retorna true si el usuario se registró con email/password
+ * Retorna false si el usuario solo tiene OAuth (sin password)
+ *
+ * **Caso de Uso**:
+ * - Mostrar/ocultar opción "Cambiar Contraseña" en UI
+ * - Validar que usuario puede cambiar contraseña
+ * - Diferencia entre usuarios registrados y OAuth
+ *
+ * @async
+ * @param {string} userId - ID del usuario
+ * @returns {Promise<boolean>} true si tiene password registrada
+ *
+ * @see {@link changeUserPassword} para cambiar contraseña
+ * @see {@link getUserProfile} que también retorna hasCredentials
  */
 export async function userHasCredentials(userId: string): Promise<boolean> {
   const credentials = await prisma.userCredentials.findUnique({
@@ -123,9 +274,89 @@ export async function userHasCredentials(userId: string): Promise<boolean> {
 }
 
 /**
- * Cambia la contraseña del usuario
- * Verifica la contraseña actual antes de cambiarla
- * Cierra TODAS las sesiones activas del usuario en todos los dispositivos
+ * Cambia la contraseña del usuario de forma segura
+ *
+ * Realiza cambio seguro de contraseña con:
+ * 1. Verificación de contraseña actual (comparación bcrypt)
+ * 2. Encriptación de nueva contraseña (bcrypt, salt rounds: 10)
+ * 3. Transacción atómica: actualiza password + revoca TODAS las sesiones
+ * 4. Cierre automático de sesiones en todos los dispositivos
+ *
+ * **Flujo**:
+ * 1. Verifica que usuario tiene credentials (no es OAuth)
+ * 2. Compara `currentPassword` contra hash almacenado
+ * 3. Si incorrecto, retorna error (sin revelar detalles)
+ * 4. Si correcto:
+ *    - Genera nuevo hash con bcrypt
+ *    - Actualiza contraseña en BD
+ *    - Elimina TODAS las sesiones del usuario (logout omnibus)
+ *    - Retorna success con `sessionsRevoked: true`
+ *
+ * **Seguridad**:
+ * - Nunca almacena contraseña en texto plano
+ * - Usa bcrypt con salt rounds = 10 (suficiente para 2024)
+ * - Comparación segura contra hash (timing-safe)
+ * - Cierre de sesiones previene acceso no autorizado
+ * - No revela si contraseña es correcta (error genérico)
+ *
+ * **Ejemplo**:
+ * ```typescript
+ * const result = await changeUserPassword(
+ *   userId,
+ *   'currentPassword123',
+ *   'newPassword456'
+ * )
+ *
+ * if (result.success) {
+ *   console.log('Contraseña cambiad')
+ *   if (result.sessionsRevoked) {
+ *     // Usuario desconectado en todos los dispositivos
+ *     // Debe volver a hacer login
+ *   }
+ * } else {
+ *   console.error(result.error)
+ *   // Output posible: 'Esta cuenta utiliza autenticación externa...'
+ * }
+ * ```
+ *
+ * **Errores Posibles**:
+ * - Sin credentials: "Esta cuenta utiliza autenticación externa..."
+ * - Contraseña incorrecta: "La contraseña actual es incorrecta." (no específico intencionalmente)
+ *
+ * **Transacción**:
+ * ```sql
+ * -- Dentro de una transacción
+ * UPDATE userCredentials SET hashedPassword = ?, updatedAt = NOW()
+ * DELETE FROM session WHERE userId = ?
+ * ```
+ *
+ * @async
+ * @param {string} userId - ID del usuario
+ * @param {string} currentPassword - Contraseña actual (texto plano, se compara contra hash)
+ * @param {string} newPassword - Nueva contraseña (será hasheada antes de guardar)
+ * @returns {Promise<{success: boolean; error?: string; sessionsRevoked?: boolean}>}
+ *   - success: true/false
+ *   - error: mensaje si success=false
+ *   - sessionsRevoked: true si se cerraron sesiones
+ *
+ * @example
+ * ```typescript
+ * // Caso exitoso
+ * const result = await changeUserPassword(userId, 'old', 'new')
+ * // { success: true, sessionsRevoked: true }
+ *
+ * // Caso error - sin credenciales
+ * const result = await changeUserPassword(oauthUserId, 'pwd', 'new')
+ * // { success: false, error: 'Esta cuenta utiliza...' }
+ *
+ * // Caso error - contraseña incorrecta
+ * const result = await changeUserPassword(userId, 'wrong', 'new')
+ * // { success: false, error: 'La contraseña actual es incorrecta.' }
+ * ```
+ *
+ * @see {@link getUserProfile} para verificar hasCredentials antes de llamar
+ * @see {@link userHasCredentials} para verificar credenciales
+ * @see {@link updateUserProfile} para actualizar otros datos
  */
 export async function changeUserPassword(
   userId: string,
