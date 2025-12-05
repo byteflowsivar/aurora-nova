@@ -27,6 +27,7 @@ import { generateSessionToken, getSessionExpiry } from "@/modules/shared/utils"
 import bcrypt from "bcryptjs"
 import logger from "@/lib/logger";
 import { eventBus, SystemEvent } from "@/lib/events";
+import { EventArea } from "@/lib/events/event-area";
 
 // Configuración del adapter Prisma para Auth.js
 const authAdapter = PrismaAdapter(prisma)
@@ -132,6 +133,7 @@ export const {
           })
 
           // Dispatch login event
+          // Usar SYSTEM ya que se dispara desde callback JWT
           await eventBus.dispatch(
             SystemEvent.USER_LOGGED_IN,
             {
@@ -141,7 +143,10 @@ export const {
               ipAddress: user.ipAddress as string,
               userAgent: user.userAgent as string,
             },
-            { userId: user.id }
+            {
+              userId: user.id,
+              area: EventArea.SYSTEM,
+            }
           );
 
           // 4. Guardar sessionToken en el JWT para validaciones futuras

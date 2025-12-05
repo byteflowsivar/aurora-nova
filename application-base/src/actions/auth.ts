@@ -25,6 +25,7 @@ import { hash } from "bcryptjs"
 import { structuredLogger } from "@/lib/logger/structured-logger"
 import { getLogContext, enrichContext } from "@/lib/logger/helpers"
 import { eventBus, SystemEvent } from "@/lib/events"
+import { EventArea } from "@/lib/events/event-area"
 import { z } from "zod";
 
 // ============================================================================
@@ -135,6 +136,7 @@ export async function registerUser(
       {
         requestId: context.requestId,
         userId: user.id,
+        area: EventArea.PUBLIC,
       }
     );
 
@@ -322,13 +324,17 @@ export async function logoutUser(): Promise<ActionResponse<void>> {
 
       if (userId) {
         // Dispatch logout event for auditing, notifications, etc.
+        // Usar SYSTEM como área ya que el logout se dispara desde server action
         await eventBus.dispatch(
           SystemEvent.USER_LOGGED_OUT,
           {
             userId,
             sessionId: sessionToken,
           },
-          { userId }
+          {
+            userId,
+            area: EventArea.SYSTEM,
+          }
         );
       }
 
@@ -417,6 +423,7 @@ export async function requestPasswordReset(
         {
           requestId: context.requestId,
           userId: user.id,
+          area: EventArea.PUBLIC,
         }
       );
     }

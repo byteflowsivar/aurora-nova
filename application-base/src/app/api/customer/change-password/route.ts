@@ -9,6 +9,7 @@ import { changeUserPassword } from '@/modules/shared/api';
 import { changePasswordSchema } from '@/modules/shared/validations';
 import { z } from 'zod';
 import { eventBus, SystemEvent } from "@/lib/events"
+import { EventArea } from "@/lib/events/event-area"
 
 /**
  * POST /api/user/change-password
@@ -50,7 +51,10 @@ export async function POST(request: Request) {
         email: session.user.email || '',
         changedBy: 'self'
       },
-      { userId: session?.user.id }
+      {
+        userId: session?.user.id,
+        area: EventArea.CUSTOMER,
+      }
     );
 
     return NextResponse.json({
