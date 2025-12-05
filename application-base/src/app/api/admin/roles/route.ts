@@ -4,6 +4,9 @@ import { z } from "zod"
 import { requirePermission } from "@/lib/server/require-permission"
 import { SYSTEM_PERMISSIONS } from "@/modules/admin/types/permissions"
 import { UnauthenticatedError, PermissionDeniedError } from "@/lib/server/require-permission"
+import { auth } from "@/lib/auth"
+import { eventBus, SystemEvent } from "@/lib/events"
+import { EventArea } from "@/lib/events/event-area"
 
 const createRoleSchema = z.object({
   name: z.string().min(1, "El nombre es requerido").max(50, "El nombre debe tener máximo 50 caracteres"),
@@ -64,6 +67,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     await requirePermission(SYSTEM_PERMISSIONS.ROLE_CREATE)
+    const session = await auth()
 
     const body = await request.json()
 
@@ -104,6 +108,21 @@ export async function POST(request: NextRequest) {
         updatedAt: true,
       },
     })
+
+    // Dispatch event for role creation audit
+    await eventBus.dispatch(
+      SystemEvent.ROLE_CREATED,
+      {
+        roleId: role.id,
+        name: role.name,
+        description: role.description,
+        createdBy: session?.user?.id || 'system',
+      },
+      {
+        userId: session?.user?.id,
+        area: EventArea.ADMIN,
+      }
+    )
 
     return NextResponse.json({
       id: role.id,

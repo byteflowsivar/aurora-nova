@@ -5,6 +5,8 @@ import { z } from "zod"
 import { requirePermission } from "@/lib/server/require-permission"
 import { SYSTEM_PERMISSIONS } from "@/modules/admin/types/permissions"
 import { UnauthenticatedError, PermissionDeniedError } from "@/lib/server/require-permission"
+import { eventBus, SystemEvent } from "@/lib/events"
+import { EventArea } from "@/lib/events/event-area"
 
 // Schema de validación para actualizar usuario
 const updateUserSchema = z.object({
@@ -253,6 +255,20 @@ export async function DELETE(
     await prisma.user.delete({
       where: { id },
     })
+
+    // Dispatch event for user deletion audit
+    await eventBus.dispatch(
+      SystemEvent.USER_DELETED,
+      {
+        userId: id,
+        email: user.email,
+        deletedBy: session?.user?.id || 'system',
+      },
+      {
+        userId: session?.user?.id,
+        area: EventArea.ADMIN,
+      }
+    )
 
     return NextResponse.json({ success: true })
   } catch (error) {
