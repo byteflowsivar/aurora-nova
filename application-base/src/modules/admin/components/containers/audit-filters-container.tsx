@@ -6,6 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { DateRange } from 'react-day-picker';
 
 export function AuditFilters() {
@@ -16,6 +23,7 @@ export function AuditFilters() {
     const [user, setUser] = React.useState(searchParams.get('userId') || '');
     const [action, setAction] = React.useState(searchParams.get('action') || '');
     const [module, setModule] = React.useState(searchParams.get('module') || '');
+    const [area, setArea] = React.useState(searchParams.get('area') || '');
     const [date, setDate] = React.useState<DateRange | undefined>(() => {
         const from = searchParams.get('startDate');
         const to = searchParams.get('endDate');
@@ -28,6 +36,7 @@ export function AuditFilters() {
         if (user) params.set('userId', user);
         if (action) params.set('action', action);
         if (module) params.set('module', module);
+        if (area) params.set('area', area);
         if (date?.from) params.set('startDate', date.from.toISOString());
         if (date?.to) params.set('endDate', date.to.toISOString());
         params.set('page', '1');
@@ -38,6 +47,7 @@ export function AuditFilters() {
         setUser('');
         setAction('');
         setModule('');
+        setArea('');
         setDate(undefined);
         router.replace(pathname);
     };
@@ -57,6 +67,22 @@ export function AuditFilters() {
       <div className="space-y-2">
         <Label htmlFor="module-filter">Módulo</Label>
         <Input id="module-filter" placeholder="ej: Auth, Roles..." value={module} onChange={(e) => setModule(e.target.value)} />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="area-filter">Área</Label>
+        <Select value={area} onValueChange={setArea}>
+          <SelectTrigger id="area-filter">
+            <SelectValue placeholder="Seleccionar área..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Todas las áreas</SelectItem>
+            <SelectItem value="ADMIN">👤 Admin</SelectItem>
+            <SelectItem value="CUSTOMER">🛍️ Cliente</SelectItem>
+            <SelectItem value="PUBLIC">🌐 Público</SelectItem>
+            <SelectItem value="SYSTEM">⚙️ Sistema</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">

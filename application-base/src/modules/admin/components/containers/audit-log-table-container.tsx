@@ -59,6 +59,21 @@ export const columns: ColumnDef<AuditLogWithUser>[] = [
     header: 'Módulo',
   },
   {
+    accessorKey: 'area',
+    header: 'Área',
+    cell: ({ row }) => {
+      const area = row.getValue('area') as string | null;
+      if (!area) return '-';
+      const areaLabels: Record<string, string> = {
+        'ADMIN': '👤 Admin',
+        'CUSTOMER': '🛍️ Cliente',
+        'PUBLIC': '🌐 Público',
+        'SYSTEM': '⚙️ Sistema',
+      };
+      return areaLabels[area] || area;
+    },
+  },
+  {
     accessorKey: 'ipAddress',
     header: 'Dirección IP',
   },
