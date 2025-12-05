@@ -1,15 +1,74 @@
 "use client"
 
-/**
- * Formulario de inicio de sesión
- * Aurora Nova - Auth Module
- */
-
 import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { loginUser } from "@/actions/auth"
-import type { LoginInput } from "@/modules/shared/validations"
+import type { LoginInput } from "@/modules/shared/validations/auth"
 
+/**
+ * Componente LoginForm
+ *
+ * Formulario presentacional para autenticación de usuario.
+ * Renderiza campos de email y contraseña con validación del lado del cliente
+ * e integración con server action para autenticación del lado del servidor.
+ *
+ * Este componente es responsable de:
+ * - Recolectar credenciales (email, password)
+ * - Validación básica de entrada
+ * - Manejo de estados de loading y errores
+ * - Llamada a server action `loginUser()` para autenticación
+ * - Redireccionamiento tras login exitoso
+ *
+ * **Características**:
+ * - Estados de error a nivel de campo y global
+ * - Loading state con spinner durante submit
+ * - Limpieza automática de errores al escribir
+ * - Redirección a callback URL o dashboard por defecto
+ * - Validación en tiempo real con visual feedback
+ * - Link a password recovery
+ *
+ * @component
+ * @returns {JSX.Element} Formulario de login con HTML y Tailwind CSS
+ *
+ * **Props**: Ninguno (sin props requeridas)
+ *
+ * **Estados Internos**:
+ * - `formData`: Objeto con email y password
+ * - `errors`: Objeto con errores de validación por campo
+ * - `isLoading`: Booleano indicando si está enviando form
+ * - `globalError`: String con error general (credenciales inválidas, etc)
+ *
+ * **Flujo**:
+ * 1. Usuario ingresa email y password
+ * 2. onSubmit valida campos y llama a `loginUser()` action
+ * 3. Si es exitoso, redirige a callback URL o dashboard
+ * 4. Si falla, muestra error global o errores por campo
+ * 5. Los errores se limpian automáticamente al escribir
+ *
+ * **Seguridad**:
+ * - Contraseña no se valida en cliente, solo en servidor
+ * - Email requerido y validado
+ * - Server action `loginUser()` maneja hash de contraseña
+ * - Estados de error no revelan información sensible
+ *
+ * @example
+ * ```tsx
+ * // En página de signin
+ * import { LoginForm } from '@/modules/shared/components/presentational/login-form';
+ *
+ * export default function SignInPage() {
+ *   return (
+ *     <div className="container">
+ *       <h1>Iniciar Sesión</h1>
+ *       <LoginForm />
+ *     </div>
+ *   );
+ * }
+ * ```
+ *
+ * @see {@link loginUser} para la server action de autenticación
+ * @see {@link LoginInput} para la estructura de datos de entrada
+ */
 export function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
