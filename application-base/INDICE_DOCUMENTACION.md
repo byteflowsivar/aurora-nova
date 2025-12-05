@@ -9,7 +9,7 @@
 ## 📚 Documentación Disponible
 
 ### 1. **DOCUMENTACION.md** - Documentación Principal
-**Estado**: ✅ Completa
+**Estado**: ✅ Completa | **Tamaño**: 34 KB
 **Público objetivo**: Todos los desarrolladores y stakeholders
 
 Una guía completa de referencia que cubre:
@@ -30,7 +30,7 @@ Una guía completa de referencia que cubre:
 ---
 
 ### 2. **INSTALACION.md** - Guía Paso a Paso de Instalación
-**Estado**: ✅ Completa
+**Estado**: ✅ Completa | **Tamaño**: 13 KB
 **Público objetivo**: Nuevos desarrolladores, DevOps, sysadmins
 
 Instrucciones detalladas para:
@@ -49,7 +49,7 @@ Instrucciones detalladas para:
 ---
 
 ### 3. **ARQUITECTURA.md** - Arquitectura Técnica Profunda
-**Estado**: ✅ Completa
+**Estado**: ✅ Completa | **Tamaño**: 28 KB
 **Público objetivo**: Arquitectos, senior developers, lead developers
 
 Análisis detallado de:
@@ -74,7 +74,7 @@ Análisis detallado de:
 ---
 
 ### 4. **CARACTERISTICAS.md** - Guía de Características Principales
-**Estado**: ✅ Completa
+**Estado**: ✅ Completa | **Tamaño**: 22 KB
 **Público objetivo**: Todos los desarrolladores
 
 Detalle de cada característica:
@@ -129,7 +129,61 @@ Detalle de cada característica:
 
 ---
 
-### 5. **README.md** - Información General (si existe)
+### 5. **CODIGO_FUENTE.md** - Documentación del Código Fuente
+**Estado**: ✅ Completa | **Tamaño**: 25 KB
+**Público objetivo**: Desarrolladores, arquitectos
+
+Análisis completo del código fuente:
+
+#### Contenidos
+- Estructura general de directorios (/src)
+- Módulos principales (Shared, Admin, Public)
+- Patrones de código (Container/Presentational, Server Actions, API Routes)
+- Servicios y librerías (Autenticación, Event Bus, Logger, Email)
+- Flujos de datos (Login, Creación, Auditoría)
+- Tipos e interfaces principales
+- Convenciones de código
+- Ubicación de archivos clave
+
+#### Secciones principales
+- Estructura de módulos
+- Patrones (5 patrones documentados)
+- Servicios (6 servicios principales)
+- Flujos (3 flujos documentados)
+- Tipos (ActionResponse, AuthContext, etc)
+- Convenciones (nombres, imports, componentes, actions, errores)
+
+**Cuándo usarla**: Necesitas entender cómo está estructurado el código, dónde encontrar algo
+
+---
+
+### 6. **EJEMPLOS_CODIGO.md** - Ejemplos Prácticos de Código
+**Estado**: ✅ Completa | **Tamaño**: 20 KB
+**Público objetivo**: Desarrolladores (especialmente nuevos)
+
+Ejemplos reales y completos de:
+
+#### Secciones
+1. **Autenticación** (Login, Registro)
+2. **Autorización** (Verificar permisos, Permission Gate)
+3. **Componentes** (Container, Presentational)
+4. **Server Actions** (Crear usuario con auditoría)
+5. **API Routes** (Obtener usuarios con filtros)
+6. **Eventos** (Emitir, Escuchar)
+7. **Logging** (Logging estructurado)
+8. **Testing** (Tests unitarios, tests de componentes)
+
+Todos los ejemplos están:
+- Completos y funcionales
+- Bien comentados
+- Con convenciones de Aurora Nova
+- Listos para copiar/adaptary
+
+**Cuándo usarla**: Necesitas ver cómo implementar algo específico, referencia de código
+
+---
+
+### 7. **README.md** - Información General (si existe)
 **Estado**: ℹ️ Referencia
 **Público objetivo**: Gerentes, stakeholders, curiosos
 
