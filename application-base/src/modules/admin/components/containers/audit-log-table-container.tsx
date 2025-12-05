@@ -65,10 +65,10 @@ export const columns: ColumnDef<AuditLogWithUser>[] = [
       const area = row.getValue('area') as string | null;
       if (!area) return '-';
       const areaLabels: Record<string, string> = {
-        'ADMIN': '👤 Admin',
-        'CUSTOMER': '🛍️ Cliente',
-        'PUBLIC': '🌐 Público',
-        'SYSTEM': '⚙️ Sistema',
+        'admin': '👤 Admin',
+        'customer': '🛍️ Cliente',
+        'public': '🌐 Público',
+        'system': '⚙️ Sistema',
       };
       return areaLabels[area] || area;
     },
@@ -112,6 +112,7 @@ export function AuditLogTable() {
     if (searchParams.has('userId')) f.userId = searchParams.get('userId')!;
     if (searchParams.has('action')) f.action = searchParams.get('action')!;
     if (searchParams.has('module')) f.module = searchParams.get('module')!;
+    if (searchParams.has('area')) f.area = searchParams.get('area')!;
     if (searchParams.has('startDate')) f.startDate = new Date(searchParams.get('startDate')!);
     if (searchParams.has('endDate')) f.endDate = new Date(searchParams.get('endDate')!);
     return f;

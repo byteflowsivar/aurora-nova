@@ -77,10 +77,10 @@ export function AuditFilters() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Todas las áreas</SelectItem>
-            <SelectItem value="ADMIN">👤 Admin</SelectItem>
-            <SelectItem value="CUSTOMER">🛍️ Cliente</SelectItem>
-            <SelectItem value="PUBLIC">🌐 Público</SelectItem>
-            <SelectItem value="SYSTEM">⚙️ Sistema</SelectItem>
+            <SelectItem value="admin">👤 Admin</SelectItem>
+            <SelectItem value="customer">🛍️ Cliente</SelectItem>
+            <SelectItem value="public">🌐 Público</SelectItem>
+            <SelectItem value="system">⚙️ Sistema</SelectItem>
           </SelectContent>
         </Select>
       </div>
