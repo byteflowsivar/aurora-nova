@@ -132,8 +132,17 @@ export const {
             userAgent: user.userAgent,
           })
 
+          // Determinar el área basándose en los permisos del usuario
+          // Si tiene permisos administrativos → ADMIN
+          // Si no → SYSTEM (callback JWT es genérico)
+          const isAdminUser = user.permissions && Array.isArray(user.permissions) && user.permissions.some(perm => {
+            // Considerar admin si tiene permisos de usuario, rol, sistema o auditoría
+            return perm.startsWith('user:') || perm.startsWith('role:') || perm.startsWith('system:') || perm.startsWith('audit:');
+          });
+
+          const loginArea = isAdminUser ? EventArea.ADMIN : EventArea.SYSTEM;
+
           // Dispatch login event
-          // Usar SYSTEM ya que se dispara desde callback JWT
           await eventBus.dispatch(
             SystemEvent.USER_LOGGED_IN,
             {
@@ -145,7 +154,7 @@ export const {
             },
             {
               userId: user.id,
-              area: EventArea.SYSTEM,
+              area: loginArea,
             }
           );
 
