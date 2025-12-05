@@ -71,12 +71,12 @@ export function AuditFilters() {
 
       <div className="space-y-2">
         <Label htmlFor="area-filter">Área</Label>
-        <Select value={area} onValueChange={setArea}>
+        <Select value={area || 'ALL'} onValueChange={(value) => setArea(value === 'ALL' ? '' : value)}>
           <SelectTrigger id="area-filter">
             <SelectValue placeholder="Seleccionar área..." />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas las áreas</SelectItem>
+            <SelectItem value="ALL">Todas las áreas</SelectItem>
             <SelectItem value="ADMIN">👤 Admin</SelectItem>
             <SelectItem value="CUSTOMER">🛍️ Cliente</SelectItem>
             <SelectItem value="PUBLIC">🌐 Público</SelectItem>
