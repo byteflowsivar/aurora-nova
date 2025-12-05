@@ -323,8 +323,17 @@ export async function logoutUser(): Promise<ActionResponse<void>> {
       const userId = session.user?.id;
 
       if (userId) {
+        // Determinar el área basándose en los permisos del usuario
+        // Si tiene permisos administrativos → ADMIN
+        // Si no → SYSTEM (asume logout de usuario público o del sistema)
+        const isAdminUser = session.user?.permissions && Array.isArray(session.user.permissions) && session.user.permissions.some(perm => {
+          // Considerar admin si tiene permisos de usuario, rol, sistema o auditoría
+          return perm.startsWith('user:') || perm.startsWith('role:') || perm.startsWith('system:') || perm.startsWith('audit:');
+        });
+
+        const logoutArea = isAdminUser ? EventArea.ADMIN : EventArea.SYSTEM;
+
         // Dispatch logout event for auditing, notifications, etc.
-        // Usar SYSTEM como área ya que el logout se dispara desde server action
         await eventBus.dispatch(
           SystemEvent.USER_LOGGED_OUT,
           {
@@ -333,7 +342,7 @@ export async function logoutUser(): Promise<ActionResponse<void>> {
           },
           {
             userId,
-            area: EventArea.SYSTEM,
+            area: logoutArea,
           }
         );
       }
