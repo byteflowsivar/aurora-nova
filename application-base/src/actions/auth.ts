@@ -1,10 +1,98 @@
 /**
- * Server Actions para autenticación - Sistema Híbrido JWT + Database
- * Aurora Nova - Módulo Auth
+ * Server Actions para Autenticación - Sistema Híbrido JWT + Database
  *
- * Este módulo implementa server actions para autenticación con sistema híbrido:
- * - Login: Crea JWT + registro en tabla session con IP y UserAgent
- * - Logout: Elimina registro de session (invalida sesión)
+ * Aurora Nova - Módulo de Autenticación de Servidor
+ *
+ * Implementa Server Actions para operaciones de autenticación con sistema híbrido:
+ *
+ * **Operaciones Disponibles**:
+ * - {@link registerUser}: Registrar nuevo usuario en el sistema
+ * - {@link loginUser}: Iniciar sesión con credenciales (JWT + BD)
+ * - {@link logoutUser}: Cerrar sesión actual
+ * - {@link requestPasswordReset}: Solicitar reinicio de contraseña
+ * - {@link validatePasswordResetToken}: Validar token de reset
+ *
+ * **Sistema Híbrido JWT + Database**:
+ * Combina dos estrategias de autenticación:
+ * ```
+ * JWT (JSON Web Token):
+ * - Token encriptado válido por 30 días
+ * - Validación rápida sin consultas a BD
+ * - Contiene permisos y datos del usuario
+ * - Almacenado en cookie HTTP-only
+ *
+ * Database Sessions:
+ * - Registro en tabla `session` de cada sesión activa
+ * - Permite invalidación manual (logout)
+ * - Rastreo de IP y User-Agent para seguridad
+ * - Permite logout remoto y gestión multi-dispositivo
+ * ```
+ *
+ * **Flujo de Autenticación**:
+ * ```
+ * 1. registerUser() → Crea usuario con contraseña hasheada
+ * 2. loginUser() → Llama Auth.js signIn()
+ * 3. Auth.js authorize() → Valida credenciales
+ * 4. Auth.js jwt callback → Crea JWT + sesión en BD
+ * 5. Auth.js session callback → Enriquece sesión con permisos
+ * 6. logoutUser() → Elimina sesión de BD + invalida JWT
+ * ```
+ *
+ * **Validación y Seguridad**:
+ * - Validación con Zod schema (loginSchema, registerSchema)
+ * - Contraseñas hasheadas con bcryptjs (12 rounds)
+ * - CSRF protection automática de Auth.js
+ * - IP y User-Agent guardados para anomaly detection
+ * - Anti-enumeration en password reset
+ * - Tokens de reset hasheados en BD
+ *
+ * **Integración con Logger y Events**:
+ * - Logging estructurado de cada operación
+ * - Eventos emitidos para email, auditoría, webhooks
+ * - Contexto enriquecido con metadata
+ * - Medición de performance de login
+ *
+ * **Errores Manejados**:
+ * - ZodError: Validación de entrada
+ * - AuthError: Credenciales inválidas
+ * - Errores de BD: Registro duplicado, timeout
+ * - Errores genéricos: Manejo robusto sin exponer detalles
+ *
+ * @module actions/auth
+ * @see {@link ../lib/auth.ts} para configuración de Auth.js
+ * @see {@link ../lib/auth-utils.ts} para funciones auxiliares
+ * @see {@link ../lib/logger/structured-logger.ts} para logging
+ * @see {@link ../lib/events/event-bus.ts} para eventos
+ *
+ * @example
+ * ```typescript
+ * // En un Client Component
+ * 'use client';
+ * import { loginUser, registerUser, logoutUser } from '@/actions/auth';
+ *
+ * export function LoginForm() {
+ *   const [error, setError] = useState('');
+ *
+ *   async function handleLogin(formData: LoginInput) {
+ *     const result = await loginUser(formData);
+ *
+ *     if (result.success) {
+ *       redirect(result.data.redirectUrl);
+ *     } else {
+ *       setError(result.error);
+ *     }
+ *   }
+ *
+ *   async function handleLogout() {
+ *     const result = await logoutUser();
+ *     if (result.success) {
+ *       redirect('/admin/auth/signin');
+ *     }
+ *   }
+ *
+ *   // ... componente UI
+ * }
+ * ```
  */
 
 "use server"
@@ -44,23 +132,106 @@ type LoginResponse = {
 /**
  * Registrar nuevo usuario en el sistema
  *
- * @param input - Datos del usuario a registrar
- * @returns Respuesta con datos del usuario creado o error
+ * Crea un nuevo usuario con contraseña hasheada y emite evento para email de bienvenida.
+ * Válida datos de entrada, verifica email único, y usa bcryptjs para hash seguro.
+ *
+ * @async
+ * @param input - Objeto con datos del usuario a registrar (validado por registerSchema)
+ * @param input.email - Email único del usuario (será validado contra BD)
+ * @param input.password - Contraseña en texto plano (será hasheada con bcryptjs)
+ * @param input.confirmPassword - Confirmación de contraseña (validada con schema)
+ * @param input.firstName - Nombre del usuario (será usado para nombre completo)
+ * @param input.lastName - Apellido del usuario (será usado para nombre completo)
+ *
+ * @returns {Promise<ActionResponse>} Respuesta tipada:
+ *   - Si éxito: { success: true, data: { userId, firstName, lastName, email } }
+ *   - Si error: { success: false, error: "mensaje de error" }
+ *
+ * **Pasos de Ejecución**:
+ * 1. Obtener contexto de log (module, action, requestId, userId)
+ * 2. Validar datos con registerSchema (email, password match, etc)
+ * 3. Verificar email no existe (prevenir duplicados)
+ * 4. Hashear contraseña con bcryptjs (rounds: 12)
+ * 5. Crear usuario en BD con relación credentials
+ * 6. Emitir evento USER_REGISTERED para listeners (email, auditoría)
+ * 7. Retornar datos del usuario creado
+ *
+ * **Eventos Emitidos**:
+ * - SystemEvent.USER_REGISTERED: Dispara listeners para:
+ *   - Enviar email de bienvenida
+ *   - Registrar en auditoría
+ *   - Notificar webhooks externos
+ *
+ * **Validación**:
+ * - Email válido y único
+ * - Password cumple requisitos (min length, complejidad, etc)
+ * - Password y confirmPassword coinciden
+ * - firstName y lastName no están vacíos
+ *
+ * **Seguridad**:
+ * - Contraseña hasheada con bcryptjs (12 rounds)
+ * - Email verificado único en BD (constraint)
+ * - Errores no exponen detalles internos
+ * - Logging de intentos fallidos
+ *
+ * **Errores Posibles**:
+ * - ZodError: Validación de datos falla
+ * - Email en uso: Usuario con ese email ya existe
+ * - Error de BD: Timeout, constraint violation, etc
+ * - Error desconocido: Fallo en servidor
+ *
+ * @throws No lanza excepciones directamente (todas capturadas y logueadas)
  *
  * @example
- * ```ts
+ * ```typescript
+ * // Uso básico
  * const result = await registerUser({
- *   email: "usuario@example.com",
- *   password: "Password123",
- *   confirmPassword: "Password123",
+ *   email: "nuevo@example.com",
+ *   password: "SecurePass123!",
+ *   confirmPassword: "SecurePass123!",
  *   firstName: "Juan",
  *   lastName: "Pérez"
- * })
+ * });
  *
  * if (result.success) {
- *   console.log("Usuario creado:", result.data.userId)
+ *   console.log("Nuevo usuario creado:", result.data.userId);
+ *   // Redirigir a login
+ *   redirect('/admin/auth/signin');
+ * } else {
+ *   console.error("Error:", result.error);
+ *   // Mostrar error al usuario
+ * }
+ *
+ * // Uso en formulario React
+ * export function RegisterForm() {
+ *   const [isPending, startTransition] = useTransition();
+ *
+ *   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+ *     e.preventDefault();
+ *     const formData = new FormData(e.currentTarget);
+ *
+ *     startTransition(async () => {
+ *       const result = await registerUser({
+ *         email: formData.get('email') as string,
+ *         password: formData.get('password') as string,
+ *         confirmPassword: formData.get('confirmPassword') as string,
+ *         firstName: formData.get('firstName') as string,
+ *         lastName: formData.get('lastName') as string,
+ *       });
+ *
+ *       if (result.success) {
+ *         redirect('/admin/auth/signin');
+ *       }
+ *     });
+ *   };
+ *
+ *   return <form onSubmit={handleSubmit}>...</form>;
  * }
  * ```
+ *
+ * @see {@link loginUser} para iniciar sesión después de registrar
+ * @see {@link ../modules/shared/validations/auth.ts} para registerSchema
+ * @see {@link ../lib/auth-utils.ts} para funciones de autenticación
  */
 export async function registerUser(
   values: z.infer<typeof registerSchema>
