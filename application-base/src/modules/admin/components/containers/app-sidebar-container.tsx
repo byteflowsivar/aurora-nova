@@ -1,5 +1,93 @@
 "use client"
 
+/**
+ * Componente AppSidebar (Container)
+ *
+ * Barra lateral de navegación del panel administrativo.
+ * Renderiza el menú dinámico con opciones de navegación, información del usuario y logout.
+ *
+ * Este componente es responsable de:
+ * - Renderizar el menú dinámico según permisos del usuario
+ * - Mostrar información del usuario en el footer
+ * - Manejar logout desde el dropdown menu
+ * - Mostrar estado de navegación activa
+ * - Soportar colapso/expansión de la barra lateral
+ *
+ * **Características**:
+ * - Menú jerárquico: soporta items con sub-items
+ * - Detección de ruta activa (pathname matching)
+ * - Avatar del usuario con iniciales como fallback
+ * - Dropdown menu en footer con perfil y logout
+ * - Iconos dinámicos según el tipo de menu item
+ * - Sidebar colapsable con icono
+ * - Navegación con Link next.js (sin full-page reload)
+ *
+ * @component
+ * @returns {JSX.Element} Barra lateral de navegación del admin
+ *
+ * @param {Object} props - Props del componente
+ * @param {MenuItemType[]} props.menuItems - Items del menú a renderizar (cargados desde BD)
+ *
+ * **Props Requeridas**:
+ * - `menuItems` (MenuItemType[]): Listado de items del menú con estructura jerárquica
+ *   - Cada item puede tener children para crear sub-menús
+ *   - Se resalta el item actual según pathname
+ *
+ * **Subcomponentes**:
+ * - `SidebarItem`: Renderiza un item o grupo del menú
+ *   - Si tiene children: Renderiza como collapsible submenu
+ *   - Si tiene href: Renderiza como link directo
+ *   - Detecta si el item está activo
+ *
+ * **Estados UI**:
+ * - Inicial: Menú colapsado (icon view) o expandido según preferencia
+ * - Active: Item activo se resalta según pathname
+ * - Hover: Menu items tienen efecto hover
+ * - Dropdown: Menu de usuario en footer muestra opciones
+ *
+ * **Flujo**:
+ * 1. Recibe menuItems como prop (generado por parent desde caché/BD)
+ * 2. Obtiene pathname actual con usePathname()
+ * 3. Renderiza items del menú mapeando estructura jerárquica
+ * 4. Resalta item activo comparando href con pathname
+ * 5. En footer: muestra avatar/nombre del usuario actual
+ * 6. Dropdown de usuario tiene opciones: Perfil y Cerrar Sesión
+ * 7. Logout: Llama server action logoutUser()
+ * 8. Redirección a signin tras logout exitoso
+ *
+ * **Seguridad**:
+ * - menuItems son filtrados en parent según permisos del usuario
+ * - Logout usa server action (invalidación de sesión en BD)
+ * - Avatar usa imagen de perfil si existe, sino iniciales
+ * - No expone información sensible
+ *
+ * @example
+ * ```tsx
+ * // En layout del admin
+ * import { AppSidebar } from '@/modules/admin/components/containers/app-sidebar-container'
+ * import { getMenuItems } from '@/lib/menu-cache'
+ *
+ * export default async function AdminLayout({
+ *   children,
+ * }: {
+ *   children: React.ReactNode
+ * }) {
+ *   const menuItems = await getMenuItems()
+ *   return (
+ *     <div className="flex">
+ *       <AppSidebar menuItems={menuItems} />
+ *       <main>{children}</main>
+ *     </div>
+ *   )
+ * }
+ * ```
+ *
+ * @see {@link MenuItemType} para la estructura de datos de menu items
+ * @see {@link getIcon} para la función de mapeo de iconos
+ * @see {@link logoutUser} para la server action de logout
+ * @see {@link useAuth} para obtener información del usuario actual
+ */
+
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"

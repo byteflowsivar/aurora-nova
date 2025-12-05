@@ -1,6 +1,83 @@
 /**
- * Componente de Información de Cuenta
- * Muestra información readonly sobre la cuenta del usuario
+ * Componente AccountInfo (Container)
+ *
+ * Tarjeta informativa que muestra detalles readonly de la cuenta del usuario.
+ * Renderiza información como email, estado de verificación, tipo de autenticación,
+ * fechas de creación y actualización.
+ *
+ * Este componente es responsable de:
+ * - Mostrar email del usuario con estado de verificación (verificado/no verificado)
+ * - Indicar tipo de autenticación (Credenciales vs OAuth)
+ * - Mostrar fechas de creación y última actualización
+ * - Proporcionar información técnica (ID) en sección colapsable
+ * - Formatear fechas según locale español
+ *
+ * **Características**:
+ * - Componente presentacional, solo lee información
+ * - Badges para estados (verificado, tipo de autenticación)
+ * - Iconos descriptivos usando lucide-react
+ * - Información técnica oculta en <details> expandible
+ * - Diseño con shadcn Card component
+ * - Responsive y accesible
+ *
+ * @component
+ * @returns {JSX.Element} Card con información de la cuenta
+ *
+ * @param {Object} props - Props del componente
+ * @param {UserProfile} props.user - Datos del usuario a mostrar
+ *
+ * **Props Requeridas**:
+ * - `user` (UserProfile): Objeto con información del usuario incluyendo:
+ *   - id: UUID del usuario
+ *   - email: Email verificado o no
+ *   - emailVerified: Boolean indicando si email está verificado
+ *   - hasCredentials: Boolean indicando si usa credenciales locales o OAuth
+ *   - createdAt: Fecha de creación de la cuenta
+ *   - updatedAt: Fecha de última actualización
+ *
+ * **Datos Mostrados**:
+ * 1. **Correo Electrónico**: Email con badge de verificación
+ *    - Verde si está verificado
+ *    - Gris si no está verificado
+ * 2. **Tipo de Autenticación**: Badge con método
+ *    - "Credenciales (Email/Contraseña)" si usa contraseña local
+ *    - "OAuth (Proveedor Externo)" si usa OAuth
+ * 3. **Fecha de Creación**: Formateada en español (ej: "5 de diciembre de 2024")
+ * 4. **Última Actualización**: Fecha de último cambio de perfil
+ * 5. **Información Técnica**: ID de usuario en <details> colapsable
+ *
+ * **Flujo**:
+ * 1. Recibe props con UserProfile
+ * 2. Renderiza Card con HeaderTitle e ícono
+ * 3. Mapea cada sección (email, auth type, fechas, technical info)
+ * 4. Formatea fechas usando locale "es-ES"
+ * 5. Muestra badges según estado (verificado, tipo auth)
+ * 6. Información técnica en details expandible
+ *
+ * **Casos de Uso**:
+ * - Mostrar información de cuenta en página de perfil/configuración
+ * - Componente readonly que no permite edición directa
+ * - Información de referencia rápida para el usuario
+ *
+ * **Notas**:
+ * - Solo lectura (read-only), no maneja cambios
+ * - Fechas se formatean en español
+ * - ID es información sensible, se oculta en <details> por defecto
+ * - No requiere hooks, es componente puro funcional
+ *
+ * @example
+ * ```tsx
+ * // En página de configuración de usuario
+ * import { AccountInfo } from '@/modules/admin/components/containers/account-info-container'
+ * import { getUserProfile } from '@/lib/queries'
+ *
+ * export default async function SettingsPage() {
+ *   const user = await getUserProfile(userId)
+ *   return <AccountInfo user={user} />
+ * }
+ * ```
+ *
+ * @see {@link UserProfile} para la estructura de datos del usuario
  */
 
 import {

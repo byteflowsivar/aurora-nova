@@ -1,8 +1,84 @@
 "use client"
 
 /**
- * Botón de cierre de sesión
- * Aurora Nova - Auth Module
+ * Componente LogoutButton (Container)
+ *
+ * Botón para cerrar sesión del usuario autenticado.
+ * Llama a server action para invalidar sesión en BD y redirige a login.
+ *
+ * Este componente es responsable de:
+ * - Proporcionar interfaz para cierre de sesión
+ * - Llamar a server action `logoutUser()`
+ * - Mostrar estado de loading durante el proceso
+ * - Redirigir a página de login tras logout exitoso
+ * - Manejar errores durante el cierre de sesión
+ *
+ * **Características**:
+ * - Botón con ícono SVG
+ * - Loading state con spinner durante logout
+ * - Estados deshabilitado durante procesamiento
+ * - Mensaje de error tipo alert si falla
+ * - Integración con server action (invalidación en BD)
+ * - Redirección segura a /admin/auth/signin
+ *
+ * @component
+ * @returns {JSX.Element} Botón de logout con estilos Tailwind
+ *
+ * **Props**: Ninguno (sin props requeridas)
+ *
+ * **Estados Internos**:
+ * - `isLoading`: Boolean indicando si está procesando logout
+ *
+ * **Flujo**:
+ * 1. Usuario hace clic en el botón
+ * 2. setIsLoading(true) deshabilita botón y muestra spinner
+ * 3. Llama await logoutUser() server action
+ * 4. Si exitoso: router.push a /admin/auth/signin
+ * 5. Si error: muestra alert con mensaje de error
+ * 6. setIsLoading(false) restaura estado del botón
+ *
+ * **Seguridad**:
+ * - Server action `logoutUser()` invalida sesión en BD
+ * - JWT se invalida en BD (no solo en cliente)
+ * - Redirección a signin fuerza nuevo login
+ * - router.refresh() sincroniza estado del servidor
+ * - Manejo de errores sin exponer información sensible
+ *
+ * **Estilos**:
+ * - Color: Blue-600 (hover: Blue-700)
+ * - Disabled: Gray-400
+ * - Focus ring de 2px en Blue-500
+ * - Padding: px-4 py-2
+ * - Icono + texto alineados horizontalmente
+ *
+ * **Casos de Uso**:
+ * - Botón en header/navbar del admin
+ * - Botón en dropdown menu del usuario (AppSidebar)
+ * - Botón en página de configuración/perfil
+ *
+ * **Notas**:
+ * - Usa <button> nativo HTML (no shadcn Button)
+ * - SVG inline para ícono (no lucide-react aquí)
+ * - Spinner animado durante loading
+ * - Para componentes reutilizables, prefer Button de shadcn
+ *
+ * @example
+ * ```tsx
+ * // En navbar o dropdown
+ * import { LogoutButton } from '@/modules/admin/components/containers/logout-button-container'
+ *
+ * export function AdminHeader() {
+ *   return (
+ *     <header>
+ *       <nav>
+ *         <LogoutButton />
+ *       </nav>
+ *     </header>
+ *   )
+ * }
+ * ```
+ *
+ * @see {@link logoutUser} para la server action de logout
  */
 
 import { useState } from "react"
