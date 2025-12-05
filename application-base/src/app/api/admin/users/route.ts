@@ -17,7 +17,36 @@ const createUserSchema = z.object({
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
 })
 
-// GET /api/users - Listar usuarios
+/**
+ * @api {get} /api/admin/users
+ * @name Listar Usuarios
+ * @description Obtiene una lista de todos los usuarios del sistema, incluyendo sus roles.
+ * @version 1.0.0
+ *
+ * @requires "user:list" - El usuario debe tener el permiso para listar usuarios.
+ *
+ * @response {200} Success - Retorna un array de objetos de usuario.
+ * @response {401} Unauthorized - El usuario no está autenticado.
+ * @response {403} Forbidden - El usuario no tiene los permisos necesarios.
+ * @response {500} InternalServerError - Error inesperado en el servidor.
+ *
+ * @returns {Promise<NextResponse>} Una promesa que resuelve a la respuesta HTTP.
+ *
+ * @property {object[]} response.body - Array de usuarios.
+ * @property {string} response.body.id - ID del usuario.
+ * @property {string} response.body.name - Nombre completo del usuario.
+ * @property {string} response.body.email - Email del usuario.
+ * @property {Date|null} response.body.emailVerified - Fecha de verificación del email.
+ * @property {object[]} response.body.roles - Array de roles asignados al usuario.
+ *
+ * @example
+ * // Fetch users from a client component
+ * async function fetchUsers() {
+ *   const response = await fetch('/api/admin/users');
+ *   const users = await response.json();
+ *   console.log(users);
+ * }
+ */
 export async function GET() {
   try {
     // Verificar permiso
@@ -88,7 +117,48 @@ export async function GET() {
   }
 }
 
-// POST /api/users - Crear usuario
+/**
+ * @api {post} /api/admin/users
+ * @name Crear Usuario
+ * @description Crea un nuevo usuario en el sistema, junto con sus credenciales.
+ * @version 1.0.0
+ *
+ * @requires "user:create" - El usuario debe tener el permiso para crear usuarios.
+ *
+ * @param {NextRequest} request - La petición HTTP de entrada.
+ * @param {object} request.body - El cuerpo de la petición.
+ * @param {string} request.body.firstName - Nombre del usuario.
+ * @param {string} request.body.lastName - Apellido del usuario.
+ * @param {string} request.body.email - Email del usuario (debe ser único).
+ * @param {string} request.body.password - Contraseña para el nuevo usuario.
+ *
+ * @response {201} Created - Retorna el objeto del usuario recién creado.
+ * @response {400} BadRequest - Los datos proporcionados son inválidos.
+ * @response {401} Unauthorized - El usuario no está autenticado.
+ * @response {403} Forbidden - El usuario no tiene los permisos necesarios.
+ * @response {409} Conflict - Ya existe un usuario con el mismo email.
+ * @response {500} InternalServerError - Error inesperado en el servidor.
+ *
+ * @returns {Promise<NextResponse>} Una promesa que resuelve a la respuesta HTTP.
+ *
+ * @fires SystemEvent.USER_CREATED - Emite un evento para auditoría cuando el usuario es creado.
+ *
+ * @example
+ * // Create a new user from a client component
+ * async function createUser(userData) {
+ *   const response = await fetch('/api/admin/users', {
+ *     method: 'POST',
+ *     headers: { 'Content-Type': 'application/json' },
+ *     body: JSON.stringify(userData),
+ *   });
+ *   const newUser = await response.json();
+ *   if (response.ok) {
+ *     console.log('Usuario creado:', newUser);
+ *   } else {
+ *     console.error('Error:', newUser.error);
+ *   }
+ * }
+ */
 export async function POST(request: NextRequest) {
   try {
     // Verificar permiso y obtener sesión

@@ -334,28 +334,50 @@ export async function registerUser(
 // ============================================================================
 
 /**
- * Iniciar sesión con credenciales - Sistema Híbrido
+ * Inicia sesión de un usuario utilizando el sistema híbrido (JWT + Sesión en BD).
  *
- * Este action implementa el sistema híbrido de autenticación:
- * 1. Valida credenciales del usuario
- * 2. Crea JWT para autenticación (via Auth.js)
- * 3. Crea registro en tabla session con IP y UserAgent (via callback JWT)
+ * Esta acción valida las credenciales, y si son correctas, invoca a Auth.js (`signIn`)
+ * para crear una sesión. El callback `jwt` de Auth.js se encarga de crear
+ * tanto el JWT encriptado como el registro de la sesión en la base de datos.
  *
- * @param input - Credenciales del usuario (email y password)
- * @returns Respuesta con resultado del login
+ * @async
+ * @param {LoginInput} input - Objeto con las credenciales del usuario.
+ * @param {string} input.email - Email del usuario.
+ * @param {string} input.password - Contraseña del usuario.
+ * @returns {Promise<ActionResponse<LoginResponse>>} Una promesa que resuelve a un objeto de respuesta.
+ *   - En caso de éxito: `{ success: true, data: { success: true, redirectUrl: '/admin/dashboard' } }`
+ *   - En caso de error de validación: `{ success: false, error: 'Error de validación', fieldErrors: {...} }`
+ *   - En caso de error de credenciales: `{ success: false, error: 'Email o contraseña incorrectos' }`
+ * @throws {AuthError} Capturado internamente. Se lanza por `signIn` si las credenciales son incorrectas.
+ * @throws {z.ZodError} Capturado internamente. Se lanza si la entrada no pasa la validación de `loginSchema`.
+ *
+ * @remarks
+ * **Flujo Híbrido**:
+ * 1.  Valida los datos de entrada con `loginSchema`.
+ * 2.  Obtiene la IP y User-Agent de las cabeceras de la petición.
+ * 3.  Llama a `signIn('credentials', ...)` de Auth.js, pasando las credenciales y la metadata (IP, User-Agent).
+ * 4.  Auth.js ejecuta el `authorize` callback: valida la contraseña contra el hash en la BD.
+ * 5.  Si es válido, Auth.js ejecuta el `jwt` callback: crea el JWT y, crucialmente, crea una entrada en la tabla `Session` en la BD.
+ * 6.  Si `signIn` finaliza sin errores, la sesión está creada y se retorna una respuesta de éxito.
+ *
+ * **Seguridad**:
+ * - Utiliza `AuthError` para manejar errores de autenticación de forma segura, sin revelar si el usuario existe o no.
+ * - La metadata (IP, User-Agent) se almacena para auditoría y para permitir la gestión de sesiones multi-dispositivo.
+ * - Toda la lógica de creación de cookies y JWT es manejada por Auth.js, que está configurado con `httpOnly` y encriptación.
  *
  * @example
- * ```ts
- * const result = await loginUser({
- *   email: "usuario@example.com",
- *   password: "Password123"
- * })
- *
- * if (result.success) {
- *   // Redirigir al dashboard administrativo
- *   redirect(result.data.redirectUrl || "/admin/dashboard")
- * }
+ * ```typescript
+ * // En un formulario de login de un Client Component
+ * const handleSubmit = async (formData: LoginInput) => {
+ *   const result = await loginUser(formData);
+ *   if (result.success && result.data?.redirectUrl) {
+ *     window.location.href = result.data.redirectUrl;
+ *   } else {
+ *     setFormError(result.error);
+ *   }
+ * };
  * ```
+ * @see {@link ../lib/auth.ts} para la configuración completa de Auth.js y sus callbacks.
  */
 export async function loginUser(
   input: LoginInput
@@ -464,24 +486,42 @@ export async function loginUser(
 // ============================================================================
 
 /**
- * Cerrar sesión del usuario actual - Sistema Híbrido
+ * Cierra la sesión del usuario actual en el sistema híbrido.
  *
- * Este action implementa logout con sistema híbrido:
- * 1. Obtiene el sessionToken de la sesión actual
- * 2. Elimina el registro de tabla session (invalida sesión en BD)
- * 3. Cierra la sesión JWT (via Auth.js)
+ * Esta acción realiza dos operaciones clave:
+ * 1.  Elimina el registro de la sesión de la base de datos, invalidándola para futuras peticiones.
+ * 2.  Llama a `signOut()` de Auth.js para eliminar la cookie JWT del navegador.
  *
- * @returns Respuesta con resultado del logout
+ * @async
+ * @returns {Promise<ActionResponse<void>>} Una promesa que resuelve a un objeto de respuesta indicando el resultado.
+ *   - En caso de éxito: `{ success: true, message: 'Sesión cerrada exitosamente' }`
+ *   - En caso de error: `{ success: false, error: 'Error al cerrar sesión' }`
+ * @throws {Error} No lanza errores directamente, pero los captura y registra.
+ *
+ * @remarks
+ * **Flujo Híbrido de Logout**:
+ * 1.  Obtiene la sesión actual con `auth()` para acceder al `sessionToken` y `userId`.
+ * 2.  Si se encuentra un `sessionToken`, se emite el evento `USER_LOGGED_OUT` para auditoría.
+ * 3.  Se llama a `deleteSession(sessionToken)` para eliminar la sesión de la tabla `sessions` en la BD. Esto es lo que permite el "logout remoto" y la invalidación real.
+ * 4.  Finalmente, se llama a `signOut()` de Auth.js, que se encarga de borrar la cookie de sesión del cliente.
+ *
+ * **Seguridad**:
+ * - Al eliminar la sesión de la base de datos, se asegura que el `sessionToken` (aunque el JWT siga siendo teóricamente válido) no pueda ser usado para autenticar peticiones que requieran validación contra la base de datos.
+ * - El logging y el evento de auditoría permiten un seguimiento de todas las acciones de logout.
  *
  * @example
- * ```ts
- * const result = await logoutUser()
+ * ```typescript
+ * // En un botón de "Cerrar Sesión" en un Client Component
+ * import { logoutUser } from '@/actions/auth';
  *
- * if (result.success) {
- *   // Redirigir al login administrativo
- *   redirect("/admin/auth/signin")
- * }
+ * const handleLogout = async () => {
+ *   await logoutUser();
+ *   // Redirigir al usuario a la página de login.
+ *   window.location.href = '/admin/auth/signin';
+ * };
  * ```
+ * @see {@link deleteSession}
+ * @see {@link ../lib/auth.ts}
  */
 export async function logoutUser(): Promise<ActionResponse<void>> {
   try {
@@ -562,6 +602,50 @@ const RequestResetSchema = z.object({
   email: z.string().email({ message: 'Por favor, introduce un email válido.' }),
 });
 
+/**
+ * Inicia el proceso de reseteo de contraseña para un usuario.
+ *
+ * Si el email proporcionado existe en la base de datos, esta función genera un token
+ * de reseteo seguro, lo almacena hasheado en la base de datos y emite un evento
+ * para que se envíe un correo electrónico al usuario con el enlace de reseteo.
+ *
+ * @async
+ * @param {object} values - Objeto que contiene el email del usuario.
+ * @param {string} values.email - El email para el cual se solicita el reseteo.
+ * @returns {Promise<ActionResponse<null>>} Una promesa que resuelve a un objeto de respuesta.
+ *   - **Importante**: Siempre retorna una respuesta exitosa para prevenir la enumeración de usuarios,
+ *     incluso si el email no existe. `{ success: true, data: null, message: 'Si tu cuenta existe...' }`
+ * @throws {Error} No lanza errores directamente, los captura y retorna una respuesta de error genérica.
+ *
+ * @remarks
+ * **Flujo**:
+ * 1.  Valida el formato del email.
+ * 2.  Busca al usuario por su email.
+ * 3.  **Si el usuario existe**:
+ *     a. Genera un token aleatorio y seguro (`crypto.getRandomValues`).
+ *     b. Hashea el token (`SHA-256`) antes de guardarlo en la BD.
+ *     c. Crea un registro en `PasswordResetToken` con el token hasheado y una fecha de expiración (30 minutos).
+ *     d. Emite el evento `PASSWORD_RESET_REQUESTED`, pasando el token en texto plano para que pueda ser incluido en el email.
+ * 4.  **Si el usuario no existe**, no hace nada.
+ * 5.  Retorna un mensaje genérico de éxito en ambos casos.
+ *
+ * **Seguridad (Anti-Enumeración)**:
+ * La función está diseñada para no revelar si un email está registrado o no en el sistema.
+ * Al devolver siempre una respuesta de éxito, un atacante no puede usar esta funcionalidad
+ * para descubrir qué emails son válidos.
+ *
+ * @example
+ * ```typescript
+ * // En un formulario de "Olvidé mi contraseña"
+ * const handleRequestReset = async (email: string) => {
+ *   const result = await requestPasswordReset({ email });
+ *   // Muestra siempre el mensaje de éxito al usuario, sin importar el resultado real.
+ *   setFeedbackMessage(result.message);
+ * };
+ * ```
+ * @see {@link validatePasswordResetToken}
+ * @see {@link SystemEvent.PASSWORD_RESET_REQUESTED}
+ */
 export async function requestPasswordReset(
   values: z.infer<typeof RequestResetSchema>
 ): Promise<ActionResponse<null>> {
@@ -623,9 +707,36 @@ export async function requestPasswordReset(
 // ============================================================================
 
 /**
- * Valida un token de reinicio de contraseña.
- * @param token - El token proporcionado por el usuario desde la URL.
- * @returns {Promise<boolean>} - `true` si el token es válido, `false` en caso contrario.
+ * Valida un token de reinicio de contraseña proporcionado por el usuario.
+ *
+ * Esta función hashea el token recibido y lo compara con los tokens hasheados
+ * almacenados en la base de datos. También verifica que el token no haya expirado.
+ *
+ * @async
+ * @param {string} token - El token de reinicio de contraseña (en texto plano) extraído de la URL.
+ * @returns {Promise<boolean>} Una promesa que resuelve a `true` si el token es válido y no ha expirado, o `false` en caso contrario.
+ *
+ * @remarks
+ * **Flujo de Validación**:
+ * 1.  Hashea el `token` de entrada usando SHA-256 para poder compararlo con el valor en la BD.
+ * 2.  Busca en la tabla `PasswordResetToken` un registro que coincida con el `hashedToken`.
+ * 3.  Si no se encuentra ningún registro, el token es inválido. Retorna `false`.
+ * 4.  Si se encuentra, comprueba si la fecha actual es posterior a `expiresAt`.
+ * 5.  Si el token ha expirado, lo elimina de la BD para invalidarlo permanentemente y retorna `false`.
+ * 6.  Si el token es válido y no ha expirado, retorna `true`.
+ *
+ * @example
+ * ```typescript
+ * // En la página de reseteo de contraseña, al cargar la página.
+ * // El token se extrae de los parámetros de la URL.
+ * const urlToken = searchParams.get('token');
+ * const isTokenValid = await validatePasswordResetToken(urlToken);
+ *
+ * if (!isTokenValid) {
+ *   // Muestra un error y deshabilita el formulario.
+ *   setUiState('invalid_token');
+ * }
+ * ```
  */
 export async function validatePasswordResetToken(token: string): Promise<boolean> {
   try {

@@ -15,6 +15,28 @@ const createMenuItemSchema = z.object({
   parentId: z.string().optional().nullable(),
 });
 
+/**
+ * @api {get} /api/admin/menu
+ * @name Listar Items del Menú
+ * @description Obtiene una lista de todos los items del menú de administración.
+ * @version 1.0.0
+ *
+ * @requires "menu:manage" - El usuario debe tener el permiso para gestionar el menú.
+ *
+ * @response {200} Success - Retorna un array de objetos de item de menú.
+ * @response {403} Forbidden - El usuario no está autenticado o no tiene los permisos necesarios.
+ * @response {500} InternalServerError - Error inesperado en el servidor.
+ *
+ * @returns {Promise<NextResponse>} Una promesa que resuelve a la respuesta HTTP.
+ *
+ * @example
+ * // Fetch menu items from a client component
+ * async function fetchMenuItems() {
+ *   const response = await fetch('/api/admin/menu');
+ *   const menuItems = await response.json();
+ *   console.log(menuItems);
+ * }
+ */
 export async function GET() {
   try {
     await requirePermission('menu:manage');
@@ -29,6 +51,47 @@ export async function GET() {
   }
 }
 
+/**
+ * @api {post} /api/admin/menu
+ * @name Crear Item de Menú
+ * @description Crea un nuevo item en el menú de administración.
+ * @version 1.0.0
+ *
+ * @requires "menu:manage" - El usuario debe tener el permiso para gestionar el menú.
+ *
+ * @param {Request} request - La petición HTTP de entrada.
+ * @param {object} request.body - El cuerpo de la petición.
+ * @param {string} request.body.title - Título del item.
+ * @param {string} [request.body.href] - URL a la que enlaza.
+ * @param {string} [request.body.icon] - Icono para el item.
+ * @param {number} request.body.order - Orden de aparición.
+ * @param {boolean} [request.body.isActive] - Si el item está activo.
+ * @param {string} [request.body.permissionId] - Permiso requerido para ver el item.
+ * @param {string} [request.body.parentId] - ID del item padre para anidación.
+ *
+ * @response {201} Created - Retorna el objeto del item de menú recién creado.
+ * @response {400} BadRequest - Los datos proporcionados son inválidos.
+ * @response {403} Forbidden - El usuario no está autenticado o no tiene los permisos necesarios.
+ * @response {500} InternalServerError - Error inesperado en el servidor.
+ *
+ * @returns {Promise<NextResponse>} Una promesa que resuelve a la respuesta HTTP.
+ *
+ * @example
+ * // Create a new menu item
+ * async function createMenuItem(itemData) {
+ *   const response = await fetch('/api/admin/menu', {
+ *     method: 'POST',
+ *     headers: { 'Content-Type': 'application/json' },
+ *     body: JSON.stringify(itemData),
+ *   });
+ *   const newMenuItem = await response.json();
+ *   if (response.ok) {
+ *     console.log('Item creado:', newMenuItem);
+ *   } else {
+ *     console.error('Error:', newMenuItem.error);
+ *   }
+ * }
+ */
 export async function POST(request: Request) {
   try {
     await requirePermission('menu:manage');

@@ -14,28 +14,40 @@ import { SYSTEM_PERMISSIONS } from '@/modules/admin/types';
 import { structuredLogger } from '@/lib/logger/structured-logger';
 
 /**
- * GET /api/audit - Obtener registros de auditoría
+ * @api {get} /api/admin/audit
+ * @name Obtener Logs de Auditoría
+ * @description Obtiene una lista paginada y filtrada de registros de auditoría del sistema.
+ * @version 1.0.0
  *
- * Query parameters:
- * - userId: string (optional) - Filtrar por ID de usuario
- * - module: string (optional) - Filtrar por módulo (auth, users, roles, etc.)
- * - action: string (optional) - Filtrar por acción (login, create, update, etc.)
- * - area: string (optional) - Filtrar por área (ADMIN, CUSTOMER, PUBLIC, SYSTEM)
- * - entityType: string (optional) - Filtrar por tipo de entidad (User, Role, etc.)
- * - entityId: string (optional) - Filtrar por ID de entidad específica
- * - requestId: string (optional) - Filtrar por request ID
- * - startDate: string (optional) - Fecha inicio (ISO 8601)
- * - endDate: string (optional) - Fecha fin (ISO 8601)
- * - limit: number (optional, default: 50, max: 100) - Límite de resultados
- * - offset: number (optional, default: 0) - Offset para paginación
+ * @requires "audit:view" - El usuario debe tener el permiso para ver los registros de auditoría.
  *
- * Requires: audit:view permission
+ * @param {NextRequest} request - La petición HTTP de entrada.
+ * @query {string} [userId] - Filtrar por ID de usuario.
+ * @query {string} [module] - Filtrar por módulo (e.g., "auth", "users").
+ * @query {string} [action] - Filtrar por acción (e.g., "login", "create").
+ * @query {string} [area] - Filtrar por área (ADMIN, CUSTOMER, PUBLIC, SYSTEM).
+ * @query {string} [entityType] - Filtrar por tipo de entidad (e.g., "Role").
+ * @query {string} [entityId] - Filtrar por ID de una entidad específica.
+ * @query {string} [requestId] - Filtrar por el ID de la petición que generó el log.
+ * @query {string} [startDate] - Fecha de inicio en formato ISO 8601.
+ * @query {string} [endDate] - Fecha de fin en formato ISO 8601.
+ * @query {number} [limit=50] - Número de registros por página (máximo 100).
+ * @query {number} [offset=0] - Número de registros a saltar para la paginación.
  *
- * @returns AuditLogResult con logs, total, count, limit, offset, hasMore
+ * @response {200} Success - Retorna un objeto con los logs y la información de paginación.
+ * @response {400} BadRequest - Parámetros de consulta inválidos (e.g., fecha mal formada).
+ * @response {401} Unauthorized - El usuario no está autenticado.
+ * @response {403} Forbidden - El usuario no tiene los permisos necesarios.
+ * @response {500} InternalServerError - Error inesperado en el servidor.
+ *
+ * @returns {Promise<NextResponse>} Una promesa que resuelve a la respuesta HTTP con el objeto `AuditLogResult`.
  *
  * @example
- * GET /api/audit?module=auth&limit=20&offset=0
- * GET /api/audit?userId=user-123&startDate=2025-11-01T00:00:00Z
+ * // Fetch the last 20 login attempts
+ * fetch('/api/admin/audit?module=auth&action=login&limit=20')
+ *
+ * // Fetch all actions performed by a specific user
+ * fetch('/api/admin/audit?userId=user-abc-123')
  */
 export async function GET(request: NextRequest) {
   try {

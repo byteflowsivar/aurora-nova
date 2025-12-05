@@ -13,7 +13,38 @@ const createRoleSchema = z.object({
   description: z.string().optional().nullable(),
 })
 
-// GET /api/roles - Listar roles
+/**
+ * @api {get} /api/admin/roles
+ * @name Listar Roles
+ * @description Obtiene una lista de todos los roles del sistema, junto con un conteo de permisos y usuarios asociados a cada uno.
+ * @version 1.0.0
+ *
+ * @requires "role:list" - El usuario debe tener el permiso para listar roles.
+ *
+ * @response {200} Success - Retorna un array de roles con su información.
+ * @response {401} Unauthorized - El usuario no está autenticado.
+ * @response {403} Forbidden - El usuario no tiene los permisos necesarios.
+ * @response {500} InternalServerError - Error inesperado en el servidor.
+ *
+ * @returns {Promise<NextResponse>} Una promesa que resuelve a la respuesta HTTP.
+ *
+ * @property {object[]} response.body - Array de roles.
+ * @property {string} response.body.id - ID del rol.
+ * @property {string} response.body.name - Nombre del rol.
+ * @property {string|null} response.body.description - Descripción del rol.
+ * @property {Date} response.body.createdAt - Fecha de creación.
+ * @property {Date} response.body.updatedAt - Última fecha de actualización.
+ * @property {number} response.body.permissionsCount - Número de permisos asociados.
+ * @property {number} response.body.usersCount - Número de usuarios con este rol.
+ *
+ * @example
+ * // Fetch roles from a client component
+ * async function fetchRoles() {
+ *   const response = await fetch('/api/admin/roles');
+ *   const roles = await response.json();
+ *   console.log(roles);
+ * }
+ */
 export async function GET() {
   try {
     await requirePermission(SYSTEM_PERMISSIONS.ROLE_LIST)
@@ -63,7 +94,47 @@ export async function GET() {
   }
 }
 
-// POST /api/roles - Crear rol
+/**
+ * @api {post} /api/admin/roles
+ * @name Crear Rol
+ * @description Crea un nuevo rol en el sistema.
+ * @version 1.0.0
+ *
+ * @requires "role:create" - El usuario debe tener el permiso para crear roles.
+ *
+ * @param {NextRequest} request - La petición HTTP de entrada.
+ * @param {object} request.body - El cuerpo de la petición.
+ * @param {string} request.body.name - Nombre del nuevo rol. Debe ser único.
+ * @param {string|null} [request.body.description] - Descripción opcional para el rol.
+ *
+ * @response {201} Created - Retorna el objeto del rol recién creado.
+ * @response {400} BadRequest - Los datos proporcionados son inválidos (e.g., nombre vacío).
+ * @response {401} Unauthorized - El usuario no está autenticado.
+ * @response {403} Forbidden - El usuario no tiene los permisos necesarios.
+ * @response {409} Conflict - Ya existe un rol con el mismo nombre.
+ * @response {500} InternalServerError - Error inesperado en el servidor.
+ *
+ * @returns {Promise<NextResponse>} Una promesa que resuelve a la respuesta HTTP.
+ *
+ * @fires SystemEvent.ROLE_CREATED - Emite un evento cuando el rol se crea exitosamente para auditoría.
+ *
+ * @example
+ * // Create a new role from a client component
+ * async function createRole(name, description) {
+ *   const response = await fetch('/api/admin/roles', {
+ *     method: 'POST',
+ *     headers: { 'Content-Type': 'application/json' },
+ *     body: JSON.stringify({ name, description }),
+ *   });
+ *   const newRole = await response.json();
+ *   if (response.ok) {
+ *     console.log('Rol creado:', newRole);
+
+ *   } else {
+ *     console.error('Error:', newRole.error);
+ *   }
+ * }
+ */
 export async function POST(request: NextRequest) {
   try {
     await requirePermission(SYSTEM_PERMISSIONS.ROLE_CREATE)

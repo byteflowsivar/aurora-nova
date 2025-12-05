@@ -13,10 +13,42 @@ const updateRoleSchema = z.object({
   description: z.string().optional().nullable(),
 })
 
-// GET /api/roles/[id] - Obtener rol por ID
+/**
+ * @api {get} /api/admin/roles/:id
+ * @name Obtener Rol
+ * @description Obtiene los detalles de un rol específico, incluyendo los permisos asociados y el número de usuarios.
+ * @version 1.0.0
+ *
+ * @requires "role:read" - El usuario debe tener el permiso para ver los detalles de un rol.
+ *
+ * @param {NextRequest} request - La petición HTTP de entrada.
+ * @param {object} context - Contexto de la ruta.
+ * @param {object} context.params - Parámetros de la URL.
+ * @param {string} context.params.id - El ID del rol a obtener.
+ *
+ * @response {200} Success - Retorna el objeto del rol con sus detalles.
+ * @response {401} Unauthorized - El usuario no está autenticado.
+ * @response {403} Forbidden - El usuario no tiene los permisos necesarios.
+ * @response {404} NotFound - No se encontró un rol con el ID proporcionado.
+ * @response {500} InternalServerError - Error inesperado en el servidor.
+ *
+ * @returns {Promise<NextResponse>} Una promesa que resuelve a la respuesta HTTP.
+ *
+ * @example
+ * // Fetch a role from a client component
+ * async function fetchRoleDetails(roleId) {
+ *   const response = await fetch(`/api/admin/roles/${roleId}`);
+ *   const role = await response.json();
+ *   if (response.ok) {
+ *     console.log('Detalles del rol:', role);
+ *   } else {
+ *     console.error('Error:', role.error);
+ *   }
+ * }
+ */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     await requirePermission(SYSTEM_PERMISSIONS.ROLE_READ)
@@ -81,10 +113,53 @@ export async function GET(
   }
 }
 
-// PUT /api/roles/[id] - Actualizar rol
+/**
+ * @api {put} /api/admin/roles/:id
+ * @name Actualizar Rol
+ * @description Actualiza el nombre y/o la descripción de un rol existente.
+ * @version 1.0.0
+ *
+ * @requires "role:update" - El usuario debe tener el permiso para modificar roles.
+ *
+ * @param {NextRequest} request - La petición HTTP de entrada.
+ * @param {object} context - Contexto de la ruta.
+ * @param {object} context.params - Parámetros de la URL.
+ * @param {string} context.params.id - El ID del rol a actualizar.
+ * @param {object} request.body - El cuerpo de la petición.
+ * @param {string} [request.body.name] - El nuevo nombre para el rol. Debe ser único.
+ * @param {string|null} [request.body.description] - La nueva descripción para el rol.
+ *
+ * @response {200} Success - Retorna el objeto del rol actualizado.
+ * @response {400} BadRequest - Los datos proporcionados son inválidos.
+ * @response {401} Unauthorized - El usuario no está autenticado.
+ * @response {403} Forbidden - El usuario no tiene los permisos necesarios.
+ * @response {404} NotFound - No se encontró un rol con el ID proporcionado.
+ * @response {409} Conflict - El nuevo nombre del rol ya está en uso.
+ * @response {500} InternalServerError - Error inesperado en el servidor.
+ *
+ * @returns {Promise<NextResponse>} Una promesa que resuelve a la respuesta HTTP.
+ *
+ * @fires SystemEvent.ROLE_UPDATED - Emite un evento con los valores antiguos y nuevos para auditoría.
+ *
+ * @example
+ * // Update a role's name
+ * async function updateRoleName(roleId, newName) {
+ *   const response = await fetch(`/api/admin/roles/${roleId}`, {
+ *     method: 'PUT',
+ *     headers: { 'Content-Type': 'application/json' },
+ *     body: JSON.stringify({ name: newName }),
+ *   });
+ *   const updatedRole = await response.json();
+ *   if (response.ok) {
+ *     console.log('Rol actualizado:', updatedRole);
+ *   } else {
+ *     console.error('Error:', updatedRole.error);
+ *   }
+ * }
+ */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     await requirePermission(SYSTEM_PERMISSIONS.ROLE_UPDATE)
@@ -197,10 +272,47 @@ export async function PUT(
   }
 }
 
-// DELETE /api/roles/[id] - Eliminar rol
+/**
+ * @api {delete} /api/admin/roles/:id
+ * @name Eliminar Rol
+ * @description Elimina un rol del sistema.
+ * @version 1.0.0
+ *
+ * @requires "role:delete" - El usuario debe tener el permiso para eliminar roles.
+ *
+ * @param {NextRequest} request - La petición HTTP de entrada.
+ * @param {object} context - Contexto de la ruta.
+ * @param {object} context.params - Parámetros de la URL.
+ * @param {string} context.params.id - El ID del rol a eliminar.
+ *
+ * @response {200} Success - Indica que el rol fue eliminado exitosamente.
+ * @response {400} BadRequest - El rol no se puede eliminar porque tiene usuarios asignados.
+ * @response {401} Unauthorized - El usuario no está autenticado.
+ * @response {403} Forbidden - El usuario no tiene los permisos necesarios.
+ * @response {404} NotFound - No se encontró un rol con el ID proporcionado.
+ * @response {500} InternalServerError - Error inesperado en el servidor.
+ *
+ * @returns {Promise<NextResponse>} Una promesa que resuelve a la respuesta HTTP.
+ *
+ * @fires SystemEvent.ROLE_DELETED - Emite un evento con el ID y nombre del rol eliminado para auditoría.
+ *
+ * @example
+ * // Delete a role
+ * async function deleteRole(roleId) {
+ *   const response = await fetch(`/api/admin/roles/${roleId}`, {
+ *     method: 'DELETE',
+ *   });
+ *   if (response.ok) {
+ *     console.log('Rol eliminado exitosamente');
+ *   } else {
+ *     const { error } = await response.json();
+ *     console.error('Error al eliminar:', error);
+ *   }
+ * }
+ */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     await requirePermission(SYSTEM_PERMISSIONS.ROLE_DELETE)

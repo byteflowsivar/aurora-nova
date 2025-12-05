@@ -15,10 +15,42 @@ const updateUserSchema = z.object({
   email: z.string().email("Email inválido").optional(),
 })
 
-// GET /api/users/[id] - Obtener usuario por ID
+/**
+ * @api {get} /api/admin/users/:id
+ * @name Obtener Usuario
+ * @description Obtiene los detalles de un usuario específico, incluyendo sus roles asignados.
+ * @version 1.0.0
+ *
+ * @requires "user:read" - El usuario debe tener el permiso para ver los detalles de otro usuario.
+ *
+ * @param {NextRequest} request - La petición HTTP de entrada.
+ * @param {object} context - Contexto de la ruta.
+ * @param {object} context.params - Parámetros de la URL.
+ * @param {string} context.params.id - El ID del usuario a obtener.
+ *
+ * @response {200} Success - Retorna el objeto del usuario con sus detalles y roles.
+ * @response {401} Unauthorized - El usuario no está autenticado.
+ * @response {403} Forbidden - El usuario no tiene los permisos necesarios.
+ * @response {404} NotFound - No se encontró un usuario con el ID proporcionado.
+ * @response {500} InternalServerError - Error inesperado en el servidor.
+ *
+ * @returns {Promise<NextResponse>} Una promesa que resuelve a la respuesta HTTP.
+ *
+ * @example
+ * // Fetch a user's details from a client component
+ * async function fetchUserDetails(userId) {
+ *   const response = await fetch(`/api/admin/users/${userId}`);
+ *   const user = await response.json();
+ *   if (response.ok) {
+ *     console.log('Detalles del usuario:', user);
+ *   } else {
+ *     console.error('Error:', user.error);
+ *   }
+ * }
+ */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     // Verificar permiso
@@ -92,10 +124,52 @@ export async function GET(
   }
 }
 
-// PUT /api/users/[id] - Actualizar usuario
+/**
+ * @api {put} /api/admin/users/:id
+ * @name Actualizar Usuario
+ * @description Actualiza los datos de un usuario existente (nombre, apellido, email).
+ * @version 1.0.0
+ *
+ * @requires "user:update" - El usuario debe tener el permiso para modificar otros usuarios.
+ *
+ * @param {NextRequest} request - La petición HTTP de entrada.
+ * @param {object} context - Contexto de la ruta.
+ * @param {object} context.params - Parámetros de la URL.
+ * @param {string} context.params.id - El ID del usuario a actualizar.
+ * @param {object} request.body - El cuerpo de la petición.
+ * @param {string} [request.body.firstName] - El nuevo nombre del usuario.
+ * @param {string} [request.body.lastName] - El nuevo apellido del usuario.
+ * @param {string} [request.body.email] - El nuevo email del usuario (debe ser único).
+ *
+ * @response {200} Success - Retorna el objeto del usuario actualizado.
+ * @response {400} BadRequest - Los datos proporcionados son inválidos.
+ * @response {401} Unauthorized - El usuario no está autenticado.
+ * @response {403} Forbidden - El usuario no tiene los permisos necesarios.
+ * @response {404} NotFound - No se encontró un usuario con el ID proporcionado.
+ * @response {409} Conflict - El nuevo email ya está en uso por otro usuario.
+ * @response {500} InternalServerError - Error inesperado en el servidor.
+ *
+ * @returns {Promise<NextResponse>} Una promesa que resuelve a la respuesta HTTP.
+ *
+ * @example
+ * // Update a user's email
+ * async function updateUserEmail(userId, newEmail) {
+ *   const response = await fetch(`/api/admin/users/${userId}`, {
+ *     method: 'PUT',
+ *     headers: { 'Content-Type': 'application/json' },
+ *     body: JSON.stringify({ email: newEmail }),
+ *   });
+ *   const updatedUser = await response.json();
+ *   if (response.ok) {
+ *     console.log('Usuario actualizado:', updatedUser);
+ *   } else {
+ *     console.error('Error:', updatedUser.error);
+ *   }
+ * }
+ */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     // Verificar permiso
@@ -218,10 +292,47 @@ export async function PUT(
   }
 }
 
-// DELETE /api/users/[id] - Eliminar usuario
+/**
+ * @api {delete} /api/admin/users/:id
+ * @name Eliminar Usuario
+ * @description Elimina un usuario del sistema de forma permanente.
+ * @version 1.0.0
+ *
+ * @requires "user:delete" - El usuario debe tener el permiso para eliminar otros usuarios.
+ *
+ * @param {NextRequest} request - La petición HTTP de entrada.
+ * @param {object} context - Contexto de la ruta.
+ * @param {object} context.params - Parámetros de la URL.
+ * @param {string} context.params.id - El ID del usuario a eliminar.
+ *
+ * @response {200} Success - Indica que el usuario fue eliminado exitosamente.
+ * @response {400} BadRequest - El usuario no puede eliminarse a sí mismo.
+ * @response {401} Unauthorized - El usuario no está autenticado.
+ * @response {403} Forbidden - El usuario no tiene los permisos necesarios.
+ * @response {404} NotFound - No se encontró un usuario con el ID proporcionado.
+ * @response {500} InternalServerError - Error inesperado en el servidor.
+ *
+ * @returns {Promise<NextResponse>} Una promesa que resuelve a la respuesta HTTP.
+ *
+ * @fires SystemEvent.USER_DELETED - Emite un evento para auditoría cuando el usuario es eliminado.
+ *
+ * @example
+ * // Delete a user
+ * async function deleteUser(userId) {
+ *   const response = await fetch(`/api/admin/users/${userId}`, {
+ *     method: 'DELETE',
+ *   });
+ *   if (response.ok) {
+ *     console.log('Usuario eliminado');
+ *   } else {
+ *     const { error } = await response.json();
+ *     console.error('Error:', error);
+ *   }
+ * }
+ */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     // Verificar permiso
