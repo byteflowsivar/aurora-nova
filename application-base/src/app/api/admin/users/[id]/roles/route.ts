@@ -5,6 +5,8 @@ import { z } from "zod"
 import { requirePermission } from "@/lib/server/require-permission"
 import { SYSTEM_PERMISSIONS } from "@/modules/admin/types/permissions"
 import { UnauthenticatedError, PermissionDeniedError } from "@/lib/server/require-permission"
+import { eventBus, SystemEvent } from "@/lib/events"
+import { EventArea } from "@/lib/events/event-area"
 
 const assignRoleSchema = z.object({
   roleId: z.string().uuid("ID de rol inválido"),
@@ -128,6 +130,21 @@ export async function POST(
       },
     })
 
+    // Dispatch event for user role assignment audit
+    await eventBus.dispatch(
+      SystemEvent.USER_ROLE_ASSIGNED,
+      {
+        userId: id,
+        roleId: roleId,
+        roleName: role.name,
+        assignedBy: session?.user?.id || 'system',
+      },
+      {
+        userId: session?.user?.id,
+        area: EventArea.ADMIN,
+      }
+    )
+
     return NextResponse.json({ success: true }, { status: 201 })
   } catch (error) {
     if (error instanceof UnauthenticatedError) {
@@ -151,6 +168,7 @@ export async function DELETE(
 ) {
   try {
     await requirePermission(SYSTEM_PERMISSIONS.USER_ASSIGN_ROLES)
+    const session = await auth()
 
     const { id } = await params
     const { searchParams } = new URL(request.url)
@@ -163,20 +181,49 @@ export async function DELETE(
       )
     }
 
+    // Obtener datos antes de eliminar para el evento
+    const userRoleData = await prisma.userRole.findUnique({
+      where: {
+        userId_roleId: {
+          userId: id,
+          roleId: roleId,
+        },
+      },
+      include: {
+        user: true,
+        role: true,
+      },
+    })
+
+    if (!userRoleData) {
+      return NextResponse.json(
+        { error: "Asignación no encontrada" },
+        { status: 404 }
+      )
+    }
+
     // Eliminar asignación
-    const deleted = await prisma.userRole.deleteMany({
+    await prisma.userRole.deleteMany({
       where: {
         userId: id,
         roleId: roleId,
       },
     })
 
-    if (deleted.count === 0) {
-      return NextResponse.json(
-        { error: "Asignación no encontrada" },
-        { status: 404 }
-      )
-    }
+    // Dispatch event for user role removal audit
+    await eventBus.dispatch(
+      SystemEvent.USER_ROLE_REMOVED,
+      {
+        userId: id,
+        roleId: roleId,
+        roleName: userRoleData.role.name,
+        removedBy: session?.user?.id || 'system',
+      },
+      {
+        userId: session?.user?.id,
+        area: EventArea.ADMIN,
+      }
+    )
 
     return NextResponse.json({ success: true })
   } catch (error) {
