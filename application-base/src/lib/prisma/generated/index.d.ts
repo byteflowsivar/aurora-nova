@@ -14197,6 +14197,7 @@ export namespace Prisma {
     userId: string | null
     action: string | null
     module: string | null
+    area: string | null
     entityType: string | null
     entityId: string | null
     ipAddress: string | null
@@ -14210,6 +14211,7 @@ export namespace Prisma {
     userId: string | null
     action: string | null
     module: string | null
+    area: string | null
     entityType: string | null
     entityId: string | null
     ipAddress: string | null
@@ -14223,6 +14225,7 @@ export namespace Prisma {
     userId: number
     action: number
     module: number
+    area: number
     entityType: number
     entityId: number
     oldValues: number
@@ -14241,6 +14244,7 @@ export namespace Prisma {
     userId?: true
     action?: true
     module?: true
+    area?: true
     entityType?: true
     entityId?: true
     ipAddress?: true
@@ -14254,6 +14258,7 @@ export namespace Prisma {
     userId?: true
     action?: true
     module?: true
+    area?: true
     entityType?: true
     entityId?: true
     ipAddress?: true
@@ -14267,6 +14272,7 @@ export namespace Prisma {
     userId?: true
     action?: true
     module?: true
+    area?: true
     entityType?: true
     entityId?: true
     oldValues?: true
@@ -14356,6 +14362,7 @@ export namespace Prisma {
     userId: string | null
     action: string
     module: string
+    area: string | null
     entityType: string | null
     entityId: string | null
     oldValues: JsonValue | null
@@ -14389,6 +14396,7 @@ export namespace Prisma {
     userId?: boolean
     action?: boolean
     module?: boolean
+    area?: boolean
     entityType?: boolean
     entityId?: boolean
     oldValues?: boolean
@@ -14406,6 +14414,7 @@ export namespace Prisma {
     userId?: boolean
     action?: boolean
     module?: boolean
+    area?: boolean
     entityType?: boolean
     entityId?: boolean
     oldValues?: boolean
@@ -14423,6 +14432,7 @@ export namespace Prisma {
     userId?: boolean
     action?: boolean
     module?: boolean
+    area?: boolean
     entityType?: boolean
     entityId?: boolean
     oldValues?: boolean
@@ -14440,6 +14450,7 @@ export namespace Prisma {
     userId?: boolean
     action?: boolean
     module?: boolean
+    area?: boolean
     entityType?: boolean
     entityId?: boolean
     oldValues?: boolean
@@ -14451,7 +14462,7 @@ export namespace Prisma {
     timestamp?: boolean
   }
 
-  export type AuditLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "action" | "module" | "entityType" | "entityId" | "oldValues" | "newValues" | "ipAddress" | "userAgent" | "requestId" | "metadata" | "timestamp", ExtArgs["result"]["auditLog"]>
+  export type AuditLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "action" | "module" | "area" | "entityType" | "entityId" | "oldValues" | "newValues" | "ipAddress" | "userAgent" | "requestId" | "metadata" | "timestamp", ExtArgs["result"]["auditLog"]>
   export type AuditLogInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | AuditLog$userArgs<ExtArgs>
   }
@@ -14472,6 +14483,7 @@ export namespace Prisma {
       userId: string | null
       action: string
       module: string
+      area: string | null
       entityType: string | null
       entityId: string | null
       oldValues: Prisma.JsonValue | null
@@ -14909,6 +14921,7 @@ export namespace Prisma {
     readonly userId: FieldRef<"AuditLog", 'String'>
     readonly action: FieldRef<"AuditLog", 'String'>
     readonly module: FieldRef<"AuditLog", 'String'>
+    readonly area: FieldRef<"AuditLog", 'String'>
     readonly entityType: FieldRef<"AuditLog", 'String'>
     readonly entityId: FieldRef<"AuditLog", 'String'>
     readonly oldValues: FieldRef<"AuditLog", 'Json'>
@@ -15500,6 +15513,7 @@ export namespace Prisma {
     userId: 'userId',
     action: 'action',
     module: 'module',
+    area: 'area',
     entityType: 'entityType',
     entityId: 'entityId',
     oldValues: 'oldValues',
@@ -16342,6 +16356,7 @@ export namespace Prisma {
     userId?: UuidNullableFilter<"AuditLog"> | string | null
     action?: StringFilter<"AuditLog"> | string
     module?: StringFilter<"AuditLog"> | string
+    area?: StringNullableFilter<"AuditLog"> | string | null
     entityType?: StringNullableFilter<"AuditLog"> | string | null
     entityId?: StringNullableFilter<"AuditLog"> | string | null
     oldValues?: JsonNullableFilter<"AuditLog">
@@ -16359,6 +16374,7 @@ export namespace Prisma {
     userId?: SortOrderInput | SortOrder
     action?: SortOrder
     module?: SortOrder
+    area?: SortOrderInput | SortOrder
     entityType?: SortOrderInput | SortOrder
     entityId?: SortOrderInput | SortOrder
     oldValues?: SortOrderInput | SortOrder
@@ -16379,6 +16395,7 @@ export namespace Prisma {
     userId?: UuidNullableFilter<"AuditLog"> | string | null
     action?: StringFilter<"AuditLog"> | string
     module?: StringFilter<"AuditLog"> | string
+    area?: StringNullableFilter<"AuditLog"> | string | null
     entityType?: StringNullableFilter<"AuditLog"> | string | null
     entityId?: StringNullableFilter<"AuditLog"> | string | null
     oldValues?: JsonNullableFilter<"AuditLog">
@@ -16396,6 +16413,7 @@ export namespace Prisma {
     userId?: SortOrderInput | SortOrder
     action?: SortOrder
     module?: SortOrder
+    area?: SortOrderInput | SortOrder
     entityType?: SortOrderInput | SortOrder
     entityId?: SortOrderInput | SortOrder
     oldValues?: SortOrderInput | SortOrder
@@ -16418,6 +16436,7 @@ export namespace Prisma {
     userId?: UuidNullableWithAggregatesFilter<"AuditLog"> | string | null
     action?: StringWithAggregatesFilter<"AuditLog"> | string
     module?: StringWithAggregatesFilter<"AuditLog"> | string
+    area?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
     entityType?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
     entityId?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
     oldValues?: JsonNullableWithAggregatesFilter<"AuditLog">
@@ -17149,6 +17168,7 @@ export namespace Prisma {
     id?: string
     action: string
     module: string
+    area?: string | null
     entityType?: string | null
     entityId?: string | null
     oldValues?: NullableJsonNullValueInput | InputJsonValue
@@ -17166,6 +17186,7 @@ export namespace Prisma {
     userId?: string | null
     action: string
     module: string
+    area?: string | null
     entityType?: string | null
     entityId?: string | null
     oldValues?: NullableJsonNullValueInput | InputJsonValue
@@ -17181,6 +17202,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     action?: StringFieldUpdateOperationsInput | string
     module?: StringFieldUpdateOperationsInput | string
+    area?: NullableStringFieldUpdateOperationsInput | string | null
     entityType?: NullableStringFieldUpdateOperationsInput | string | null
     entityId?: NullableStringFieldUpdateOperationsInput | string | null
     oldValues?: NullableJsonNullValueInput | InputJsonValue
@@ -17198,6 +17220,7 @@ export namespace Prisma {
     userId?: NullableStringFieldUpdateOperationsInput | string | null
     action?: StringFieldUpdateOperationsInput | string
     module?: StringFieldUpdateOperationsInput | string
+    area?: NullableStringFieldUpdateOperationsInput | string | null
     entityType?: NullableStringFieldUpdateOperationsInput | string | null
     entityId?: NullableStringFieldUpdateOperationsInput | string | null
     oldValues?: NullableJsonNullValueInput | InputJsonValue
@@ -17214,6 +17237,7 @@ export namespace Prisma {
     userId?: string | null
     action: string
     module: string
+    area?: string | null
     entityType?: string | null
     entityId?: string | null
     oldValues?: NullableJsonNullValueInput | InputJsonValue
@@ -17229,6 +17253,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     action?: StringFieldUpdateOperationsInput | string
     module?: StringFieldUpdateOperationsInput | string
+    area?: NullableStringFieldUpdateOperationsInput | string | null
     entityType?: NullableStringFieldUpdateOperationsInput | string | null
     entityId?: NullableStringFieldUpdateOperationsInput | string | null
     oldValues?: NullableJsonNullValueInput | InputJsonValue
@@ -17245,6 +17270,7 @@ export namespace Prisma {
     userId?: NullableStringFieldUpdateOperationsInput | string | null
     action?: StringFieldUpdateOperationsInput | string
     module?: StringFieldUpdateOperationsInput | string
+    area?: NullableStringFieldUpdateOperationsInput | string | null
     entityType?: NullableStringFieldUpdateOperationsInput | string | null
     entityId?: NullableStringFieldUpdateOperationsInput | string | null
     oldValues?: NullableJsonNullValueInput | InputJsonValue
@@ -17958,6 +17984,7 @@ export namespace Prisma {
     userId?: SortOrder
     action?: SortOrder
     module?: SortOrder
+    area?: SortOrder
     entityType?: SortOrder
     entityId?: SortOrder
     oldValues?: SortOrder
@@ -17974,6 +18001,7 @@ export namespace Prisma {
     userId?: SortOrder
     action?: SortOrder
     module?: SortOrder
+    area?: SortOrder
     entityType?: SortOrder
     entityId?: SortOrder
     ipAddress?: SortOrder
@@ -17987,6 +18015,7 @@ export namespace Prisma {
     userId?: SortOrder
     action?: SortOrder
     module?: SortOrder
+    area?: SortOrder
     entityType?: SortOrder
     entityId?: SortOrder
     ipAddress?: SortOrder
@@ -19152,6 +19181,7 @@ export namespace Prisma {
     id?: string
     action: string
     module: string
+    area?: string | null
     entityType?: string | null
     entityId?: string | null
     oldValues?: NullableJsonNullValueInput | InputJsonValue
@@ -19167,6 +19197,7 @@ export namespace Prisma {
     id?: string
     action: string
     module: string
+    area?: string | null
     entityType?: string | null
     entityId?: string | null
     oldValues?: NullableJsonNullValueInput | InputJsonValue
@@ -19365,6 +19396,7 @@ export namespace Prisma {
     userId?: UuidNullableFilter<"AuditLog"> | string | null
     action?: StringFilter<"AuditLog"> | string
     module?: StringFilter<"AuditLog"> | string
+    area?: StringNullableFilter<"AuditLog"> | string | null
     entityType?: StringNullableFilter<"AuditLog"> | string | null
     entityId?: StringNullableFilter<"AuditLog"> | string | null
     oldValues?: JsonNullableFilter<"AuditLog">
@@ -20543,6 +20575,7 @@ export namespace Prisma {
     id?: string
     action: string
     module: string
+    area?: string | null
     entityType?: string | null
     entityId?: string | null
     oldValues?: NullableJsonNullValueInput | InputJsonValue
@@ -20678,6 +20711,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     action?: StringFieldUpdateOperationsInput | string
     module?: StringFieldUpdateOperationsInput | string
+    area?: NullableStringFieldUpdateOperationsInput | string | null
     entityType?: NullableStringFieldUpdateOperationsInput | string | null
     entityId?: NullableStringFieldUpdateOperationsInput | string | null
     oldValues?: NullableJsonNullValueInput | InputJsonValue
@@ -20693,6 +20727,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     action?: StringFieldUpdateOperationsInput | string
     module?: StringFieldUpdateOperationsInput | string
+    area?: NullableStringFieldUpdateOperationsInput | string | null
     entityType?: NullableStringFieldUpdateOperationsInput | string | null
     entityId?: NullableStringFieldUpdateOperationsInput | string | null
     oldValues?: NullableJsonNullValueInput | InputJsonValue
@@ -20708,6 +20743,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     action?: StringFieldUpdateOperationsInput | string
     module?: StringFieldUpdateOperationsInput | string
+    area?: NullableStringFieldUpdateOperationsInput | string | null
     entityType?: NullableStringFieldUpdateOperationsInput | string | null
     entityId?: NullableStringFieldUpdateOperationsInput | string | null
     oldValues?: NullableJsonNullValueInput | InputJsonValue

@@ -9,6 +9,7 @@
 
 import { eventBus } from '../event-bus';
 import { SystemEvent } from '../types';
+import { EventArea } from '../event-area';
 import { activeEmailService } from '@/modules/shared/api/email-service';
 import { structuredLogger } from '@/lib/logger/structured-logger';
 import Mustache from 'mustache';
@@ -20,7 +21,29 @@ import { env } from '@/lib/env';
  * Listener para enviar emails basados en eventos del sistema
  */
 export class EmailEventListener {
-  private templatesPath = path.join(process.cwd(), 'templates', 'admin', 'email');
+  /**
+   * Obtener la ruta base de templates según el área
+   */
+  private getTemplatesPath(area?: string): string {
+    const areaFolder = this.getAreaFolder(area);
+    return path.join(process.cwd(), 'templates', areaFolder, 'email');
+  }
+
+  /**
+   * Obtener el nombre de carpeta para el área
+   */
+  private getAreaFolder(area?: string): string {
+    switch (area) {
+      case EventArea.CUSTOMER:
+        return 'customer';
+      case EventArea.PUBLIC:
+        return 'public';
+      case EventArea.ADMIN:
+      case EventArea.SYSTEM:
+      default:
+        return 'admin';
+    }
+  }
 
   /**
    * Registrar todos los listeners de email
@@ -28,22 +51,22 @@ export class EmailEventListener {
   register() {
     // Login notification
     eventBus.subscribe(SystemEvent.USER_LOGGED_IN, async (event) => {
-      await this.sendLoginNotification(event.payload);
+      await this.sendLoginNotification(event.payload, event.metadata.area);
     });
 
     // Password reset
     eventBus.subscribe(SystemEvent.PASSWORD_RESET_REQUESTED, async (event) => {
-      await this.sendPasswordResetEmail(event.payload);
+      await this.sendPasswordResetEmail(event.payload, event.metadata.area);
     });
 
     // Password changed notification
     eventBus.subscribe(SystemEvent.PASSWORD_CHANGED, async (event) => {
-      await this.sendPasswordChangedNotification(event.payload);
+      await this.sendPasswordChangedNotification(event.payload, event.metadata.area);
     });
 
     // Welcome email
     eventBus.subscribe(SystemEvent.USER_REGISTERED, async (event) => {
-      await this.sendWelcomeEmail(event.payload);
+      await this.sendWelcomeEmail(event.payload, event.metadata.area);
     });
 
     structuredLogger.info('Email event listeners registered', {
@@ -63,14 +86,18 @@ export class EmailEventListener {
   /**
    * Enviar notificación de login
    */
-  private async sendLoginNotification(payload: {
-    email: string;
-    ipAddress: string;
-    userAgent: string;
-  }) {
+  private async sendLoginNotification(
+    payload: {
+      email: string;
+      ipAddress: string;
+      userAgent: string;
+    },
+    area?: string
+  ) {
     try {
+      const templatesPath = this.getTemplatesPath(area);
       const template = await fs.readFile(
-        path.join(this.templatesPath, 'login-notification.mustache'),
+        path.join(templatesPath, 'login-notification.mustache'),
         'utf8'
       );
 
@@ -97,6 +124,7 @@ export class EmailEventListener {
         metadata: {
           email: payload.email,
           emailType: 'login_notification',
+          area,
         },
       });
     } catch (error) {
@@ -106,6 +134,7 @@ export class EmailEventListener {
         metadata: {
           email: payload.email,
           emailType: 'login_notification',
+          area,
         },
       });
     }
@@ -114,14 +143,18 @@ export class EmailEventListener {
   /**
    * Enviar email de reset de contraseña
    */
-  private async sendPasswordResetEmail(payload: {
-    email: string;
-    token: string;
-    expiresAt: Date;
-  }) {
+  private async sendPasswordResetEmail(
+    payload: {
+      email: string;
+      token: string;
+      expiresAt: Date;
+    },
+    area?: string
+  ) {
     try {
+      const templatesPath = this.getTemplatesPath(area);
       const template = await fs.readFile(
-        path.join(this.templatesPath, 'password-reset.mustache'),
+        path.join(templatesPath, 'password-reset.mustache'),
         'utf8'
       );
 
@@ -149,6 +182,7 @@ export class EmailEventListener {
         metadata: {
           email: payload.email,
           emailType: 'password_reset',
+          area,
         },
       });
     } catch (error) {
@@ -158,6 +192,7 @@ export class EmailEventListener {
         metadata: {
           email: payload.email,
           emailType: 'password_reset',
+          area,
         },
       });
     }
@@ -166,13 +201,17 @@ export class EmailEventListener {
   /**
    * Enviar notificación de contraseña cambiada
    */
-  private async sendPasswordChangedNotification(payload: {
-    email: string;
-    changedBy: 'self' | 'admin';
-  }) {
+  private async sendPasswordChangedNotification(
+    payload: {
+      email: string;
+      changedBy: 'self' | 'admin';
+    },
+    area?: string
+  ) {
     try {
+      const templatesPath = this.getTemplatesPath(area);
       const template = await fs.readFile(
-        path.join(this.templatesPath, 'password-changed.mustache'),
+        path.join(templatesPath, 'password-changed.mustache'),
         'utf8'
       );
 
@@ -201,6 +240,7 @@ export class EmailEventListener {
         metadata: {
           email: payload.email,
           emailType: 'password_changed',
+          area,
         },
       });
     } catch (error) {
@@ -210,6 +250,7 @@ export class EmailEventListener {
         metadata: {
           email: payload.email,
           emailType: 'password_changed',
+          area,
         },
       });
     }
@@ -218,13 +259,17 @@ export class EmailEventListener {
   /**
    * Enviar email de bienvenida
    */
-  private async sendWelcomeEmail(payload: {
-    email: string;
-    firstName: string | null;
-  }) {
+  private async sendWelcomeEmail(
+    payload: {
+      email: string;
+      firstName: string | null;
+    },
+    area?: string
+  ) {
     try {
+      const templatesPath = this.getTemplatesPath(area);
       const template = await fs.readFile(
-        path.join(this.templatesPath, 'welcome.mustache'),
+        path.join(templatesPath, 'welcome.mustache'),
         'utf8'
       );
 
@@ -248,6 +293,7 @@ export class EmailEventListener {
         metadata: {
           email: payload.email,
           emailType: 'welcome',
+          area,
         },
       });
     } catch (error) {
@@ -257,6 +303,7 @@ export class EmailEventListener {
         metadata: {
           email: payload.email,
           emailType: 'welcome',
+          area,
         },
       });
     }

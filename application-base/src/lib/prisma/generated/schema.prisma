@@ -183,8 +183,9 @@ model AuditLog {
   user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   // What - Acción realizada
-  action String @db.VarChar(100) // "create", "update", "delete", "login"
-  module String @db.VarChar(50) // "users", "roles", "auth"
+  action String  @db.VarChar(100) // "create", "update", "delete", "login"
+  module String  @db.VarChar(50) // "users", "roles", "auth"
+  area   String? @db.VarChar(50) // "admin", "customer", "public", "system"
 
   // Where - Entidad afectada
   entityType String? @map("entity_type") @db.VarChar(50) // "User", "Role"
@@ -208,6 +209,7 @@ model AuditLog {
   @@index([userId], map: "idx_audit_log_user_id")
   @@index([action], map: "idx_audit_log_action")
   @@index([module], map: "idx_audit_log_module")
+  @@index([area], map: "idx_audit_log_area")
   @@index([entityType, entityId], map: "idx_audit_log_entity")
   @@index([timestamp], map: "idx_audit_log_timestamp")
   @@index([requestId], map: "idx_audit_log_request_id")

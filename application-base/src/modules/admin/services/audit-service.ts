@@ -185,6 +185,7 @@ export class AuditService {
         userId: log.userId,
         action: log.action,
         module: log.module,
+        area: log.area,
         entityType: log.entityType,
         entityId: log.entityId,
         oldValues: log.oldValues as Record<string, unknown> | null,

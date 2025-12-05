@@ -19,6 +19,9 @@ export interface AuditLogInput {
   /** Módulo del sistema (ej: "auth", "users", "roles") */
   module: string;
 
+  /** Área de la aplicación desde donde se originó la acción */
+  area?: string;
+
   /** Tipo de entidad afectada (ej: "User", "Role") */
   entityType?: string;
 
@@ -56,6 +59,9 @@ export interface AuditLogFilters {
 
   /** Filtrar por acción */
   action?: string;
+
+  /** Filtrar por área de la aplicación */
+  area?: string;
 
   /** Filtrar por tipo de entidad */
   entityType?: string;
@@ -110,6 +116,7 @@ export interface AuditLogWithUser {
   userId: string | null;
   action: string;
   module: string;
+  area: string | null;
   entityType: string | null;
   entityId: string | null;
   oldValues: Record<string, unknown> | null;
