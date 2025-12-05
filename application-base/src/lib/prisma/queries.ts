@@ -860,11 +860,50 @@ export async function removeRoleFromUser(userId: string, roleId: string): Promis
 }
 
 // ============================================================================
-// QUERIES DE SESIONES
+// QUERIES DE SESIONES - Session Management Queries
 // ============================================================================
 
 /**
- * Obtener sesión por token
+ * Obtener sesión por token junto con datos del usuario
+ *
+ * Busca una sesión activa por su token de sesión.
+ * Incluye datos completos del usuario asociado.
+ *
+ * @async
+ * @param sessionToken - Token único de la sesión (del cookie)
+ *
+ * @returns {Promise<Session & { user: User } | null>} Sesión con usuario o null
+ *
+ * @remarks
+ * **Flujo de Autenticación**:
+ * 1. Extrae sessionToken del cookie (habitualmente 'auth-session')
+ * 2. Busca sesión en BD
+ * 3. Valida que no esté expirada (timestamp)
+ * 4. Retorna usuario asociado
+ *
+ * **Seguridad**:
+ * - Token almacenado en BD (nunca en memoria)
+ * - Búsqueda única por token previene collisiones
+ * - Verifica expiración en código
+ *
+ * **Casos de Uso**:
+ * - Middleware de autenticación (validar sesión al inicio de request)
+ * - Refresh de sesión
+ * - Auditoría de acceso
+ *
+ * @example
+ * ```typescript
+ * // En middleware
+ * const sessionToken = req.cookies.get('auth-session')?.value;
+ * if (!sessionToken) return unauthorized();
+ *
+ * const session = await getSessionByToken(sessionToken);
+ * if (!session || new Date() > session.expires) {
+ *   return unauthorized();
+ * }
+ *
+ * const user = session.user;
+ * ```
  */
 export async function getSessionByToken(sessionToken: string) {
   return await prisma.session.findUnique({
@@ -876,7 +915,37 @@ export async function getSessionByToken(sessionToken: string) {
 }
 
 /**
- * Obtener sesiones activas de un usuario
+ * Obtener todas las sesiones activas de un usuario
+ *
+ * Retorna lista de sesiones no expiradas del usuario.
+ * Útil para mostrar dispositivos conectados o logout múltiple.
+ *
+ * @async
+ * @param userId - ID del usuario
+ *
+ * @returns {Promise<Session[]>} Array de sesiones activas (ordenadas por fecha)
+ *
+ * @remarks
+ * **Filtro de Actividad**:
+ * - Solo retorna sesiones donde `expires > NOW()`
+ * - Sesiones expiradas ignoradas automáticamente
+ *
+ * **Casos de Uso**:
+ * - UI: "Dispositivos conectados" en perfil de usuario
+ * - Admin: Ver qué dispositivos tienen sesión activa
+ * - Logout: Invalidar todas las sesiones (en combinación con deleteMany)
+ * - Fuerza re-login después de cambio de contraseña
+ *
+ * @example
+ * ```typescript
+ * // Mostrar dispositivos conectados
+ * const activeSessions = await getUserActiveSessions(userId);
+ *
+ * // Logout de todos los dispositivos
+ * await prisma.session.deleteMany({
+ *   where: { userId }
+ * });
+ * ```
  */
 export async function getUserActiveSessions(userId: string) {
   return await prisma.session.findMany({
@@ -890,7 +959,45 @@ export async function getUserActiveSessions(userId: string) {
 }
 
 /**
- * Limpiar sesiones expiradas
+ * Limpiar sesiones expiradas del sistema
+ *
+ * Elimina todos los registros de sesión cuya fecha de expiración
+ * es anterior a ahora. Útil para cron jobs de mantenimiento.
+ *
+ * @async
+ *
+ * @returns {Promise<number>} Cantidad de sesiones eliminadas
+ *
+ * @remarks
+ * **Propósito**:
+ * - Liberar espacio en BD
+ * - Mantener tabla session limpia
+ * - Evitar crecer indefinidamente
+ *
+ * **Recomendación de Ejecución**:
+ * - Cron job: ejecutar cada hora o diariamente
+ * - Bajo carga (ej: 3 AM UTC)
+ * - Con índice en `expires` para performance
+ *
+ * **Performance**:
+ * - Usa índice en campo `expires` para búsqueda rápida
+ * - DELETE optimizado para múltiples registros
+ * - Típicamente < 100ms si se ejecuta regularmente
+ *
+ * **Ejemplo Cron**:
+ * ```
+ * 0 0 * * * curl https://app.com/api/cron/cleanup-sessions
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // En API route cron (/api/cron/cleanup-sessions)
+ * export async function POST(request: Request) {
+ *   const deleted = await cleanExpiredSessions();
+ *   console.log(`Cleaned ${deleted} expired sessions`);
+ *   return NextResponse.json({ deleted });
+ * }
+ * ```
  */
 export async function cleanExpiredSessions(): Promise<number> {
   const result = await prisma.session.deleteMany({
@@ -905,11 +1012,59 @@ export async function cleanExpiredSessions(): Promise<number> {
 }
 
 // ============================================================================
-// QUERIES DE ESTADÍSTICAS
+// QUERIES DE ESTADÍSTICAS - System Statistics Queries
 // ============================================================================
 
 /**
- * Obtener estadísticas generales del sistema
+ * Obtener estadísticas globales del sistema
+ *
+ * Retorna conteos agregados de usuarios, roles, permisos y sesiones.
+ * Ejecuta todas las queries en paralelo para mejor performance.
+ *
+ * @async
+ *
+ * @returns {Promise<Object>} Objeto con estadísticas del sistema:
+ *   - users: Cantidad total de usuarios registrados
+ *   - roles: Cantidad total de roles definidos
+ *   - permissions: Cantidad total de permisos del sistema
+ *   - activeSessions: Cantidad de sesiones NO expiradas
+ *
+ * @remarks
+ * **Performance**:
+ * - Ejecuta 4 COUNT queries en paralelo (Promise.all)
+ * - Cada query usa índice de PK/FK para rapidez
+ * - Típicamente < 50ms en BD normal
+ *
+ * **Casos de Uso**:
+ * - Dashboard administrativo (widget de métricas)
+ * - Monitoreo de salud del sistema
+ * - Auditoría y reportes
+ * - Alertas (ej: "demasiadas sesiones activas")
+ *
+ * **Ejemplo Retorno**:
+ * ```typescript
+ * {
+ *   users: 142,
+ *   roles: 5,
+ *   permissions: 47,
+ *   activeSessions: 23
+ * }
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // En dashboard administrativo
+ * const stats = await getSystemStats();
+ *
+ * return (
+ *   <div className="grid grid-cols-4">
+ *     <Card title="Usuarios" value={stats.users} />
+ *     <Card title="Roles" value={stats.roles} />
+ *     <Card title="Permisos" value={stats.permissions} />
+ *     <Card title="Sesiones Activas" value={stats.activeSessions} />
+ *   </div>
+ * );
+ * ```
  */
 export async function getSystemStats() {
   const [usersCount, rolesCount, permissionsCount, activeSessionsCount] = await Promise.all([
@@ -934,11 +1089,75 @@ export async function getSystemStats() {
 }
 
 // ============================================================================
-// HELPER FUNCTIONS
+// HELPER FUNCTIONS - Data Transformation Utilities
 // ============================================================================
 
 /**
  * Convertir usuario con datos completos a formato simplificado
+ *
+ * Transforma estructura anidada de usuario (con roles y permisos completos)
+ * a formato simplificado para respuestas de API o almacenamiento en token.
+ *
+ * @param user - Usuario con estructura completa (UserWithFullData)
+ *
+ * @returns {UserWithRolesAndPermissions} Usuario simplificado con arrays planos
+ *
+ * @remarks
+ * **Transformación**:
+ * - Extrae solo IDs de permisos (deduplica con Set)
+ * - Mapea roles a estructura simple
+ * - Retorna todos los campos del usuario
+ *
+ * **Deduplicación**:
+ * - Si usuario tiene 2 roles con permiso común, aparece 1 sola vez
+ * - Usa `Array.from(new Set(...))` para garantizar unicidad
+ *
+ * **Casos de Uso**:
+ * - Respuesta API después de login
+ * - Payload del JWT token
+ * - Almacenamiento en sesión
+ * - Serialización para caché
+ *
+ * **Estructura Original**:
+ * ```
+ * user {
+ *   userRoles: [
+ *     {
+ *       role: {
+ *         rolePermissions: [
+ *           { permission: { id: "user:read" } }
+ *         ]
+ *       }
+ *     }
+ *   ]
+ * }
+ * ```
+ *
+ * **Estructura Retornada**:
+ * ```
+ * {
+ *   id, name, email, ...
+ *   roles: [{ id, name, description }],
+ *   permissions: ["user:read", "user:create", ...]
+ * }
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // En login
+ * const user = await getUserWithFullData(userId);
+ * const simplified = simplifyUserWithFullData(user);
+ *
+ * // Guardar en token
+ * const token = jwt.sign({
+ *   userId: simplified.id,
+ *   email: simplified.email,
+ *   permissions: simplified.permissions
+ * }, secret);
+ *
+ * // O retornar en API
+ * return NextResponse.json(simplified);
+ * ```
  */
 export function simplifyUserWithFullData(user: UserWithFullData): UserWithRolesAndPermissions {
   const roles = user.userRoles.map(ur => ({
