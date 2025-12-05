@@ -1,5 +1,100 @@
 "use client"
 
+/**
+ * Componente DeleteRoleDialog (Dialog)
+ *
+ * Diálogo de alerta para confirmar eliminación de un rol.
+ * Muestra advertencia si hay usuarios asignados al rol.
+ *
+ * Este componente es responsable de:
+ * - Mostrar diálogo de confirmación para eliminar rol
+ * - Advertir si hay usuarios asignados (no se puede eliminar)
+ * - Hacer DELETE a API para eliminar rol
+ * - Mostrar notificaciones de éxito/error
+ * - Cerrar diálogo tras operación
+ *
+ * **Características**:
+ * - AlertDialog controlado (open/onOpenChange)
+ * - Valida si el rol tiene usuarios asignados
+ * - Loading state en botón de acción
+ * - Toast notifications para feedback
+ * - Mensaje de advertencia descriptivo
+ *
+ * @component
+ * @returns {JSX.Element} AlertDialog para confirmar eliminación
+ *
+ * @param {Object} props - Props del componente
+ * @param {boolean} props.open - Estado del diálogo (abierto/cerrado)
+ * @param {(open: boolean) => void} props.onOpenChange - Callback para cambiar estado
+ * @param {RoleData | null} props.role - Datos del rol a eliminar
+ * @param {() => void} props.onSuccess - Callback tras eliminación exitosa
+ *
+ * **Props Requeridas**:
+ * - `open` (boolean): Indica si el diálogo está abierto
+ * - `onOpenChange` (function): Callback para controlar estado del diálogo
+ * - `role` (object | null): { id, name, usersCount } - null si no hay rol
+ * - `onSuccess` (function): Callback ejecutado tras eliminar exitosamente
+ *
+ * **Estados Internos**:
+ * - `loading`: Boolean indicando si está eliminando
+ *
+ * **Validaciones**:
+ * - Si usersCount > 0: Se muestra advertencia y se deshabilita eliminación
+ * - Rol debe tener id válido para eliminar
+ *
+ * **Flujo**:
+ * 1. AlertDialog se abre cuando open = true
+ * 2. Muestra nombre del rol y número de usuarios asignados
+ * 3. Si usersCount > 0: Mensaje de advertencia, botón acción deshabilitado
+ * 4. Si usersCount === 0: Botón "Eliminar" habilitado
+ * 5. En click "Eliminar":
+ *    - setLoading(true)
+ *    - DELETE a /api/admin/roles/:id
+ *    - Si exitoso: toast + callback onSuccess() + cierra
+ *    - Si error: toast error con mensaje
+ * 6. Botón Cancelar cierra sin hacer nada
+ *
+ * **API Integration**:
+ * - Endpoint: DELETE /api/admin/roles/:id
+ * - No requiere body
+ * - Response: { success: true }
+ *
+ * **Casos de Uso**:
+ * - Eliminar rol desde tabla de roles
+ * - Protección: no permite eliminar si hay usuarios asignados
+ *
+ * **Seguridad**:
+ * - Validación en servidor si el rol tiene usuarios
+ * - No elimina roles con referencias activas
+ * - Requiere autenticación/autorización
+ * - Toast errors sin exponer información sensible
+ *
+ * @example
+ * ```tsx
+ * // En página de gestión de roles
+ * import { DeleteRoleDialog } from './delete-role-dialog'
+ * 
+ * export function RolesPage() {
+ *   const [openDelete, setOpenDelete] = useState(false)
+ *   const [selectedRole, setSelectedRole] = useState(null)
+ *   
+ *   const handleDelete = (role) => {
+ *     setSelectedRole(role)
+ *     setOpenDelete(true)
+ *   }
+ *   
+ *   return (
+ *     <DeleteRoleDialog
+ *       open={openDelete}
+ *       onOpenChange={setOpenDelete}
+ *       role={selectedRole}
+ *       onSuccess={() => refetchRoles()}
+ *     />
+ *   )
+ * }
+ * ```
+ */
+
 import * as React from "react"
 import {
   AlertDialog,

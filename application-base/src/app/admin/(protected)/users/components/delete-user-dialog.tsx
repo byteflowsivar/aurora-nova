@@ -1,5 +1,89 @@
 "use client"
 
+/**
+ * Componente DeleteUserDialog (Dialog)
+ *
+ * Diálogo de alerta para confirmar eliminación de un usuario.
+ * Valida que no sea el propio usuario quien se intente eliminar.
+ *
+ * Este componente es responsable de:
+ * - Mostrar diálogo de confirmación para eliminar usuario
+ * - Advertir si intenta auto-eliminarse
+ * - Hacer DELETE a API para eliminar usuario
+ * - Mostrar notificaciones de éxito/error
+ * - Cerrar diálogo tras operación
+ *
+ * **Características**:
+ * - AlertDialog controlado (open/onOpenChange)
+ * - Valida intento de auto-eliminación
+ * - Loading state en botón de acción
+ * - Toast notifications para feedback
+ * - Mensaje de advertencia descriptivo
+ *
+ * @component
+ * @returns {JSX.Element} AlertDialog para confirmar eliminación
+ *
+ * @param {Object} props - Props del componente
+ * @param {boolean} props.open - Estado del diálogo (abierto/cerrado)
+ * @param {(open: boolean) => void} props.onOpenChange - Callback para cambiar estado
+ * @param {UserData | null} props.user - Datos del usuario a eliminar
+ * @param {() => void} props.onSuccess - Callback tras eliminación exitosa
+ *
+ * **Props Requeridas**:
+ * - `open` (boolean): Indica si el diálogo está abierto
+ * - `onOpenChange` (function): Callback para controlar estado
+ * - `user` (object | null): { id, email } - null si no hay usuario
+ * - `onSuccess` (function): Callback ejecutado tras eliminar
+ *
+ * **Estados Internos**:
+ * - `loading`: Boolean indicando si está eliminando
+ *
+ * **Validaciones**:
+ * - No permite auto-eliminación (se valida en servidor)
+ * - Usuario debe tener id válido para eliminar
+ *
+ * **Flujo**:
+ * 1. AlertDialog se abre cuando open = true
+ * 2. Muestra email del usuario a eliminar
+ * 3. Advertencia sobre eliminación permanente
+ * 4. En click "Eliminar":
+ *    - setLoading(true)
+ *    - DELETE a /api/admin/users/:id
+ *    - Si exitoso: toast + callback onSuccess()
+ *    - Si error: toast error con mensaje
+ * 5. Botón Cancelar cierra sin hacer nada
+ *
+ * **API Integration**:
+ * - Endpoint: DELETE /api/admin/users/:id
+ * - No requiere body
+ * - Response: { success: true }
+ * - Valida en servidor si es auto-eliminación
+ *
+ * **Casos de Uso**:
+ * - Eliminar usuario desde tabla de usuarios
+ * - Protección: no permite auto-eliminación
+ *
+ * @example
+ * ```tsx
+ * // En página de gestión de usuarios
+ * import { DeleteUserDialog } from './delete-user-dialog'
+ * 
+ * export function UsersPage() {
+ *   const [openDelete, setOpenDelete] = useState(false)
+ *   const [selectedUser, setSelectedUser] = useState(null)
+ *   
+ *   return (
+ *     <DeleteUserDialog
+ *       open={openDelete}
+ *       onOpenChange={setOpenDelete}
+ *       user={selectedUser}
+ *       onSuccess={() => refetchUsers()}
+ *     />
+ *   )
+ * }
+ * ```
+ */
+
 import * as React from "react"
 import {
   AlertDialog,

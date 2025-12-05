@@ -1,5 +1,109 @@
 "use client"
 
+/**
+ * Componente ManageRolePermissionsDialog (Dialog)
+ *
+ * Diálogo para gestionar permisos asignados a un rol.
+ * Permite agregar/remover permisos con búsqueda y filtrado.
+ *
+ * Este componente es responsable de:
+ * - Mostrar diálogo para administrar permisos del rol
+ * - Cargar lista de todos los permisos disponibles
+ * - Mostrar permisos ya asignados al rol (con badges)
+ * - Permitir agregar/remover permisos
+ * - Búsqueda de permisos por nombre/módulo
+ * - Sincronización de cambios con servidor
+ *
+ * **Características**:
+ * - Dialog controlado (open/onOpenChange)
+ * - Carga asíncrona de permisos disponibles
+ * - Search en tiempo real para filtrar permisos
+ * - Badges de permisos asignados
+ * - Buttons para agregar/remover permisos
+ * - Loading state durante operaciones
+ * - Toast notifications para feedback
+ * - ScrollArea para lista larga de permisos
+ *
+ * @component
+ * @returns {JSX.Element} Dialog para gestión de permisos
+ *
+ * @param {Object} props - Props del componente
+ * @param {boolean} props.open - Estado del diálogo (abierto/cerrado)
+ * @param {(open: boolean) => void} props.onOpenChange - Callback para cambiar estado
+ * @param {string} props.roleId - ID del rol a editar
+ * @param {string} props.roleName - Nombre del rol (para mostrar en header)
+ * @param {() => void} [props.onUpdate] - Callback tras actualizar permisos
+ *
+ * **Props Requeridas**:
+ * - `open` (boolean): Indica si el diálogo está abierto
+ * - `onOpenChange` (function): Callback para controlar estado
+ * - `roleId` (string): UUID del rol
+ * - `roleName` (string): Nombre del rol (para display)
+ * - `onUpdate` (optional function): Callback tras cambios
+ *
+ * **Estados Internos**:
+ * - `allPermissions`: Array de todos los permisos disponibles
+ * - `assignedPermissions`: Array de permisos ya asignados
+ * - `searchQuery`: String de búsqueda
+ * - `loading`: Boolean para loading state
+ *
+ * **Flujo**:
+ * 1. Al abrir el diálogo: carga permisos con GET
+ * 2. Muestra permisos asignados como badges
+ * 3. Muestra lista de permisos disponibles
+ * 4. Usuario puede buscar por nombre/módulo
+ * 5. Para agregar: click en "+ Agregar" en permiso
+ *    - POST a /api/admin/roles/:roleId/permissions
+ *    - Si exitoso: se remueve de disponibles, se agrega a asignados
+ * 6. Para remover: click en "X" en badge de permiso asignado
+ *    - DELETE a /api/admin/roles/:roleId/permissions/:permissionId
+ *    - Si exitoso: se remueve de asignados, se agrega a disponibles
+ * 7. Callback onUpdate() se ejecuta tras cambios
+ *
+ * **API Integration**:
+ * - GET /api/admin/permissions - Obtener todos los permisos
+ * - GET /api/admin/roles/:roleId/permissions - Permisos del rol
+ * - POST /api/admin/roles/:roleId/permissions - Agregar permiso
+ * - DELETE /api/admin/roles/:roleId/permissions/:permissionId - Remover
+ *
+ * **Casos de Uso**:
+ * - Administrar permisos desde tabla de roles
+ * - Asignar permisos a rol nuevo
+ * - Revocar permisos de rol existente
+ *
+ * **Seguridad**:
+ * - Validación en servidor de permisos válidos
+ * - Requiere autenticación/autorización
+ * - No permite permisos inválidos
+ * - Toast errors sin exponer información sensible
+ *
+ * @example
+ * ```tsx
+ * // En página de gestión de roles
+ * import { ManageRolePermissionsDialog } from './manage-role-permissions-dialog'
+ * 
+ * export function RolesPage() {
+ *   const [openPerms, setOpenPerms] = useState(false)
+ *   const [selectedRole, setSelectedRole] = useState(null)
+ *   
+ *   const handleManagePerms = (role) => {
+ *     setSelectedRole(role)
+ *     setOpenPerms(true)
+ *   }
+ *   
+ *   return (
+ *     <ManageRolePermissionsDialog
+ *       open={openPerms}
+ *       onOpenChange={setOpenPerms}
+ *       roleId={selectedRole?.id}
+ *       roleName={selectedRole?.name}
+ *       onUpdate={() => refetchRoles()}
+ *     />
+ *   )
+ * }
+ * ```
+ */
+
 import * as React from "react"
 import { X, Plus, Key, Search, Loader2 } from "lucide-react"
 

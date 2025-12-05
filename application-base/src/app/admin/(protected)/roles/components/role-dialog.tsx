@@ -1,5 +1,83 @@
 "use client"
 
+/**
+ * Componente RoleDialog (Dialog)
+ *
+ * Diálogo modal para crear o editar roles.
+ * Renderiza un formulario con campos para nombre y descripción del rol.
+ *
+ * Este componente es responsable de:
+ * - Mostrar diálogo modal para crear o editar rol
+ * - Renderizar formulario con nombre y descripción
+ * - Validar datos antes de enviar
+ * - Hacer POST/PUT a API según modo (crear/editar)
+ * - Mostrar notificaciones de éxito/error
+ * - Cerrar diálogo tras operación exitosa
+ *
+ * **Características**:
+ * - Modal dialog controlado (open/onOpenChange)
+ * - Modo dual: crear nuevo rol o editar existente
+ * - Campos: nombre (requerido, max 50 chars), descripción (opcional)
+ * - Loading state en botón durante envío
+ * - Toast notifications para feedback
+ * - Validación de entrada en formulario
+ *
+ * @component
+ * @returns {JSX.Element} Dialog modal para gestión de roles
+ *
+ * @param {Object} props - Props del componente
+ * @param {boolean} props.open - Estado del diálogo (abierto/cerrado)
+ * @param {(open: boolean) => void} props.onOpenChange - Callback para cambiar estado del diálogo
+ * @param {RoleData} [props.role] - Datos del rol si se está editando (null para crear)
+ * @param {() => void} props.onSuccess - Callback tras operación exitosa (para refrescar lista)
+ *
+ * **Props Requeridas**:
+ * - `open` (boolean): Indica si el diálogo está abierto
+ * - `onOpenChange` (function): Callback para controlar estado del diálogo
+ * - `onSuccess` (function): Callback ejecutado tras crear/editar exitosamente
+ * - `role` (optional): Objeto con { id, name, description } si editar, null si crear
+ *
+ * **Campos del Formulario**:
+ * 1. **Nombre** (requerido)
+ *    - Input text
+ *    - Máximo 50 caracteres
+ *    - Placeholder: "ej: Administrador, Editor, Visor"
+ * 2. **Descripción** (opcional)
+ *    - Textarea con 3 filas
+ *    - Placeholder: "Describe el propósito de este rol..."
+ *
+ * **Flujo**:
+ * 1. Props open controla visibilidad del modal
+ * 2. Si role !== null: modo "editar", pre-carga datos en form
+ * 3. Si role === null: modo "crear", form vacío
+ * 4. Usuario completa/modifica datos
+ * 5. En submit:
+ *    - Modo crear: POST a /api/admin/roles
+ *    - Modo editar: PUT a /api/admin/roles/:id
+ * 6. Si exitoso: toast success + cierra diálogo
+ * 7. Si error: toast error con mensaje
+ *
+ * @example
+ * ```tsx
+ * // En página de gestión de roles
+ * import { RoleDialog } from './role-dialog'
+ * 
+ * export function RolesPage() {
+ *   const [open, setOpen] = useState(false)
+ *   const [selectedRole, setSelectedRole] = useState(null)
+ *   
+ *   return (
+ *     <RoleDialog
+ *       open={open}
+ *       onOpenChange={setOpen}
+ *       role={selectedRole}
+ *       onSuccess={() => refetchRoles()}
+ *     />
+ *   )
+ * }
+ * ```
+ */
+
 import * as React from "react"
 import { Button } from "@/components/ui/button"
 import {
