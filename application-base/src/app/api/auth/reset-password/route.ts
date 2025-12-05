@@ -1,4 +1,125 @@
-// /application-base/src/app/api/auth/reset-password/route.ts
+/**
+ * API Route POST /api/auth/reset-password
+ *
+ * Aurora Nova - Endpoint para Reinicio de Contraseña
+ *
+ * Procesa solicitudes POST para resetear la contraseña de un usuario utilizando
+ * un token de reset enviado por email. Implementa validación segura, hash de
+ * contraseña, y invalidación de sesiones existentes.
+ *
+ * **Endpoint Details**:
+ * - **Method**: POST
+ * - **Route**: `/api/auth/reset-password`
+ * - **Auth**: Public (no requiere autenticación)
+ * - **Content-Type**: application/json
+ *
+ * **Parámetros de Request** (body JSON):
+ * ```typescript
+ * {
+ *   token: string;      // Token de reset enviado por email
+ *   password: string;   // Nueva contraseña (min 8 caracteres)
+ * }
+ * ```
+ *
+ * **Respuestas**:
+ * - 200: { message: "Contraseña actualizada exitosamente." }
+ * - 400: { error: "Datos inválidos." | "Token inválido o ya ha sido usado." | "El token ha expirado." }
+ * - 404: { error: "Usuario no encontrado." }
+ * - 500: { error: "Ocurrió un error en el servidor." }
+ *
+ * **Flujo de Proceso**:
+ * ```
+ * 1. Recibir JSON con token y password
+ * 2. Validar con Zod schema (token requerido, password min 8)
+ * 3. Hashear token con SHA-256 para búsqueda en BD
+ * 4. Buscar registro en tabla passwordResetToken
+ * 5. Validar token existe y no ha expirado
+ * 6. Obtener usuario del token
+ * 7. Hashear nueva contraseña con bcryptjs (12 rounds)
+ * 8. Ejecutar transacción ATOMIC:
+ *    a. Actualizar contraseña del usuario
+ *    b. Eliminar token de reset (prevenir reutilización)
+ *    c. Eliminar todas las sesiones activas (force re-login en todos dispositivos)
+ * 9. Retornar éxito
+ * ```
+ *
+ * **Seguridad**:
+ * - Tokens guardados como hash SHA-256 en BD (no texto plano)
+ * - Contraseña nueva hasheada con bcryptjs (12 rounds)
+ * - Tokens con expiración de 30 minutos
+ * - Token se elimina después de usar (reutilización imposible)
+ * - Todas las sesiones invalidadas (fuerza re-login)
+ * - Transacción atómica garantiza consistencia
+ * - Errores no exponen detalles internos
+ *
+ * **Validaciones**:
+ * - Token: No vacío, requerido
+ * - Password: Mínimo 8 caracteres
+ * - Token debe existir en BD
+ * - Token no debe estar expirado
+ * - Usuario debe existir
+ * - Usuario debe tener credentials
+ *
+ * **Performance**:
+ * - Búsqueda por token hasheado (indexed)
+ * - Transacción optimizada (3 queries)
+ * - Hash SHA-256 rápido
+ * - Bcryptjs con 12 rounds (~200ms por hash)
+ *
+ * **Integraciones**:
+ * - Prisma ORM para acceso a BD
+ * - Zod para validación de tipos
+ * - Crypto API para hash seguro
+ * - Bcryptjs para hash de contraseña
+ *
+ * @route POST /api/auth/reset-password
+ * @see {@link ../../actions/auth.ts} para requestPasswordReset y validatePasswordResetToken
+ * @see {@link ../../../../lib/prisma/connection.ts} para acceso a BD
+ * @see {@link ../../../../lib/logger/helpers.ts} para contexto de logging
+ *
+ * @example
+ * ```bash
+ * # Curl ejemplo
+ * curl -X POST http://localhost:3000/api/auth/reset-password \
+ *   -H "Content-Type: application/json" \
+ *   -d '{
+ *     "token": "abc123...xyz",
+ *     "password": "NewPassword123!"
+ *   }'
+ *
+ * # Respuesta exitosa
+ * { "message": "Contraseña actualizada exitosamente." }
+ *
+ * # Respuesta con error
+ * { "error": "El token ha expirado." }
+ * ```
+ *
+ * **Flujo Completo desde UI**:
+ * 1. Usuario recibe email con link reset (contiene token)
+ * 2. Usuario hace click en link → va a página reset-password
+ * 3. Usuario ingresa nueva contraseña
+ * 4. Form submits POST /api/auth/reset-password con token
+ * 5. API valida y actualiza contraseña
+ * 6. API invalida todas las sesiones
+ * 7. Usuario vuelve a login con nueva contraseña
+ *
+ * @remarks
+ * **Token Expiration**:
+ * - Tokens expiran después de 30 minutos
+ * - Tokens expirados se limpian al intentar usar
+ * - Podría haber cron job para limpiar periódicamente
+ *
+ * **Session Invalidation**:
+ * - Todas las sesiones se eliminan (T06)
+ * - Usuario debe re-login en todos dispositivos
+ * - Mejora seguridad si contraseña fue comprometida
+ *
+ * **Password Requirements**:
+ * - Mínimo 8 caracteres (validado por schema)
+ * - Recomendado: mayúsculas, minúsculas, números, símbolos
+ * - Se valida en el form frontend (UX) y backend (seguridad)
+ */
+
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from "@/lib/prisma/connection"
@@ -10,6 +131,23 @@ const ResetPasswordSchema = z.object({
   password: z.string().min(8, { message: 'La contraseña debe tener al menos 8 caracteres.' }),
 });
 
+/**
+ * Handler POST para /api/auth/reset-password
+ *
+ * Procesa solicitud POST para reiniciar contraseña de usuario.
+ * Implementa todas las validaciones de seguridad y transacción atómica.
+ *
+ * @async
+ * @param request - Objeto NextRequest con body JSON
+ *
+ * @returns {Promise<NextResponse>} Respuesta JSON:
+ *   - 200: Éxito con mensaje
+ *   - 400: Validación falla
+ *   - 404: Usuario no encontrado
+ *   - 500: Error servidor
+ *
+ * @throws No lanza excepciones directamente (todas manejadas)
+ */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
