@@ -1,15 +1,27 @@
 /**
- * API Route: User Roles Management
+ * API Route - Admin User Roles Management - Aurora Nova
  *
  * Endpoints para gestionar los roles asignados a un usuario específico.
- * Permite obtener, asignar y remover roles de usuarios.
+ * Permite obtener, asignar y remover roles de usuarios con validación, deduplicación y auditoría.
  *
  * **Endpoints**:
- * - GET /api/admin/users/:id/roles - Obtener roles del usuario
- * - POST /api/admin/users/:id/roles - Asignar rol a usuario
- * - DELETE /api/admin/users/:id/roles - Remover rol de usuario
+ * - GET /api/admin/users/:id/roles - Obtener todos los roles del usuario
+ * - POST /api/admin/users/:id/roles - Asignar nuevo rol a usuario (validando que no exista)
+ * - DELETE /api/admin/users/:id/roles?roleId=... - Remover rol de usuario
  *
- * @module api/admin/users/roles
+ * **Patrones de Seguridad**:
+ * - Validación de usuario existente (404 si no)
+ * - Validación de rol existente (404 si no)
+ * - Deduplicación: previene asignar rol si ya lo tiene (409)
+ * - Auditoría completa: USER_ROLE_ASSIGNED, USER_ROLE_REMOVED
+ * - Permisos distintos: USER_READ para GET, USER_ASSIGN_ROLES para POST/DELETE
+ *
+ * **Casos de Uso**:
+ * 1. Dashboard admin: mostrar roles del usuario
+ * 2. Administración: asignar/remover roles a usuarios
+ * 3. Auditoría: registrar cambios en roles para compliance
+ *
+ * @module api/admin/users/[id]/roles
  */
 
 import { NextRequest, NextResponse } from "next/server"
@@ -27,50 +39,79 @@ const assignRoleSchema = z.object({
 })
 
 /**
+ * GET /api/admin/users/:id/roles - Obtener roles del usuario
+ *
  * Obtiene todos los roles asignados a un usuario específico.
+ * Retorna lista completa de roles con información de cada uno (ID, nombre, descripción, fecha asignación).
  *
- * Retorna una lista completa de roles que tiene el usuario, incluyendo
- * información sobre cada rol (ID, nombre, descripción, fecha de asignación).
+ * **Autenticación**: Requerida (permiso: `user:read`)
  *
- * **Endpoint Details**:
- * - Method: GET
- * - Route: /api/admin/users/:id/roles
- * - Auth: Requiere permiso "user:read"
- * - Content-Type: application/json
+ * **URL Parameters**:
+ * - `id` (string, requerido): UUID del usuario cuyo roles se desea obtener
  *
- * **Parámetros**:
- * - `:id` (path parameter): ID del usuario del cual obtener roles
+ * **Respuesta** (200):
+ * ```json
+ * [
+ *   {
+ *     "id": "uuid",
+ *     "name": "admin",
+ *     "description": "Administrador del sistema",
+ *     "assignedAt": "2024-01-01T00:00:00Z"
+ *   },
+ *   {
+ *     "id": "uuid",
+ *     "name": "editor",
+ *     "description": "Editor de contenidos",
+ *     "assignedAt": "2024-01-02T00:00:00Z"
+ *   }
+ * ]
+ * ```
  *
- * **Respuestas**:
- * - 200: Lista de roles obtenida exitosamente
- *   - Array de objetos con: { id, name, description, assignedAt }
- * - 401: Usuario no autenticado
- * - 403: Usuario no tiene permiso "user:read"
- * - 500: Error interno del servidor
+ * **Errores**:
+ * - 401: No autenticado (enviar JWT válido)
+ * - 403: Sin permiso `user:read` (solicitar al admin)
+ * - 500: Error del servidor
+ *
+ * **Performance**:
+ * - Query directa a userRole con select específico
+ * - Mapea roles enriquecidos con assignedAt
+ * - Típicamente < 50ms
  *
  * **Flujo**:
- * 1. Valida que el usuario tiene permiso "user:read"
- * 2. Extrae el ID del usuario desde los parámetros
- * 3. Obtiene todos los userRoles asociados al usuario
- * 4. Enriquece los datos con información del rol
- * 5. Retorna lista de roles asignados
+ * 1. Valida permiso `user:read`
+ * 2. Extrae ID del usuario desde URL
+ * 3. Busca todos userRoles para este usuario
+ * 4. Enriquece cada rol con assignedAt (createdAt del userRole)
+ * 5. Retorna array de roles
  *
- * @async
- * @param {NextRequest} request - La solicitud HTTP
- * @param {object} context - Contexto de la ruta con parámetros
- * @param {Promise<{id: string}>} context.params - Parámetros de ruta
- * @returns {Promise<NextResponse>} Array de roles asignados al usuario
+ * @method GET
+ * @route /api/admin/users/:id/roles
+ * @auth Requerida (JWT válido)
+ * @permission user:read
+ *
+ * @param {NextRequest} request - NextRequest HTTP
+ * @param {object} context - Contexto de Next.js
+ * @param {Promise<{id: string}>} context.params - Parámetros de URL
+ * @returns {Promise<NextResponse>} Array de roles asignados
  *
  * @example
  * ```typescript
- * // Get roles of a user
- * const response = await fetch('/api/admin/users/user-123/roles');
- * const roles = await response.json();
- * // [
- * //   { id: 'admin', name: 'Administrator', description: '...', assignedAt: '2024-12-05T...' },
- * //   { id: 'editor', name: 'Editor', description: '...', assignedAt: '2024-12-04T...' }
- * // ]
+ * // Obtener todos los roles de un usuario
+ * const response = await fetch(`/api/admin/users/${userId}/roles`, {
+ *   headers: {
+ *     'Authorization': `Bearer ${session.user.token}`
+ *   }
+ * })
+ *
+ * if (response.ok) {
+ *   const roles = await response.json()
+ *   console.log(`Usuario tiene ${roles.length} roles`)
+ *   roles.forEach(r => console.log(`- ${r.name}: ${r.description}`))
+ * }
  * ```
+ *
+ * @see {@link ./route.ts#POST} para asignar rol
+ * @see {@link ./route.ts#DELETE} para remover rol
  */
 export async function GET(
   request: NextRequest,
@@ -115,75 +156,99 @@ export async function GET(
 }
 
 /**
- * Asigna un rol a un usuario específico.
+ * POST /api/admin/users/:id/roles - Asignar rol a usuario
  *
- * Crea una nueva relación entre un usuario y un rol, dándole al usuario
- * acceso a todos los permisos del rol. Valida que ambos existen y que no
- * tienen una asignación previa.
+ * Asigna un nuevo rol a un usuario específico.
+ * Crea relación entre usuario y rol, dándole acceso a todos los permisos del rol.
+ * Previene duplicados: error 409 si ya tiene el rol asignado.
  *
- * **Endpoint Details**:
- * - Method: POST
- * - Route: /api/admin/users/:id/roles
- * - Auth: Requiere permiso "user:assign_roles"
- * - Content-Type: application/json
+ * **Autenticación**: Requerida (permiso: `user:assign_roles`)
  *
- * **Parámetros**:
- * - `:id` (path parameter): ID del usuario al cual asignar el rol
- * - `roleId` (body): ID del rol a asignar (debe ser UUID válido)
+ * **URL Parameters**:
+ * - `id` (string, requerido): UUID del usuario al cual asignar rol
  *
- * **Respuestas**:
- * - 201: Rol asignado exitosamente
- *   - `{ success: true }`
- * - 400: Datos inválidos (roleId faltante o formato incorrecto)
- * - 401: Usuario no autenticado
- * - 403: Usuario no tiene permiso "user:assign_roles"
- * - 404: Usuario o rol no encontrado
- * - 409: El usuario ya tiene este rol asignado
- * - 500: Error interno del servidor
- *
- * **Flujo**:
- * 1. Valida que el usuario tiene permiso "user:assign_roles"
- * 2. Obtiene el ID del usuario desde los parámetros
- * 3. Extrae el `roleId` del body JSON
- * 4. Valida los datos con `assignRoleSchema`
- * 5. Verifica que el usuario existe
- * 6. Verifica que el rol existe
- * 7. Verifica que no existe una asignación previa
- * 8. Crea la relación userRole
- * 9. Emite evento `USER_ROLE_ASSIGNED` para auditoría
- *
- * **Seguridad**:
- * - Valida existencia de usuario y rol antes de crear relación
- * - Previene duplicados (409 si ya existe)
- * - UUID validation en roleId para evitar inyecciones
- * - Auditoría completa con evento
- * - Requiere permiso específico para asignar
- *
- * **Eventos Emitidos**:
- * - `SystemEvent.USER_ROLE_ASSIGNED`: Evento para auditoría
- *   - Contiene: userId, roleId, roleName, assignedBy
- *   - Area: ADMIN
- *
- * @async
- * @param {NextRequest} request - La solicitud HTTP con body JSON
- * @param {object} context - Contexto de la ruta con parámetros
- * @param {Promise<{id: string}>} context.params - Parámetros de ruta
- * @returns {Promise<NextResponse>} { success: true } o error
- *
- * @example
- * ```typescript
- * // Assign a role to a user
- * const response = await fetch('/api/admin/users/user-123/roles', {
- *   method: 'POST',
- *   headers: { 'Content-Type': 'application/json' },
- *   body: JSON.stringify({ roleId: '550e8400-e29b-41d4-a716-446655440000' }),
- * });
- * if (response.status === 201) {
- *   console.log('Role assigned successfully');
+ * **Body Esperado**:
+ * ```json
+ * {
+ *   "roleId": "string (UUID válido, debe existir)"
  * }
  * ```
  *
- * @see {@link delete} para remover roles de usuarios
+ * **Respuesta** (201):
+ * ```json
+ * {
+ *   "success": true
+ * }
+ * ```
+ *
+ * **Errores**:
+ * - 400: Datos inválidos (roleId faltante, no es UUID válido)
+ *   - Validación Zod: roleId debe ser UUID
+ * - 401: No autenticado (enviar JWT válido)
+ * - 403: Sin permiso `user:assign_roles` (solicitar al admin)
+ * - 404: Usuario no encontrado o Rol no encontrado
+ * - 409: Usuario ya tiene este rol asignado (deduplicación)
+ * - 500: Error del servidor
+ *
+ * **Validaciones**:
+ * - roleId: debe ser UUID válido (formato)
+ * - Usuario: debe existir en BD (404 si no)
+ * - Rol: debe existir en BD (404 si no)
+ * - Unicidad: no puede asignar si ya existe relación (409)
+ *
+ * **Lógica**:
+ * 1. Valida existencia de usuario (404 si no)
+ * 2. Valida existencia de rol (404 si no)
+ * 3. Valida que no existe asignación previa (409 si existe)
+ * 4. Crea userRole con createdBy (usuario actual)
+ * 5. Emite evento USER_ROLE_ASSIGNED para auditoría
+ *
+ * **Efectos Secundarios**:
+ * - Crea registro en tabla `userRole`
+ * - Usuario obtiene acceso inmediato a permisos del rol
+ * - Cambio se refleja en próxima sesión o refresh de JWT
+ * - Emite evento para auditoría
+ *
+ * **Auditoría**:
+ * - Evento: `USER_ROLE_ASSIGNED`
+ * - Quién: usuario autenticado (session.user.id)
+ * - Cuándo: timestamp ISO
+ * - Qué: userId, roleId, roleName, assignedBy
+ *
+ * @method POST
+ * @route /api/admin/users/:id/roles
+ * @auth Requerida (JWT válido)
+ * @permission user:assign_roles
+ *
+ * @param {NextRequest} request - NextRequest con body JSON
+ * @param {object} context - Contexto de Next.js
+ * @param {Promise<{id: string}>} context.params - Parámetros de URL
+ * @returns {Promise<NextResponse>} { success: true } (201) o error
+ *
+ * @example
+ * ```typescript
+ * // Asignar rol "admin" a usuario
+ * const response = await fetch(`/api/admin/users/${userId}/roles`, {
+ *   method: 'POST',
+ *   headers: {
+ *     'Content-Type': 'application/json',
+ *     'Authorization': `Bearer ${session.user.token}`
+ *   },
+ *   body: JSON.stringify({ roleId: adminRoleId })
+ * })
+ *
+ * if (response.status === 201) {
+ *   console.log('Rol asignado exitosamente')
+ *   // Refrescar lista de roles del usuario
+ * } else if (response.status === 409) {
+ *   console.error('Usuario ya tiene este rol')
+ * } else if (response.status === 404) {
+ *   console.error('Usuario o rol no encontrado')
+ * }
+ * ```
+ *
+ * @see {@link ./route.ts#GET} para obtener roles del usuario
+ * @see {@link ./route.ts#DELETE} para remover rol
  */
 export async function POST(
   request: NextRequest,
@@ -291,76 +356,100 @@ export async function POST(
 }
 
 /**
+ * DELETE /api/admin/users/:id/roles - Remover rol de usuario
+ *
  * Remueve un rol de un usuario específico.
+ * Elimina relación usuario-rol, revocando acceso a todos los permisos del rol.
+ * Valida que la asignación existe antes de eliminarla.
  *
- * Elimina la relación entre un usuario y un rol, revocando el acceso a todos
- * los permisos del rol para ese usuario. Valida que la asignación existe
- * antes de eliminarla.
+ * **Autenticación**: Requerida (permiso: `user:assign_roles`)
  *
- * **Endpoint Details**:
- * - Method: DELETE
- * - Route: /api/admin/users/:id/roles?roleId=:roleId
- * - Auth: Requiere permiso "user:assign_roles"
- * - Content-Type: application/json
+ * **URL Parameters**:
+ * - `id` (string, requerido): UUID del usuario del cual remover rol
+ * - `roleId` (query string, requerido): UUID del rol a remover
  *
- * **Parámetros**:
- * - `:id` (path parameter): ID del usuario del cual remover el rol
- * - `roleId` (query parameter): ID del rol a remover
+ * **Respuesta** (200):
+ * ```json
+ * {
+ *   "success": true
+ * }
+ * ```
  *
- * **Respuestas**:
- * - 200: Rol removido exitosamente
- *   - `{ success: true }`
- * - 400: Parámetro `roleId` faltante
- * - 401: Usuario no autenticado
- * - 403: Usuario no tiene permiso "user:assign_roles"
- * - 404: Usuario, rol, o asignación no encontrada
- * - 500: Error interno del servidor
+ * **Errores**:
+ * - 400: Parámetro `roleId` no proporcionado en query string
+ *   ```json
+ *   { "error": "roleId es requerido" }
+ *   ```
+ * - 401: No autenticado (enviar JWT válido)
+ * - 403: Sin permiso `user:assign_roles` (solicitar al admin)
+ * - 404: Asignación no encontrada (usuario no tiene este rol)
+ * - 500: Error del servidor
  *
- * **Flujo**:
- * 1. Valida que el usuario tiene permiso "user:assign_roles"
- * 2. Obtiene el ID del usuario desde los parámetros
- * 3. Extrae `roleId` desde query parameters
- * 4. Verifica que `roleId` fue proporcionado
- * 5. Obtiene la asignación actual (para datos de auditoría)
- * 6. Verifica que la asignación existe
- * 7. Elimina la relación userRole
- * 8. Emite evento `USER_ROLE_REMOVED` para auditoría
+ * **Validaciones**:
+ * - roleId: requerido en query string
+ * - Asignación: debe existir (404 si no existe userRole para este usuario+rol)
  *
- * **Seguridad**:
- * - Verifica que la asignación existe antes de eliminarla
- * - Recopila datos completos antes de eliminar para auditoría
- * - Auditoría completa con evento
- * - Requiere permiso específico
- * - Los permisos del rol son revocados inmediatamente
+ * **Lógica**:
+ * 1. Valida que roleId está en query string (400 si no)
+ * 2. Busca asignación para obtener datos (para auditoría)
+ * 3. Verifica que asignación existe (404 si no)
+ * 4. Elimina la relación userRole
+ * 5. Emite evento USER_ROLE_REMOVED para auditoría
  *
- * **Eventos Emitidos**:
- * - `SystemEvent.USER_ROLE_REMOVED`: Evento para auditoría
- *   - Contiene: userId, roleId, roleName, removedBy
- *   - Area: ADMIN
+ * **Efectos Secundarios**:
+ * - Elimina registro en tabla `userRole`
+ * - Usuario pierde acceso a permisos del rol inmediatamente
+ * - Si es el último rol, usuario quedaría sin permisos
+ * - Cambio se refleja en próxima sesión o refresh de JWT
+ * - Emite evento para auditoría
  *
- * **Impacto**:
- * - El usuario pierda acceso a todos los permisos del rol inmediatamente
- * - Si es el último rol del usuario, quedaría sin permisos
- * - Cambio se refleja en próxima autenticación o refresh de sesión
+ * **Auditoría**:
+ * - Evento: `USER_ROLE_REMOVED`
+ * - Quién: usuario autenticado (session.user.id)
+ * - Cuándo: timestamp ISO
+ * - Qué: userId, roleId, roleName, removedBy
  *
- * @async
- * @param {NextRequest} request - La solicitud HTTP
- * @param {object} context - Contexto de la ruta con parámetros
- * @param {Promise<{id: string}>} context.params - Parámetros de ruta
+ * **Consideraciones**:
+ * - ✓ Recopila datos antes de eliminar para auditoría
+ * - ✓ Valida que asignación existe (404 si no)
+ * - ⚠️ No valida "último rol" (usuario puede quedar sin permisos)
+ * - ⚠️ Cambio no es inmediato en sesión actual (requiere refresh)
+ *
+ * @method DELETE
+ * @route /api/admin/users/:id/roles?roleId=...
+ * @auth Requerida (JWT válido)
+ * @permission user:assign_roles
+ *
+ * @param {NextRequest} request - NextRequest HTTP
+ * @param {object} context - Contexto de Next.js
+ * @param {Promise<{id: string}>} context.params - Parámetros de URL
  * @returns {Promise<NextResponse>} { success: true } o error
  *
  * @example
  * ```typescript
- * // Remove a role from a user
- * const response = await fetch('/api/admin/users/user-123/roles?roleId=550e8400-e29b-41d4-a716-446655440000', {
- *   method: 'DELETE',
- * });
+ * // Remover rol de usuario
+ * const response = await fetch(
+ *   `/api/admin/users/${userId}/roles?roleId=${roleId}`,
+ *   {
+ *     method: 'DELETE',
+ *     headers: {
+ *       'Authorization': `Bearer ${session.user.token}`
+ *     }
+ *   }
+ * )
+ *
  * if (response.ok) {
- *   console.log('Role removed successfully');
+ *   console.log('Rol removido exitosamente')
+ *   // Refrescar lista de roles del usuario
+ * } else if (response.status === 404) {
+ *   console.error('Usuario no tiene este rol')
+ * } else if (response.status === 400) {
+ *   console.error('roleId requerido en query string')
  * }
  * ```
  *
- * @see {@link POST} para asignar roles a usuarios
+ * @see {@link ./route.ts#GET} para obtener roles del usuario
+ * @see {@link ./route.ts#POST} para asignar rol
  */
 export async function DELETE(
   request: NextRequest,
