@@ -1,5 +1,104 @@
 "use client"
 
+/**
+ * Componente ManageUserRolesDialog (Dialog)
+ *
+ * Diálogo para gestionar roles asignados a un usuario.
+ * Permite agregar/remover roles con búsqueda y filtrado.
+ *
+ * Este componente es responsable de:
+ * - Mostrar diálogo para administrar roles del usuario
+ * - Cargar lista de todos los roles disponibles
+ * - Mostrar roles ya asignados al usuario (con badges)
+ * - Permitir agregar/remover roles
+ * - Búsqueda de roles por nombre
+ * - Sincronización de cambios con servidor
+ *
+ * **Características**:
+ * - Dialog controlado (open/onOpenChange)
+ * - Carga asíncrona de roles disponibles
+ * - Search en tiempo real para filtrar roles
+ * - Badges de roles asignados
+ * - Buttons para agregar/remover roles
+ * - Loading state durante operaciones
+ * - Toast notifications para feedback
+ * - ScrollArea para lista larga de roles
+ *
+ * @component
+ * @returns {JSX.Element} Dialog para gestión de roles
+ *
+ * @param {Object} props - Props del componente
+ * @param {boolean} props.open - Estado del diálogo (abierto/cerrado)
+ * @param {(open: boolean) => void} props.onOpenChange - Callback para cambiar estado
+ * @param {string} props.userId - ID del usuario a editar
+ * @param {string} props.userEmail - Email del usuario (para mostrar en header)
+ * @param {() => void} [props.onUpdate] - Callback tras actualizar roles
+ *
+ * **Props Requeridas**:
+ * - `open` (boolean): Indica si el diálogo está abierto
+ * - `onOpenChange` (function): Callback para controlar estado
+ * - `userId` (string): UUID del usuario
+ * - `userEmail` (string): Email del usuario (para display)
+ * - `onUpdate` (optional function): Callback tras cambios
+ *
+ * **Estados Internos**:
+ * - `allRoles`: Array de todos los roles disponibles
+ * - `assignedRoles`: Array de roles ya asignados
+ * - `searchQuery`: String de búsqueda
+ * - `loading`: Boolean para loading state
+ *
+ * **Flujo**:
+ * 1. Al abrir el diálogo: carga roles con GET
+ * 2. Muestra roles asignados como badges
+ * 3. Muestra lista de roles disponibles
+ * 4. Usuario puede buscar por nombre
+ * 5. Para agregar: click en "+ Agregar" en rol
+ *    - POST a /api/admin/users/:userId/roles
+ *    - Si exitoso: se remueve de disponibles, se agrega a asignados
+ * 6. Para remover: click en "X" en badge de rol asignado
+ *    - DELETE a /api/admin/users/:userId/roles/:roleId
+ *    - Si exitoso: se remueve de asignados, se agrega a disponibles
+ * 7. Callback onUpdate() se ejecuta tras cambios
+ *
+ * **API Integration**:
+ * - GET /api/admin/roles - Obtener todos los roles
+ * - GET /api/admin/users/:userId/roles - Roles del usuario
+ * - POST /api/admin/users/:userId/roles - Agregar rol
+ * - DELETE /api/admin/users/:userId/roles/:roleId - Remover
+ *
+ * **Casos de Uso**:
+ * - Administrar roles desde tabla de usuarios
+ * - Asignar roles a usuario nuevo
+ * - Revocar roles de usuario existente
+ *
+ * **Seguridad**:
+ * - Validación en servidor de roles válidos
+ * - Requiere autenticación/autorización
+ * - No permite roles inválidos
+ * - Toast errors sin exponer información sensible
+ *
+ * @example
+ * ```tsx
+ * // En página de gestión de usuarios
+ * import { ManageUserRolesDialog } from './manage-user-roles-dialog'
+ * 
+ * export function UsersPage() {
+ *   const [openRoles, setOpenRoles] = useState(false)
+ *   const [selectedUser, setSelectedUser] = useState(null)
+ *   
+ *   return (
+ *     <ManageUserRolesDialog
+ *       open={openRoles}
+ *       onOpenChange={setOpenRoles}
+ *       userId={selectedUser?.id}
+ *       userEmail={selectedUser?.email}
+ *       onUpdate={() => refetchUsers()}
+ *     />
+ *   )
+ * }
+ * ```
+ */
+
 import * as React from "react"
 import { X, Plus, Shield, Search, Loader2 } from "lucide-react"
 

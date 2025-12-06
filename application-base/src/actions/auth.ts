@@ -1,10 +1,98 @@
 /**
- * Server Actions para autenticación - Sistema Híbrido JWT + Database
- * Aurora Nova - Módulo Auth
+ * Server Actions para Autenticación - Sistema Híbrido JWT + Database
  *
- * Este módulo implementa server actions para autenticación con sistema híbrido:
- * - Login: Crea JWT + registro en tabla session con IP y UserAgent
- * - Logout: Elimina registro de session (invalida sesión)
+ * Aurora Nova - Módulo de Autenticación de Servidor
+ *
+ * Implementa Server Actions para operaciones de autenticación con sistema híbrido:
+ *
+ * **Operaciones Disponibles**:
+ * - {@link registerUser}: Registrar nuevo usuario en el sistema
+ * - {@link loginUser}: Iniciar sesión con credenciales (JWT + BD)
+ * - {@link logoutUser}: Cerrar sesión actual
+ * - {@link requestPasswordReset}: Solicitar reinicio de contraseña
+ * - {@link validatePasswordResetToken}: Validar token de reset
+ *
+ * **Sistema Híbrido JWT + Database**:
+ * Combina dos estrategias de autenticación:
+ * ```
+ * JWT (JSON Web Token):
+ * - Token encriptado válido por 30 días
+ * - Validación rápida sin consultas a BD
+ * - Contiene permisos y datos del usuario
+ * - Almacenado en cookie HTTP-only
+ *
+ * Database Sessions:
+ * - Registro en tabla `session` de cada sesión activa
+ * - Permite invalidación manual (logout)
+ * - Rastreo de IP y User-Agent para seguridad
+ * - Permite logout remoto y gestión multi-dispositivo
+ * ```
+ *
+ * **Flujo de Autenticación**:
+ * ```
+ * 1. registerUser() → Crea usuario con contraseña hasheada
+ * 2. loginUser() → Llama Auth.js signIn()
+ * 3. Auth.js authorize() → Valida credenciales
+ * 4. Auth.js jwt callback → Crea JWT + sesión en BD
+ * 5. Auth.js session callback → Enriquece sesión con permisos
+ * 6. logoutUser() → Elimina sesión de BD + invalida JWT
+ * ```
+ *
+ * **Validación y Seguridad**:
+ * - Validación con Zod schema (loginSchema, registerSchema)
+ * - Contraseñas hasheadas con bcryptjs (12 rounds)
+ * - CSRF protection automática de Auth.js
+ * - IP y User-Agent guardados para anomaly detection
+ * - Anti-enumeration en password reset
+ * - Tokens de reset hasheados en BD
+ *
+ * **Integración con Logger y Events**:
+ * - Logging estructurado de cada operación
+ * - Eventos emitidos para email, auditoría, webhooks
+ * - Contexto enriquecido con metadata
+ * - Medición de performance de login
+ *
+ * **Errores Manejados**:
+ * - ZodError: Validación de entrada
+ * - AuthError: Credenciales inválidas
+ * - Errores de BD: Registro duplicado, timeout
+ * - Errores genéricos: Manejo robusto sin exponer detalles
+ *
+ * @module actions/auth
+ * @see {@link ../lib/auth.ts} para configuración de Auth.js
+ * @see {@link ../lib/auth-utils.ts} para funciones auxiliares
+ * @see {@link ../lib/logger/structured-logger.ts} para logging
+ * @see {@link ../lib/events/event-bus.ts} para eventos
+ *
+ * @example
+ * ```typescript
+ * // En un Client Component
+ * 'use client';
+ * import { loginUser, registerUser, logoutUser } from '@/actions/auth';
+ *
+ * export function LoginForm() {
+ *   const [error, setError] = useState('');
+ *
+ *   async function handleLogin(formData: LoginInput) {
+ *     const result = await loginUser(formData);
+ *
+ *     if (result.success) {
+ *       redirect(result.data.redirectUrl);
+ *     } else {
+ *       setError(result.error);
+ *     }
+ *   }
+ *
+ *   async function handleLogout() {
+ *     const result = await logoutUser();
+ *     if (result.success) {
+ *       redirect('/admin/auth/signin');
+ *     }
+ *   }
+ *
+ *   // ... componente UI
+ * }
+ * ```
  */
 
 "use server"
@@ -44,23 +132,106 @@ type LoginResponse = {
 /**
  * Registrar nuevo usuario en el sistema
  *
- * @param input - Datos del usuario a registrar
- * @returns Respuesta con datos del usuario creado o error
+ * Crea un nuevo usuario con contraseña hasheada y emite evento para email de bienvenida.
+ * Válida datos de entrada, verifica email único, y usa bcryptjs para hash seguro.
+ *
+ * @async
+ * @param input - Objeto con datos del usuario a registrar (validado por registerSchema)
+ * @param input.email - Email único del usuario (será validado contra BD)
+ * @param input.password - Contraseña en texto plano (será hasheada con bcryptjs)
+ * @param input.confirmPassword - Confirmación de contraseña (validada con schema)
+ * @param input.firstName - Nombre del usuario (será usado para nombre completo)
+ * @param input.lastName - Apellido del usuario (será usado para nombre completo)
+ *
+ * @returns {Promise<ActionResponse>} Respuesta tipada:
+ *   - Si éxito: { success: true, data: { userId, firstName, lastName, email } }
+ *   - Si error: { success: false, error: "mensaje de error" }
+ *
+ * **Pasos de Ejecución**:
+ * 1. Obtener contexto de log (module, action, requestId, userId)
+ * 2. Validar datos con registerSchema (email, password match, etc)
+ * 3. Verificar email no existe (prevenir duplicados)
+ * 4. Hashear contraseña con bcryptjs (rounds: 12)
+ * 5. Crear usuario en BD con relación credentials
+ * 6. Emitir evento USER_REGISTERED para listeners (email, auditoría)
+ * 7. Retornar datos del usuario creado
+ *
+ * **Eventos Emitidos**:
+ * - SystemEvent.USER_REGISTERED: Dispara listeners para:
+ *   - Enviar email de bienvenida
+ *   - Registrar en auditoría
+ *   - Notificar webhooks externos
+ *
+ * **Validación**:
+ * - Email válido y único
+ * - Password cumple requisitos (min length, complejidad, etc)
+ * - Password y confirmPassword coinciden
+ * - firstName y lastName no están vacíos
+ *
+ * **Seguridad**:
+ * - Contraseña hasheada con bcryptjs (12 rounds)
+ * - Email verificado único en BD (constraint)
+ * - Errores no exponen detalles internos
+ * - Logging de intentos fallidos
+ *
+ * **Errores Posibles**:
+ * - ZodError: Validación de datos falla
+ * - Email en uso: Usuario con ese email ya existe
+ * - Error de BD: Timeout, constraint violation, etc
+ * - Error desconocido: Fallo en servidor
+ *
+ * @throws No lanza excepciones directamente (todas capturadas y logueadas)
  *
  * @example
- * ```ts
+ * ```typescript
+ * // Uso básico
  * const result = await registerUser({
- *   email: "usuario@example.com",
- *   password: "Password123",
- *   confirmPassword: "Password123",
+ *   email: "nuevo@example.com",
+ *   password: "SecurePass123!",
+ *   confirmPassword: "SecurePass123!",
  *   firstName: "Juan",
  *   lastName: "Pérez"
- * })
+ * });
  *
  * if (result.success) {
- *   console.log("Usuario creado:", result.data.userId)
+ *   console.log("Nuevo usuario creado:", result.data.userId);
+ *   // Redirigir a login
+ *   redirect('/admin/auth/signin');
+ * } else {
+ *   console.error("Error:", result.error);
+ *   // Mostrar error al usuario
+ * }
+ *
+ * // Uso en formulario React
+ * export function RegisterForm() {
+ *   const [isPending, startTransition] = useTransition();
+ *
+ *   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+ *     e.preventDefault();
+ *     const formData = new FormData(e.currentTarget);
+ *
+ *     startTransition(async () => {
+ *       const result = await registerUser({
+ *         email: formData.get('email') as string,
+ *         password: formData.get('password') as string,
+ *         confirmPassword: formData.get('confirmPassword') as string,
+ *         firstName: formData.get('firstName') as string,
+ *         lastName: formData.get('lastName') as string,
+ *       });
+ *
+ *       if (result.success) {
+ *         redirect('/admin/auth/signin');
+ *       }
+ *     });
+ *   };
+ *
+ *   return <form onSubmit={handleSubmit}>...</form>;
  * }
  * ```
+ *
+ * @see {@link loginUser} para iniciar sesión después de registrar
+ * @see {@link ../modules/shared/validations/auth.ts} para registerSchema
+ * @see {@link ../lib/auth-utils.ts} para funciones de autenticación
  */
 export async function registerUser(
   values: z.infer<typeof registerSchema>
@@ -163,28 +334,50 @@ export async function registerUser(
 // ============================================================================
 
 /**
- * Iniciar sesión con credenciales - Sistema Híbrido
+ * Inicia sesión de un usuario utilizando el sistema híbrido (JWT + Sesión en BD).
  *
- * Este action implementa el sistema híbrido de autenticación:
- * 1. Valida credenciales del usuario
- * 2. Crea JWT para autenticación (via Auth.js)
- * 3. Crea registro en tabla session con IP y UserAgent (via callback JWT)
+ * Esta acción valida las credenciales, y si son correctas, invoca a Auth.js (`signIn`)
+ * para crear una sesión. El callback `jwt` de Auth.js se encarga de crear
+ * tanto el JWT encriptado como el registro de la sesión en la base de datos.
  *
- * @param input - Credenciales del usuario (email y password)
- * @returns Respuesta con resultado del login
+ * @async
+ * @param {LoginInput} input - Objeto con las credenciales del usuario.
+ * @param {string} input.email - Email del usuario.
+ * @param {string} input.password - Contraseña del usuario.
+ * @returns {Promise<ActionResponse<LoginResponse>>} Una promesa que resuelve a un objeto de respuesta.
+ *   - En caso de éxito: `{ success: true, data: { success: true, redirectUrl: '/admin/dashboard' } }`
+ *   - En caso de error de validación: `{ success: false, error: 'Error de validación', fieldErrors: {...} }`
+ *   - En caso de error de credenciales: `{ success: false, error: 'Email o contraseña incorrectos' }`
+ * @throws {AuthError} Capturado internamente. Se lanza por `signIn` si las credenciales son incorrectas.
+ * @throws {z.ZodError} Capturado internamente. Se lanza si la entrada no pasa la validación de `loginSchema`.
+ *
+ * @remarks
+ * **Flujo Híbrido**:
+ * 1.  Valida los datos de entrada con `loginSchema`.
+ * 2.  Obtiene la IP y User-Agent de las cabeceras de la petición.
+ * 3.  Llama a `signIn('credentials', ...)` de Auth.js, pasando las credenciales y la metadata (IP, User-Agent).
+ * 4.  Auth.js ejecuta el `authorize` callback: valida la contraseña contra el hash en la BD.
+ * 5.  Si es válido, Auth.js ejecuta el `jwt` callback: crea el JWT y, crucialmente, crea una entrada en la tabla `Session` en la BD.
+ * 6.  Si `signIn` finaliza sin errores, la sesión está creada y se retorna una respuesta de éxito.
+ *
+ * **Seguridad**:
+ * - Utiliza `AuthError` para manejar errores de autenticación de forma segura, sin revelar si el usuario existe o no.
+ * - La metadata (IP, User-Agent) se almacena para auditoría y para permitir la gestión de sesiones multi-dispositivo.
+ * - Toda la lógica de creación de cookies y JWT es manejada por Auth.js, que está configurado con `httpOnly` y encriptación.
  *
  * @example
- * ```ts
- * const result = await loginUser({
- *   email: "usuario@example.com",
- *   password: "Password123"
- * })
- *
- * if (result.success) {
- *   // Redirigir al dashboard administrativo
- *   redirect(result.data.redirectUrl || "/admin/dashboard")
- * }
+ * ```typescript
+ * // En un formulario de login de un Client Component
+ * const handleSubmit = async (formData: LoginInput) => {
+ *   const result = await loginUser(formData);
+ *   if (result.success && result.data?.redirectUrl) {
+ *     window.location.href = result.data.redirectUrl;
+ *   } else {
+ *     setFormError(result.error);
+ *   }
+ * };
  * ```
+ * @see {@link ../lib/auth.ts} para la configuración completa de Auth.js y sus callbacks.
  */
 export async function loginUser(
   input: LoginInput
@@ -293,24 +486,42 @@ export async function loginUser(
 // ============================================================================
 
 /**
- * Cerrar sesión del usuario actual - Sistema Híbrido
+ * Cierra la sesión del usuario actual en el sistema híbrido.
  *
- * Este action implementa logout con sistema híbrido:
- * 1. Obtiene el sessionToken de la sesión actual
- * 2. Elimina el registro de tabla session (invalida sesión en BD)
- * 3. Cierra la sesión JWT (via Auth.js)
+ * Esta acción realiza dos operaciones clave:
+ * 1.  Elimina el registro de la sesión de la base de datos, invalidándola para futuras peticiones.
+ * 2.  Llama a `signOut()` de Auth.js para eliminar la cookie JWT del navegador.
  *
- * @returns Respuesta con resultado del logout
+ * @async
+ * @returns {Promise<ActionResponse<void>>} Una promesa que resuelve a un objeto de respuesta indicando el resultado.
+ *   - En caso de éxito: `{ success: true, message: 'Sesión cerrada exitosamente' }`
+ *   - En caso de error: `{ success: false, error: 'Error al cerrar sesión' }`
+ * @throws {Error} No lanza errores directamente, pero los captura y registra.
+ *
+ * @remarks
+ * **Flujo Híbrido de Logout**:
+ * 1.  Obtiene la sesión actual con `auth()` para acceder al `sessionToken` y `userId`.
+ * 2.  Si se encuentra un `sessionToken`, se emite el evento `USER_LOGGED_OUT` para auditoría.
+ * 3.  Se llama a `deleteSession(sessionToken)` para eliminar la sesión de la tabla `sessions` en la BD. Esto es lo que permite el "logout remoto" y la invalidación real.
+ * 4.  Finalmente, se llama a `signOut()` de Auth.js, que se encarga de borrar la cookie de sesión del cliente.
+ *
+ * **Seguridad**:
+ * - Al eliminar la sesión de la base de datos, se asegura que el `sessionToken` (aunque el JWT siga siendo teóricamente válido) no pueda ser usado para autenticar peticiones que requieran validación contra la base de datos.
+ * - El logging y el evento de auditoría permiten un seguimiento de todas las acciones de logout.
  *
  * @example
- * ```ts
- * const result = await logoutUser()
+ * ```typescript
+ * // En un botón de "Cerrar Sesión" en un Client Component
+ * import { logoutUser } from '@/actions/auth';
  *
- * if (result.success) {
- *   // Redirigir al login administrativo
- *   redirect("/admin/auth/signin")
- * }
+ * const handleLogout = async () => {
+ *   await logoutUser();
+ *   // Redirigir al usuario a la página de login.
+ *   window.location.href = '/admin/auth/signin';
+ * };
  * ```
+ * @see {@link deleteSession}
+ * @see {@link ../lib/auth.ts}
  */
 export async function logoutUser(): Promise<ActionResponse<void>> {
   try {
@@ -391,6 +602,50 @@ const RequestResetSchema = z.object({
   email: z.string().email({ message: 'Por favor, introduce un email válido.' }),
 });
 
+/**
+ * Inicia el proceso de reseteo de contraseña para un usuario.
+ *
+ * Si el email proporcionado existe en la base de datos, esta función genera un token
+ * de reseteo seguro, lo almacena hasheado en la base de datos y emite un evento
+ * para que se envíe un correo electrónico al usuario con el enlace de reseteo.
+ *
+ * @async
+ * @param {object} values - Objeto que contiene el email del usuario.
+ * @param {string} values.email - El email para el cual se solicita el reseteo.
+ * @returns {Promise<ActionResponse<null>>} Una promesa que resuelve a un objeto de respuesta.
+ *   - **Importante**: Siempre retorna una respuesta exitosa para prevenir la enumeración de usuarios,
+ *     incluso si el email no existe. `{ success: true, data: null, message: 'Si tu cuenta existe...' }`
+ * @throws {Error} No lanza errores directamente, los captura y retorna una respuesta de error genérica.
+ *
+ * @remarks
+ * **Flujo**:
+ * 1.  Valida el formato del email.
+ * 2.  Busca al usuario por su email.
+ * 3.  **Si el usuario existe**:
+ *     a. Genera un token aleatorio y seguro (`crypto.getRandomValues`).
+ *     b. Hashea el token (`SHA-256`) antes de guardarlo en la BD.
+ *     c. Crea un registro en `PasswordResetToken` con el token hasheado y una fecha de expiración (30 minutos).
+ *     d. Emite el evento `PASSWORD_RESET_REQUESTED`, pasando el token en texto plano para que pueda ser incluido en el email.
+ * 4.  **Si el usuario no existe**, no hace nada.
+ * 5.  Retorna un mensaje genérico de éxito en ambos casos.
+ *
+ * **Seguridad (Anti-Enumeración)**:
+ * La función está diseñada para no revelar si un email está registrado o no en el sistema.
+ * Al devolver siempre una respuesta de éxito, un atacante no puede usar esta funcionalidad
+ * para descubrir qué emails son válidos.
+ *
+ * @example
+ * ```typescript
+ * // En un formulario de "Olvidé mi contraseña"
+ * const handleRequestReset = async (email: string) => {
+ *   const result = await requestPasswordReset({ email });
+ *   // Muestra siempre el mensaje de éxito al usuario, sin importar el resultado real.
+ *   setFeedbackMessage(result.message);
+ * };
+ * ```
+ * @see {@link validatePasswordResetToken}
+ * @see {@link SystemEvent.PASSWORD_RESET_REQUESTED}
+ */
 export async function requestPasswordReset(
   values: z.infer<typeof RequestResetSchema>
 ): Promise<ActionResponse<null>> {
@@ -452,9 +707,36 @@ export async function requestPasswordReset(
 // ============================================================================
 
 /**
- * Valida un token de reinicio de contraseña.
- * @param token - El token proporcionado por el usuario desde la URL.
- * @returns {Promise<boolean>} - `true` si el token es válido, `false` en caso contrario.
+ * Valida un token de reinicio de contraseña proporcionado por el usuario.
+ *
+ * Esta función hashea el token recibido y lo compara con los tokens hasheados
+ * almacenados en la base de datos. También verifica que el token no haya expirado.
+ *
+ * @async
+ * @param {string} token - El token de reinicio de contraseña (en texto plano) extraído de la URL.
+ * @returns {Promise<boolean>} Una promesa que resuelve a `true` si el token es válido y no ha expirado, o `false` en caso contrario.
+ *
+ * @remarks
+ * **Flujo de Validación**:
+ * 1.  Hashea el `token` de entrada usando SHA-256 para poder compararlo con el valor en la BD.
+ * 2.  Busca en la tabla `PasswordResetToken` un registro que coincida con el `hashedToken`.
+ * 3.  Si no se encuentra ningún registro, el token es inválido. Retorna `false`.
+ * 4.  Si se encuentra, comprueba si la fecha actual es posterior a `expiresAt`.
+ * 5.  Si el token ha expirado, lo elimina de la BD para invalidarlo permanentemente y retorna `false`.
+ * 6.  Si el token es válido y no ha expirado, retorna `true`.
+ *
+ * @example
+ * ```typescript
+ * // En la página de reseteo de contraseña, al cargar la página.
+ * // El token se extrae de los parámetros de la URL.
+ * const urlToken = searchParams.get('token');
+ * const isTokenValid = await validatePasswordResetToken(urlToken);
+ *
+ * if (!isTokenValid) {
+ *   // Muestra un error y deshabilita el formulario.
+ *   setUiState('invalid_token');
+ * }
+ * ```
  */
 export async function validatePasswordResetToken(token: string): Promise<boolean> {
   try {

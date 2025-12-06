@@ -1,4 +1,97 @@
-// /application-base/src/components/auth/reset-password-form.tsx
+/**
+ * Componente ResetPasswordForm
+ *
+ * Formulario para restablecer contraseña del usuario.
+ * Permite que un usuario ingrese una nueva contraseña usando un token
+ * de reinicio válido. Valida que las contraseñas coincidan y tienen
+ * longitud mínima.
+ *
+ * Este componente es responsable de:
+ * - Recolectar nueva contraseña y confirmación
+ * - Validar que las contraseñas coinciden
+ * - Validar requisitos de contraseña (longitud mínima)
+ * - Enviar solicitud de cambio a API `/api/auth/reset-password`
+ * - Mostrar confirmación tras éxito
+ * - Redirigir a login tras cambio exitoso
+ *
+ * **Características**:
+ * - Validación con Zod Schema (coincidencia y longitud)
+ * - Manejo robusto de errores
+ * - Toast notifications para errores
+ * - Mensaje de confirmación tras cambio exitoso
+ * - Link de retorno a login
+ * - Loading state durante envío
+ * - Integración con shadcn/ui Form components
+ *
+ * @component
+ * @returns {JSX.Element} Formulario de reinicio de contraseña
+ *
+ * @param {Object} props - Props del componente
+ * @param {string} props.token - Token de reinicio extraído de URL (query param)
+ *
+ * **Props Requeridas**:
+ * - `token` (string): Token de reinicio de contraseña válido (extraído de URL)
+ *
+ * **Estados Internos**:
+ * - `isLoading`: Indica si está enviando la solicitud
+ * - `isSuccess`: Indica si el cambio fue exitoso (muestra confirmación)
+ *
+ * **Validaciones**:
+ * - Password: mínimo 8 caracteres
+ * - ConfirmPassword: debe coincidir exactamente con password
+ * - Ambos campos son requeridos
+ *
+ * **Flujo**:
+ * 1. Usuario recibe enlace con token en email
+ * 2. Ingresa nueva contraseña dos veces
+ * 3. Validación local con Zod
+ * 4. POST a `/api/auth/reset-password` con token y password
+ * 5. Si exitoso, muestra confirmación y link a login
+ * 6. Si falla, muestra toast con error
+ *
+ * **Seguridad**:
+ * - Token validado en servidor antes de permitir cambio
+ * - Token tiene expiración (30 minutos)
+ * - Contraseña nunca se valida en cliente completamente
+ * - API endpoint verifica token hasheado
+ * - Requiere que usuario haga login con nueva contraseña
+ *
+ * **Estados UI**:
+ * - Inicial: formulario con 2 campos de contraseña
+ * - Enviando: botón deshabilitado con estado "Actualizando..."
+ * - Éxito: mensaje de confirmación con link a login
+ * - Error: toast notification con descripción del error
+ *
+ * @example
+ * ```tsx
+ * // En página de reset-password
+ * import { ResetPasswordForm } from '@/modules/shared/components/presentational/reset-password-form';
+ *
+ * export default function ResetPasswordPage({
+ *   searchParams,
+ * }: {
+ *   searchParams: { token?: string };
+ * }) {
+ *   const token = searchParams.token || '';
+ *
+ *   if (!token) {
+ *     return <div>Token inválido</div>;
+ *   }
+ *
+ *   return (
+ *     <div className="container max-w-sm">
+ *       <h1>Restablecer Contraseña</h1>
+ *       <ResetPasswordForm token={token} />
+ *     </div>
+ *   );
+ * }
+ * ```
+ *
+ * @see {@link requestPasswordReset} para solicitar token de reinicio
+ * @see {@link validatePasswordResetToken} para validar token
+ * @see {@link ForgotPasswordForm} para solicitud inicial
+ */
+
 'use client';
 
 import { useState } from 'react';

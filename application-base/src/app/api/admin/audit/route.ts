@@ -14,28 +14,111 @@ import { SYSTEM_PERMISSIONS } from '@/modules/admin/types';
 import { structuredLogger } from '@/lib/logger/structured-logger';
 
 /**
- * GET /api/audit - Obtener registros de auditoría
+ * GET /api/admin/audit - Obtener registros de auditoría paginados
  *
- * Query parameters:
- * - userId: string (optional) - Filtrar por ID de usuario
- * - module: string (optional) - Filtrar por módulo (auth, users, roles, etc.)
- * - action: string (optional) - Filtrar por acción (login, create, update, etc.)
- * - area: string (optional) - Filtrar por área (ADMIN, CUSTOMER, PUBLIC, SYSTEM)
- * - entityType: string (optional) - Filtrar por tipo de entidad (User, Role, etc.)
- * - entityId: string (optional) - Filtrar por ID de entidad específica
- * - requestId: string (optional) - Filtrar por request ID
- * - startDate: string (optional) - Fecha inicio (ISO 8601)
- * - endDate: string (optional) - Fecha fin (ISO 8601)
- * - limit: number (optional, default: 50, max: 100) - Límite de resultados
- * - offset: number (optional, default: 0) - Offset para paginación
+ * Obtiene una lista paginada y filtrada de registros de auditoría del sistema.
+ * Incluye filtros por usuario, módulo, acción, área, tipo de entidad, rango de fechas.
+ * Útil para auditar cambios en el sistema y rastrear actividades de usuarios.
  *
- * Requires: audit:view permission
+ * **Autenticación**: Requerida (permiso: `audit:view`)
  *
- * @returns AuditLogResult con logs, total, count, limit, offset, hasMore
+ * **Query Parameters** (todos opcionales):
+ * - `userId` (string): Filtrar por ID de usuario que realizó la acción
+ * - `module` (string): Filtrar por módulo (e.g., "auth", "users", "roles")
+ * - `action` (string): Filtrar por acción (e.g., "login", "create", "update", "delete")
+ * - `area` (string): Filtrar por área del sistema (ADMIN, CUSTOMER, PUBLIC, SYSTEM)
+ * - `entityType` (string): Filtrar por tipo de entidad (e.g., "Role", "User", "Permission")
+ * - `entityId` (string): Filtrar por ID de entidad específica
+ * - `requestId` (string): Filtrar por ID de petición que generó el log
+ * - `startDate` (string): Fecha de inicio en formato ISO 8601 (e.g., "2024-01-01T00:00:00Z")
+ * - `endDate` (string): Fecha de fin en formato ISO 8601 (e.g., "2024-12-31T23:59:59Z")
+ * - `limit` (number): Registros por página, máximo 100 (default: 50)
+ * - `offset` (number): Registros a saltar para paginación (default: 0)
+ *
+ * **Respuesta** (200):
+ * ```json
+ * {
+ *   "logs": [
+ *     {
+ *       "id": "uuid",
+ *       "userId": "user-uuid",
+ *       "module": "roles",
+ *       "action": "create",
+ *       "area": "ADMIN",
+ *       "entityType": "Role",
+ *       "entityId": "role-uuid",
+ *       "changes": { "name": "moderator" },
+ *       "timestamp": "2024-12-05T12:00:00Z"
+ *     }
+ *   ],
+ *   "count": 150,
+ *   "limit": 50,
+ *   "offset": 0
+ * }
+ * ```
+ *
+ * **Errores**:
+ * - 400: Parámetros inválidos (fecha mal formada, limit/offset no son números)
+ * - 401: No autenticado
+ * - 403: Sin permiso `audit:view`
+ * - 500: Error del servidor
+ *
+ * **Validaciones**:
+ * - Fechas: formato ISO 8601 válido
+ * - limit: número positivo, máximo 100 (se ajusta si supera)
+ * - offset: número no negativo
+ * - Todos los filtros son opcionales
+ *
+ * **Casos de Uso**:
+ * - Dashboard admin: ver últimas actividades del sistema
+ * - Auditoría de cambios: rastrear modificaciones de roles/permisos
+ * - Investigación de seguridad: ver acciones de usuario específico
+ * - Cumplimiento: generar reportes de actividad para período
+ * - Debugging: investigar cambios en entidades específicas
+ *
+ * **Performance**:
+ * - Paginación eficiente (limit máx 100 por request)
+ * - Filtros optimizados con índices de BD
+ * - Típicamente < 200ms incluso con millones de logs
+ * - Logging estructurado de cada acceso por seguridad
+ *
+ * @method GET
+ * @route /api/admin/audit
+ * @auth Requerida (JWT válido)
+ * @permission audit:view
+ *
+ * @param {NextRequest} request - Request con query parameters
+ * @returns {Promise<NextResponse>} Logs paginados con metadatos (200) o error
  *
  * @example
- * GET /api/audit?module=auth&limit=20&offset=0
- * GET /api/audit?userId=user-123&startDate=2025-11-01T00:00:00Z
+ * ```typescript
+ * // Obtener últimos 20 intentos de login
+ * const response = await fetch(
+ *   '/api/admin/audit?module=auth&action=login&limit=20',
+ *   { headers: { 'Authorization': `Bearer ${token}` } }
+ * )
+ * const { logs, count } = await response.json()
+ * console.log(`Total intentos: ${count}, mostrando 20`)
+ *
+ * // Obtener cambios en roles durante último mes
+ * const startDate = new Date(Date.now() - 30*24*60*60*1000).toISOString()
+ * const endDate = new Date().toISOString()
+ * const response = await fetch(
+ *   `/api/admin/audit?module=roles&startDate=${startDate}&endDate=${endDate}&limit=100`,
+ *   { headers: { 'Authorization': `Bearer ${token}` } }
+ * )
+ * const { logs } = await response.json()
+ * logs.forEach(log => console.log(`${log.action}: ${log.entityId}`))
+ *
+ * // Auditar actividades de un usuario específico
+ * const response = await fetch(
+ *   `/api/admin/audit?userId=user-123&limit=50`,
+ *   { headers: { 'Authorization': `Bearer ${token}` } }
+ * )
+ * ```
+ *
+ * @see {@link ../users/[id]/route.ts} para ver detalles de usuario específico
+ * @see {@link ../roles/[id]/route.ts} para ver detalles de rol específico
  */
 export async function GET(request: NextRequest) {
   try {

@@ -26,7 +26,7 @@ services:
       - aurora-nova-db-data:/var/lib/postgresql/data
 
   app:
-    image: docker.io/byteflowsivar/aurora-nova:0.0.9
+    image: docker.io/byteflowsivar/aurora-nova:1.0.0
     container_name: aurora-nova-app
     restart: unless-stopped
     ports:

@@ -1,8 +1,82 @@
 'use client';
 
 /**
- * Formulario de Perfil de Usuario
- * Permite actualizar nombre y apellido
+ * Componente ProfileForm (Container)
+ *
+ * Formulario para actualizar información del perfil del usuario.
+ * Permite editar nombre y apellido con validación y manejo de errores.
+ *
+ * Este componente es responsable de:
+ * - Renderizar formulario con campos de nombre y apellido
+ * - Validación de entrada con Zod schema
+ * - Llamada a API para actualizar perfil
+ * - Manejo de estados de loading y errores
+ * - Notificaciones via toast (éxito/error)
+ * - Redirección tras actualización exitosa
+ *
+ * **Características**:
+ * - Integración con react-hook-form + Zod
+ * - Validación en tiempo real
+ * - Loading state en botón durante submit
+ * - Toast notifications (éxito/error)
+ * - Manejo robusto de errores
+ * - Diseño con shadcn Card y Form components
+ * - Responsive
+ *
+ * @component
+ * @returns {JSX.Element} Card con formulario de perfil
+ *
+ * @param {Object} props - Props del componente
+ * @param {UserProfile} props.user - Datos del usuario actual
+ *
+ * **Props Requeridas**:
+ * - `user` (UserProfile): Objeto con datos actuales del usuario
+ *   - firstName: Nombre del usuario
+ *   - lastName: Apellido del usuario
+ *
+ * **Validaciones**:
+ * - firstName: Mínimo 1 carácter, máximo requerido
+ * - lastName: Mínimo 1 carácter, máximo requerido
+ * - Ambos campos validados con updateProfileSchema
+ *
+ * **Estados Internos**:
+ * - `isLoading`: Boolean indicando si está enviando el formulario
+ * - `form`: Estado del formulario con react-hook-form
+ *
+ * **Flujo**:
+ * 1. Componente carga con datos iniciales del usuario
+ * 2. Usuario modifica nombre y/o apellido
+ * 3. En submit: valida datos con schema
+ * 4. Envía PATCH a /api/customer/profile
+ * 5. Si exitoso: muestra toast de éxito, redirecciona
+ * 6. Si error: muestra toast con mensaje de error
+ *
+ * **API Integration**:
+ * - Endpoint: PATCH /api/customer/profile
+ * - Body: { firstName, lastName }
+ * - Auth: Requiere sesión autenticada
+ * - Response: { success: boolean, message?: string }
+ *
+ * **Seguridad**:
+ * - Validación de entrada con Zod
+ * - No envía datos no modificados
+ * - Manejo de errores sin exponer información sensible
+ * - Toast notifications seguras
+ *
+ * @example
+ * ```tsx
+ * // En página de configuración
+ * import { ProfileForm } from '@/modules/admin/components/containers/profile-form-container'
+ * import { getUserProfile } from '@/lib/queries'
+ *
+ * export default async function SettingsPage() {
+ *   const user = await getUserProfile(userId)
+ *   return <ProfileForm user={user} />
+ * }
+ * ```
+ *
+ * @see {@link updateProfileSchema} para validaciones
+ * @see {@link UserProfile} para estructura de datos
  */
 
 import { useState } from 'react';

@@ -1,17 +1,130 @@
 /**
- * Event System - Type Definitions
+ * Tipos e Interfaces del Sistema de Eventos
  *
- * Catálogo completo de eventos del sistema y sus payloads tipados.
+ * Aurora Nova - Catálogo de Eventos y Payloads Tipados
  *
- * @module events/types
+ * Define todos los eventos del sistema y sus estructuras de datos.
+ * Proporciona type-safety para el sistema pub/sub de eventos.
+ *
+ * **Contenido**:
+ * - {@link SystemEvent}: Enum de todos los eventos del sistema
+ * - {@link EventPayload}: Interface con payloads tipados por evento
+ * - {@link BaseEvent}: Estructura envolvente con metadata
+ * - {@link EventListener}: Tipo de función listener
+ *
+ * **Eventos por Categoría**:
+ * - **Auth**: USER_REGISTERED, USER_LOGGED_IN, USER_LOGGED_OUT, PASSWORD_RESET_REQUESTED, PASSWORD_CHANGED
+ * - **Users**: USER_CREATED, USER_UPDATED, USER_DELETED, USER_ROLE_ASSIGNED, USER_ROLE_REMOVED
+ * - **Roles**: ROLE_CREATED, ROLE_UPDATED, ROLE_DELETED, ROLE_PERMISSION_ASSIGNED, ROLE_PERMISSION_REMOVED
+ * - **Permissions**: PERMISSION_CREATED, PERMISSION_UPDATED, PERMISSION_DELETED
+ * - **Sessions**: SESSION_EXPIRED, CONCURRENT_SESSION_DETECTED
+ *
+ * **Características**:
+ * - Type-safe event system con TypeScript
+ * - Cada evento tiene payload específico
+ * - Listeners fuertemente tipados
+ * - Autocomplete completo en IDE
+ * - Previene errores de tipos en tiempo de compilación
+ *
+ * **Listeners Típicos**:
+ * - Email: Envía emails por ciertos eventos (USER_REGISTERED, PASSWORD_RESET_REQUESTED)
+ * - Audit: Registra todos los eventos en BD para compliance
+ * - Webhook: Notifica sistemas externos
+ * - Analytics: Rastrea comportamiento de usuario
+ * - Notifications: Notifica usuarios de cambios
+ *
+ * @module lib/events/types
+ * @see {@link ./event-bus.ts} para implementación del bus
+ * @see {@link ./listeners/} para listeners implementados
+ *
+ * @example
+ * ```typescript
+ * import type { SystemEvent, EventPayload } from '@/lib/events/types';
+ * import { eventBus } from '@/lib/events/event-bus';
+ *
+ * // Dispatch evento con payload tipado
+ * await eventBus.dispatch(
+ *   SystemEvent.USER_REGISTERED,
+ *   {
+ *     userId: 'user-123',
+ *     email: 'user@example.com',
+ *     firstName: 'John',
+ *     lastName: 'Doe'
+ *   } as EventPayload[SystemEvent.USER_REGISTERED]
+ * );
+ *
+ * // Suscribirse a evento con payload tipado
+ * eventBus.subscribe(SystemEvent.USER_REGISTERED, async (event) => {
+ *   const payload = event.payload; // Tipado automáticamente
+ *   console.log(payload.email);   // ✓ Email está disponible
+ *   console.log(payload.foo);     // ✗ Error: foo no existe
+ * });
+ * ```
  */
 
 /**
- * Catálogo de eventos del sistema
+ * Enum de Eventos del Sistema
  *
- * Cada evento representa una acción significativa que ocurre en el sistema.
- * Los listeners pueden suscribirse a estos eventos para ejecutar acciones
- * secundarias como enviar emails, registrar auditoría, o notificaciones.
+ * Catálogo centralizado de todos los eventos que pueden ocurrir en la aplicación.
+ * Cada evento representa una acción significativa del dominio.
+ *
+ * @enum {string} SystemEvent
+ *
+ * **Auth Events** (Autenticación):
+ * - `USER_REGISTERED`: Usuario registrado (dispara email de bienvenida)
+ * - `USER_LOGGED_IN`: Usuario inició sesión (para auditoría, analytics)
+ * - `USER_LOGGED_OUT`: Usuario cerró sesión (para auditoría)
+ * - `PASSWORD_RESET_REQUESTED`: Solicitud de reset (dispara email con link)
+ * - `PASSWORD_CHANGED`: Contraseña actualizada (notifica usuario)
+ *
+ * **User Management** (Gestión de Usuarios):
+ * - `USER_CREATED`: Nuevo usuario creado por admin
+ * - `USER_UPDATED`: Datos de usuario actualizados
+ * - `USER_DELETED`: Usuario eliminado
+ * - `USER_ROLE_ASSIGNED`: Rol asignado a usuario
+ * - `USER_ROLE_REMOVED`: Rol removido de usuario
+ *
+ * **Role Management** (Gestión de Roles):
+ * - `ROLE_CREATED`: Nuevo rol creado
+ * - `ROLE_UPDATED`: Rol actualizado
+ * - `ROLE_DELETED`: Rol eliminado
+ * - `ROLE_PERMISSION_ASSIGNED`: Permiso asignado a rol
+ * - `ROLE_PERMISSION_REMOVED`: Permiso removido de rol
+ *
+ * **Permission Management** (Gestión de Permisos):
+ * - `PERMISSION_CREATED`: Nuevo permiso creado
+ * - `PERMISSION_UPDATED`: Permiso actualizado
+ * - `PERMISSION_DELETED`: Permiso eliminado
+ *
+ * **Session Management** (Gestión de Sesiones):
+ * - `SESSION_EXPIRED`: Sesión expiró
+ * - `CONCURRENT_SESSION_DETECTED`: Acceso concurrente detectado
+ *
+ * @remarks
+ * **Convención de Nombres**:
+ * - Patrón: `SUBJECT_ACTION` (ej: USER_LOGGED_IN)
+ * - Valores de enum en snake_case
+ * - Valores de enumeración en formato "subject.action"
+ *
+ * **Listener Típicos por Evento**:
+ * ```
+ * USER_REGISTERED:
+ *   - Email: Enviar email de bienvenida
+ *   - Audit: Registrar creación de usuario
+ *   - Analytics: Rastrear registración
+ *
+ * USER_LOGGED_IN:
+ *   - Audit: Registrar login (IP, dispositivo)
+ *   - Analytics: Rastrear actividad
+ *   - Webhook: Notificar integración externa
+ *
+ * PASSWORD_RESET_REQUESTED:
+ *   - Email: Enviar email con link de reset
+ *   - Audit: Registrar solicitud
+ * ```
+ *
+ * @see {@link EventPayload} para estructura de datos por evento
+ * @see {@link ./event-bus.ts} para cómo dispatchear eventos
  */
 export enum SystemEvent {
   // ============================================================================

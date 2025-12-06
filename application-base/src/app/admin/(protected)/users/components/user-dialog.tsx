@@ -1,5 +1,101 @@
 "use client"
 
+/**
+ * Componente UserDialog (Dialog)
+ *
+ * Diálogo modal para crear o editar usuarios.
+ * Renderiza un formulario con campos para email, nombre y apellido.
+ *
+ * Este componente es responsable de:
+ * - Mostrar diálogo modal para crear o editar usuario
+ * - Renderizar formulario con email, nombre, apellido
+ * - Validar datos antes de enviar
+ * - Hacer POST/PUT a API según modo (crear/editar)
+ * - Mostrar notificaciones de éxito/error
+ * - Cerrar diálogo tras operación exitosa
+ *
+ * **Características**:
+ * - Modal dialog controlado (open/onOpenChange)
+ * - Modo dual: crear nuevo usuario o editar existente
+ * - Campos: email (único), nombre, apellido
+ * - Loading state en botón durante envío
+ * - Toast notifications para feedback
+ * - Validación de entrada en formulario
+ *
+ * @component
+ * @returns {JSX.Element} Dialog modal para gestión de usuarios
+ *
+ * @param {Object} props - Props del componente
+ * @param {boolean} props.open - Estado del diálogo (abierto/cerrado)
+ * @param {(open: boolean) => void} props.onOpenChange - Callback para cambiar estado
+ * @param {UserData} [props.user] - Datos del usuario si se está editando
+ * @param {() => void} props.onSuccess - Callback tras operación exitosa
+ *
+ * **Props Requeridas**:
+ * - `open` (boolean): Indica si el diálogo está abierto
+ * - `onOpenChange` (function): Callback para controlar estado del diálogo
+ * - `onSuccess` (function): Callback ejecutado tras crear/editar
+ * - `user` (optional): Objeto con { id, email, firstName, lastName }
+ *
+ * **Campos del Formulario**:
+ * 1. **Email** (requerido si crear, readonly si editar)
+ *    - Input email
+ *    - Validación de formato email
+ *    - Único a nivel de aplicación
+ * 2. **Nombre** (requerido)
+ *    - Input text
+ *    - Mínimo 1 carácter
+ * 3. **Apellido** (requerido)
+ *    - Input text
+ *    - Mínimo 1 carácter
+ *
+ * **Flujo**:
+ * 1. Props open controla visibilidad del modal
+ * 2. Si user !== null: modo "editar", pre-carga datos
+ * 3. Si user === null: modo "crear", form vacío
+ * 4. Usuario completa/modifica datos
+ * 5. En submit:
+ *    - Modo crear: POST a /api/admin/users con datos
+ *    - Modo editar: PUT a /api/admin/users/:id con datos
+ * 6. Si exitoso: toast success + callback onSuccess()
+ * 7. Si error: toast error con mensaje
+ *
+ * **API Integration**:
+ * - Crear: POST /api/admin/users
+ * - Editar: PUT /api/admin/users/:id
+ * - Body: { email, firstName, lastName }
+ * - Response: { id, email, firstName, lastName, ... }
+ *
+ * **Validaciones**:
+ * - Email: formato válido, único en BD
+ * - firstName: requerido
+ * - lastName: requerido
+ *
+ * **Casos de Uso**:
+ * - Crear nuevo usuario desde tabla de usuarios
+ * - Editar información de usuario existente
+ *
+ * @example
+ * ```tsx
+ * // En página de gestión de usuarios
+ * import { UserDialog } from './user-dialog'
+ * 
+ * export function UsersPage() {
+ *   const [open, setOpen] = useState(false)
+ *   const [selectedUser, setSelectedUser] = useState(null)
+ *   
+ *   return (
+ *     <UserDialog
+ *       open={open}
+ *       onOpenChange={setOpen}
+ *       user={selectedUser}
+ *       onSuccess={() => refetchUsers()}
+ *     />
+ *   )
+ * }
+ * ```
+ */
+
 import * as React from "react"
 import { Button } from "@/components/ui/button"
 import {

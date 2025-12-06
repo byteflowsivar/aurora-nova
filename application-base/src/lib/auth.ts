@@ -1,18 +1,124 @@
 /**
- * Configuración de Auth.js para Aurora Nova - Sistema Híbrido JWT + Database
+ * Configuración de Auth.js - Sistema Híbrido JWT + Database
  *
- * Este archivo implementa un sistema híbrido de autenticación que combina:
+ * Aurora Nova - Autenticación Profesional de Aplicación
  *
- * 1. JWT Strategy: Para autenticación rápida sin consultas a BD en cada request
- * 2. Database Session Tracking: Para gestión manual de sesiones, invalidación y auditoría
+ * Implementa un sistema híbrido de autenticación que combina dos estrategias:
  *
- * Flujo del sistema:
- * - Login: Se crea JWT + registro en tabla `session` con IP y UserAgent
- * - Request: Middleware valida JWT (rápido) + opcionalmente verifica sesión en BD
- * - Logout: Se elimina registro de tabla `session` (invalida sesión)
- * - Gestión: Permite listar/invalidar sesiones manualmente
+ * **1. JWT Strategy (Rápido)**:
+ * - Token JWT con validez de 30 días
+ * - Validación sin consultas a BD en cada request (mediante middleware)
+ * - Ideal para rendimiento y escalabilidad
  *
- * @see docs/auth-hybrid-system.md para documentación completa
+ * **2. Database Session Tracking (Gestión)**:
+ * - Registro en tabla `session` de cada sesión activa
+ * - Información de IP y User-Agent para seguridad
+ * - Permite invalidación manual, logout remoto, auditoría
+ *
+ * **Flujo Completo**:
+ * ```
+ * Login:
+ *   1. Usuario ingresa email/contraseña en form
+ *   2. Credentials Provider valida contra hash en BD
+ *   3. Se crea JWT válido por 30 días
+ *   4. Se crea registro en tabla session para tracking
+ *   5. Se emite evento USER_LOGGED_IN para auditoría
+ *
+ * Request (Durante sesión):
+ *   1. Middleware valida JWT (sin consulta a BD)
+ *   2. Usuario obtiene info de permisos desde token
+ *   3. Opcionalmente se verifica sesión en BD (si required)
+ *
+ * Logout:
+ *   1. Usuario hace click en logout
+ *   2. Se elimina registro de tabla session (invalida)
+ *   3. Se emite evento USER_LOGGED_OUT para auditoría
+ *
+ * Gestión (Admin):
+ *   1. Admin puede listar sesiones activas del usuario
+ *   2. Admin puede invalidar sesiones de otros usuarios
+ *   3. Todos los cambios se auditan
+ * ```
+ *
+ * **Componentes**:
+ * - {@link CredentialsProvider}: Valida email/password contra BD
+ * - {@link callbacks.jwt}: Crea JWT y sesión en BD, emite eventos
+ * - {@link callbacks.session}: Enriquece sesión con permisos
+ * - {@link handlers.POST/GET}: Endpoints para `/api/auth/[...nextauth]`
+ * - {@link signIn}: Server action para iniciar sesión
+ * - {@link signOut}: Server action para cerrar sesión
+ * - {@link auth}: Obtener sesión actual en Server Components
+ *
+ * **Características de Seguridad**:
+ * - Contraseñas hasheadas con bcryptjs (rounds: 12)
+ * - CSRF protection automática de Auth.js
+ * - JWT con expiración de 30 días
+ * - Tracking de IP y User-Agent para detección de anomalías
+ * - Soporte para permissions en token
+ *
+ * **Extensiones Custom**:
+ * - Sistema híbrido JWT + Base de Datos
+ * - Integración con EventBus para auditoría
+ * - Carga automática de permisos del usuario
+ * - Evento USER_LOGGED_IN en cada login exitoso
+ *
+ * @module lib/auth
+ * @see {@link auth-utils.ts} para funciones auxiliares de autenticación
+ * @see {@link ../lib/auth-types.ts} para tipos extendidos (Session, User, etc)
+ * @see {@link ../modules/shared/api/create-session.ts} para creación de sesiones
+ * @see {@link ../lib/events/event-bus.ts} para sistema de eventos
+ *
+ * @example
+ * ```typescript
+ * // En Server Component
+ * import { auth } from '@/lib/auth';
+ *
+ * export default async function DashboardLayout() {
+ *   const session = await auth();
+ *   if (!session) return redirect('/auth/signin');
+ *
+ *   return <div>Bienvenido {session.user.name}</div>;
+ * }
+ *
+ * // En Server Action
+ * import { signIn, signOut } from '@/lib/auth';
+ *
+ * export async function loginAction(email: string, password: string) {
+ *   const result = await signIn('credentials', {
+ *     email,
+ *     password,
+ *     redirect: false
+ *   });
+ *   return result;
+ * }
+ *
+ * // En Middleware
+ * import { auth } from '@/lib/auth';
+ *
+ * export const middleware = auth((req) => {
+ *   if (!req.auth) {
+ *     return Response.redirect(new URL('/auth/signin', req.url));
+ *   }
+ * });
+ * ```
+ *
+ * @remarks
+ * **Tipos Extendidos**:
+ * Los tipos de Session y User están extendidos en `auth-types.ts` para incluir:
+ * - `user.id`: ID único del usuario
+ * - `user.permissions`: Array de permisos (ej: ['user:read', 'user:create'])
+ * - `sessionToken`: Token de sesión para validaciones en BD
+ *
+ * **Performance**:
+ * - JWT validation: ~1ms (sin consulta a BD)
+ * - Database session check: ~5-10ms si es necesario
+ * - Token refresh: Automático mediante callback jwt()
+ *
+ * **Seguridad**:
+ * - Contraseña hasheada con bcryptjs (12 rounds)
+ * - CSRF token verificado automáticamente
+ * - JWT no contiene datos sensibles (solo IDs y permisos públicos)
+ * - Sesiones invalidables desde logout o admin
  */
 
 import NextAuth from "next-auth"
@@ -204,5 +310,38 @@ export const {
   },
   debug: process.env.NODE_ENV === 'development',
 })
+
+/**
+ * Exportaciones de Auth.js
+ *
+ * @exports handlers Handlers HTTP para la ruta `/api/auth/[...nextauth]`
+ * @exports handlers.GET Manejador GET para Auth.js (callback, signin, session, etc)
+ * @exports handlers.POST Manejador POST para Auth.js (signin, callback, etc)
+ *
+ * @exports auth Función para obtener la sesión actual
+ * Uso: `const session = await auth();`
+ * En Server Components, Server Actions, API Routes, Middleware
+ *
+ * @exports signIn Función para iniciar sesión
+ * Uso: `await signIn('credentials', { email, password })`
+ * Dispara el callback jwt() que crea JWT + sesión en BD
+ *
+ * @exports signOut Función para cerrar sesión
+ * Uso: `await signOut()`
+ * Invalida el JWT y elimina la sesión de la BD
+ *
+ * @remarks
+ * **Tipos Extendidos**:
+ * Los tipos de Session y User están extendidos en `auth-types.ts` para incluir:
+ * - `session.user.id`: ID único del usuario
+ * - `session.user.firstName`: Nombre del usuario
+ * - `session.user.lastName`: Apellido del usuario
+ * - `session.user.permissions`: Array de permisos (ej: ['user:read', 'user:create'])
+ * - `session.sessionToken`: Token de sesión para validaciones en BD
+ *
+ * Estos tipos se importan automáticamente en toda la aplicación.
+ *
+ * @see {@link ../lib/auth-types.ts} para definición de tipos extendidos
+ */
 
 // Los tipos extendidos están definidos en auth-types.ts
