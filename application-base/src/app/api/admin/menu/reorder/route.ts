@@ -25,74 +25,99 @@ const reorderMenuItemsSchema = z.array(
 );
 
 /**
- * Reordena múltiples items del menú en una sola operación.
+ * POST /api/admin/menu/reorder - Reordenar múltiples items de menú
  *
- * Permite cambiar el orden de visualización de los items del menú de forma masiva.
- * Útil para operaciones de drag-and-drop o cambios de layout. Acepta un array
- * de items con su nuevo orden y actualiza todos en una operación.
+ * Actualiza el orden de visualización de varios items del menú en una sola operación.
+ * Ideal para interfaces de drag-and-drop o reorganización masiva de navegación.
+ * Operación atómica: todos los items se actualizan o ninguno. Cache se invalida automáticamente.
  *
- * **Endpoint Details**:
- * - Method: POST
- * - Route: /api/admin/menu/reorder
- * - Auth: Requiere permiso "menu:manage"
- * - Content-Type: application/json
+ * **Autenticación**: Requerida (permiso: `menu:manage`)
  *
- * **Parámetros** (en el body):
- * - Array de objetos con:
- *   - `id` (string): ID del item del menú
- *   - `order` (number): Nueva posición/orden del item
+ * **Body Esperado**:
+ * ```json
+ * [
+ *   { "id": "uuid-1", "order": 1 },
+ *   { "id": "uuid-2", "order": 2 },
+ *   { "id": "uuid-3", "order": 3 }
+ * ]
+ * ```
  *
- * **Respuestas**:
- * - 200: Items reordenados exitosamente
- * - 400: Datos inválidos (validación Zod fallida)
- * - 403: Usuario no tiene permiso "menu:manage"
- * - 500: Error interno del servidor
+ * **Respuesta** (200):
+ * ```json
+ * {}
+ * ```
+ * (Respuesta vacía, solo indica éxito 200 OK)
  *
- * **Flujo**:
- * 1. Valida que el usuario tiene permiso "menu:manage"
- * 2. Obtiene el body JSON de la solicitud
- * 3. Valida que es un array de objetos { id, order } con `reorderMenuItemsSchema`
- * 4. Actualiza el orden de todos los items en la base de datos
- * 5. Invalida el cache del menú
- * 6. Retorna 200 OK
+ * **Errores**:
+ * - 400: Datos inválidos (no es array, faltan campos id/order, order no es número)
+ * - 403: No autenticado o sin permiso `menu:manage`
+ * - 500: Error del servidor
  *
- * **Casos de Uso**:
- * - Interfaz de drag-and-drop para reordenar menú
- * - Cambios de layout y reorganización de navegación
- * - Actualización masiva de orden de items
+ * **Validaciones** (Zod schema):
+ * - Debe ser array de objetos
+ * - Cada objeto requiere:
+ *   - `id`: string (UUID del item)
+ *   - `order`: number entero (nueva posición)
+ * - Array vacío permitido (sin cambios)
  *
  * **Efectos Secundarios**:
- * - Actualiza el orden de todos los items especificados
- * - Invalida el cache del menú (reconstruido en próxima lectura)
- * - Los usuarios verán el menú reordenado inmediatamente
+ * - Actualiza campo `order` de todos los items especificados
+ * - Operación atómica: si una falla, ninguna se aplica (transacción BD)
+ * - Invalida caché de menú (se reconstruye en próxima lectura)
+ * - Cambios visibles inmediatamente en UI para todos los usuarios
+ * - Menú se reordena según nuevo campo `order` ASC
+ *
+ * **Casos de Uso**:
+ * - UI de drag-and-drop para reordenar navegación
+ * - Cambios de layout y reorganización de secciones
+ * - Actualización masiva de prioridades/orden de items
+ * - Sincronizar orden después de importar menú
  *
  * **Performance**:
- * - Operación atómica: todos los items se actualizan o ninguno
- * - Cache invalidado automáticamente
- * - Recomendado para cambios de orden de múltiples items
+ * - Operación muy rápida (actualiza múltiples en una transacción)
+ * - Cache invalidado una sola vez (no por cada item)
+ * - Más eficiente que múltiples requests PATCH individuales
+ * - Recomendado para cambios de orden de 3+ items
  *
- * @async
- * @param {Request} request - La solicitud HTTP con body JSON
- * @returns {Promise<NextResponse>} Respuesta 200 OK
+ * @method POST
+ * @route /api/admin/menu/reorder
+ * @auth Requerida (JWT válido)
+ * @permission menu:manage
+ *
+ * @param {Request} request - Request con body JSON (array de {id, order})
+ * @returns {Promise<NextResponse>} 200 OK (sin contenido) o error
  *
  * @example
  * ```typescript
- * // Reorder menu items
+ * // Reordenar items después de drag-and-drop
+ * const reorderItems = [
+ *   { id: 'usuarios-id', order: 1 },
+ *   { id: 'roles-id', order: 2 },
+ *   { id: 'permisos-id', order: 3 },
+ * ]
+ *
  * const response = await fetch('/api/admin/menu/reorder', {
  *   method: 'POST',
- *   headers: { 'Content-Type': 'application/json' },
- *   body: JSON.stringify([
- *     { id: 'menu-1', order: 1 },
- *     { id: 'menu-2', order: 2 },
- *     { id: 'menu-3', order: 3 },
- *   ]),
- * });
- * if (response.ok) {
- *   console.log('Menu items reordered successfully');
+ *   headers: {
+ *     'Content-Type': 'application/json',
+ *     'Authorization': `Bearer ${token}`
+ *   },
+ *   body: JSON.stringify(reorderItems)
+ * })
+ *
+ * if (response.status === 200) {
+ *   console.log('Menú reordenado exitosamente')
+ *   refreshMenuDisplay()
+ * } else {
+ *   const error = await response.json()
+ *   console.error('Error reordenando:', error.details)
  * }
  * ```
  *
- * @see {@link PATCH} para actualizar items individuales
+ * @see {@link ./route.ts#GET} para listar todos los items
+ * @see {@link ./route.ts#POST} para crear nuevo item
+ * @see {@link ./[id]/route.ts#PATCH} para actualizar item individual
+ * @see {@link ./[id]/route.ts#DELETE} para eliminar item
  */
 export async function POST(request: Request) {
   try {

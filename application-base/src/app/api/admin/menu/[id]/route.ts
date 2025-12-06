@@ -35,62 +35,97 @@ interface RouteParams {
 }
 
 /**
- * Actualiza un item específico del menú de administración.
+ * PATCH /api/admin/menu/:id - Actualizar item de menú
  *
- * Permite modificar las propiedades de un item del menú como título, href, icono,
- * orden, estado, permisos y relaciones parent-child. Invalida el cache del menú
- * después de la actualización.
+ * Actualiza propiedades de un item específico del menú de administración.
+ * Permite cambios parciales: solo envía los campos que necesitas actualizar.
+ * Cache de menú se invalida automáticamente.
  *
- * **Endpoint Details**:
- * - Method: PATCH
- * - Route: /api/admin/menu/:id
- * - Auth: Requiere permiso "menu:manage"
- * - Content-Type: application/json
+ * **Autenticación**: Requerida (permiso: `menu:manage`)
  *
  * **Parámetros**:
- * - `:id` (path parameter): ID del item del menú a actualizar
- * - `title` (body, opcional): Nuevo título del item
- * - `href` (body, opcional): Nueva URL/ruta del item
- * - `icon` (body, opcional): Nuevo ícono del item
- * - `order` (body, opcional): Nueva posición del item
- * - `isActive` (body, opcional): Si el item está activo o no
- * - `permissionId` (body, opcional): Permiso requerido para ver el item
- * - `parentId` (body, opcional): ID del item padre (para menús anidados)
+ * - `:id` (path, requerido): UUID del item de menú a actualizar
  *
- * **Respuestas**:
- * - 200: Item actualizado exitosamente
- * - 400: Datos inválidos (validación Zod fallida)
- * - 403: Usuario no tiene permiso "menu:manage"
- * - 500: Error interno del servidor
+ * **Body Esperado** (todos los campos opcionales):
+ * ```json
+ * {
+ *   "title": "string (opcional, min 1 char)",
+ *   "href": "string (opcional, puede ser null)",
+ *   "icon": "string (opcional, puede ser null)",
+ *   "order": "number (opcional, entero para ordenamiento)",
+ *   "isActive": "boolean (opcional)",
+ *   "permissionId": "string (opcional, puede ser null)",
+ *   "parentId": "string (opcional, puede ser null, para anidación)"
+ * }
+ * ```
  *
- * **Flujo**:
- * 1. Valida que el usuario tiene permiso "menu:manage"
- * 2. Extrae el ID del item desde parámetros
- * 3. Obtiene el body JSON de la solicitud
- * 4. Valida los datos con `updateMenuItemSchema`
- * 5. Actualiza el item en la base de datos
- * 6. Invalida el cache del menú
- * 7. Retorna el item actualizado
+ * **Respuesta** (200):
+ * ```json
+ * {
+ *   "id": "uuid",
+ *   "title": "Usuarios Actualizado",
+ *   "href": "/admin/users",
+ *   "icon": "Users",
+ *   "order": 1,
+ *   "isActive": true,
+ *   "permissionId": "user:read",
+ *   "parentId": null,
+ *   "updatedAt": "2024-12-05T12:00:00Z"
+ * }
+ * ```
+ *
+ * **Errores**:
+ * - 400: Datos inválidos (title < 1 char, order no es número, etc)
+ * - 403: No autenticado o sin permiso `menu:manage`
+ * - 404: Item de menú no existe
+ * - 500: Error del servidor
+ *
+ * **Validaciones** (Zod schema):
+ * - title: opcional, min 1 char (si se proporciona)
+ * - href: opcional, puede ser null
+ * - icon: opcional, puede ser null
+ * - order: opcional, entero (si se proporciona)
+ * - isActive: opcional, boolean
+ * - permissionId: opcional, puede ser null
+ * - parentId: opcional, puede ser null (anidación jerarquía)
  *
  * **Efectos Secundarios**:
- * - Invalida el cache del menú (reconstruido en próxima lectura)
- * - Puede afectar la visibilidad de items para usuarios
+ * - Actualiza registro en tabla `MenuItem`
+ * - Invalida caché de menú (se reconstruye en próxima lectura)
+ * - Cambios visibles inmediatamente en UI para usuarios autenticados
+ * - Si cambia parentId, puede afectar estructura jerárquica
  *
- * @async
- * @param {Request} request - La solicitud HTTP con body JSON
- * @param {RouteParams} context - Contexto de la ruta con parámetros
- * @returns {Promise<NextResponse>} Item del menú actualizado
+ * @method PATCH
+ * @route /api/admin/menu/:id
+ * @auth Requerida (JWT válido)
+ * @permission menu:manage
+ *
+ * @param {Request} request - Request con body JSON (actualización parcial)
+ * @param {RouteParams} context - Parámetros de ruta con `id`
+ * @returns {Promise<NextResponse>} Item actualizado (200) o error
  *
  * @example
  * ```typescript
- * // Update menu item
- * const response = await fetch('/api/admin/menu/menu-123', {
+ * // Actualizar solo el título de un item
+ * const response = await fetch('/api/admin/menu/users-menu-id', {
  *   method: 'PATCH',
- *   headers: { 'Content-Type': 'application/json' },
- *   body: JSON.stringify({ title: 'New Title', order: 5 }),
- * });
- * const updated = await response.json();
+ *   headers: {
+ *     'Content-Type': 'application/json',
+ *     'Authorization': `Bearer ${token}`
+ *   },
+ *   body: JSON.stringify({
+ *     title: 'Gestión de Usuarios',
+ *     order: 2
+ *   })
+ * })
+ * const updated = await response.json()
+ * console.log(`Actualizado: ${updated.title}`)
  * ```
+ *
+ * @see {@link ./route.ts#GET} para listar todos los items
+ * @see {@link ./route.ts#POST} para crear nuevo item
+ * @see {@link ./route.ts#DELETE} para eliminar item
+ * @see {@link ../reorder/route.ts} para reordenar múltiples items
  */
 export async function PATCH(request: Request, { params }: RouteParams) {
   const { id } = await params;
@@ -118,59 +153,79 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 }
 
 /**
- * Elimina un item específico del menú de administración.
+ * DELETE /api/admin/menu/:id - Eliminar item de menú
  *
- * Remueve un item del menú del sistema, invalidando el cache para reflejar
- * los cambios en la próxima lectura. Esta operación es destructiva y no se
- * puede deshacer sin una copia de seguridad.
+ * Elimina permanentemente un item del menú de administración.
+ * Operación destructiva sin confirmación. Cache de menú se invalida automáticamente.
+ * Items hijo pueden quedar huérfanos si tenían relación parent-child.
  *
- * **Endpoint Details**:
- * - Method: DELETE
- * - Route: /api/admin/menu/:id
- * - Auth: Requiere permiso "menu:manage"
- * - Content-Type: application/json
+ * **Autenticación**: Requerida (permiso: `menu:manage`)
  *
  * **Parámetros**:
- * - `:id` (path parameter): ID del item del menú a eliminar
+ * - `:id` (path, requerido): UUID del item de menú a eliminar
  *
- * **Respuestas**:
- * - 204: Item eliminado exitosamente (sin contenido en respuesta)
- * - 403: Usuario no tiene permiso "menu:manage"
- * - 500: Error interno del servidor
+ * **Body**: Vacío (no requiere body)
  *
- * **Flujo**:
- * 1. Valida que el usuario tiene permiso "menu:manage"
- * 2. Extrae el ID del item desde parámetros
- * 3. Elimina el item de la base de datos
- * 4. Invalida el cache del menú
- * 5. Retorna 204 No Content
+ * **Respuesta** (204):
+ * ```
+ * Sin contenido (204 No Content)
+ * ```
+ *
+ * **Errores**:
+ * - 403: No autenticado o sin permiso `menu:manage`
+ * - 404: Item de menú no existe
+ * - 500: Error del servidor
  *
  * **Efectos Secundarios**:
- * - Elimina el item del menú permanentemente
- * - Invalida el cache del menú (reconstruido en próxima lectura)
- * - Los usuarios no verán más este item en el menú
- * - Si el item tenía subitems (children), pueden quedar huérfanos
+ * - Elimina registro en tabla `MenuItem` permanentemente (sin soft-delete)
+ * - Invalida caché de menú (se reconstruye en próxima lectura)
+ * - Item desaparece del menú inmediatamente para todos los usuarios
+ * - Items hijo (con este item como parentId) pueden quedar huérfanos
+ * - **Advertencia**: No hay deshacer, solo disponible a través de backup de BD
  *
- * **Seguridad**:
- * - Operación destructiva, requiere permiso específico
- * - No hay confirmación o soft-delete
- * - Considerar implementar soft-delete o confirmación en futuro
+ * **Consideraciones**:
+ * - Operación irreversible sin backup
+ * - No hay soft-delete implementado
+ * - Afecta jerarquía si el item tenía subitems
+ * - Requiere permiso especial: `menu:manage`
  *
- * @async
- * @param {Request} request - La solicitud HTTP
- * @param {RouteParams} context - Contexto de la ruta con parámetros
- * @returns {Promise<NextResponse>} Respuesta 204 No Content
+ * **Casos de Uso**:
+ * - Remover opciones de menú obsoletas
+ * - Limpiar estructura de navegación
+ * - Eliminar accesos específicos del admin
+ *
+ * @method DELETE
+ * @route /api/admin/menu/:id
+ * @auth Requerida (JWT válido)
+ * @permission menu:manage
+ *
+ * @param {Request} request - Request HTTP (sin body)
+ * @param {RouteParams} context - Parámetros de ruta con `id`
+ * @returns {Promise<NextResponse>} 204 No Content o error
  *
  * @example
  * ```typescript
- * // Delete menu item
- * const response = await fetch('/api/admin/menu/menu-123', {
+ * // Eliminar un item de menú
+ * const response = await fetch('/api/admin/menu/users-menu-id', {
  *   method: 'DELETE',
- * });
+ *   headers: {
+ *     'Authorization': `Bearer ${token}`
+ *   }
+ * })
+ *
  * if (response.status === 204) {
- *   console.log('Menu item deleted successfully');
+ *   console.log('Item eliminado del menú')
+ *   // Refrescar UI para mostrar cambios
+ *   refreshMenuItems()
+ * } else if (response.status === 404) {
+ *   console.error('Item no encontrado')
  * }
  * ```
+ *
+ * @see {@link ./route.ts#GET} para listar todos los items
+ * @see {@link ./route.ts#POST} para crear nuevo item
+ * @see {@link ./route.ts#PATCH} para actualizar item
+ * @see {@link ../reorder/route.ts} para reordenar múltiples items
  */
 export async function DELETE(request: Request, { params }: RouteParams) {
   const { id } = await params;

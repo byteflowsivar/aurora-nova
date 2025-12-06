@@ -18,42 +18,76 @@ import { updateProfileSchema } from '@/modules/shared/validations';
 import { z } from 'zod';
 
 /**
- * Obtiene el perfil completo del usuario autenticado.
+ * GET /api/customer/profile - Obtener perfil del usuario actual
  *
- * Retorna toda la información personal del usuario actual incluyendo nombre,
- * email, imagen de perfil y otros datos asociados.
+ * Obtiene la información completa del perfil del usuario autenticado.
+ * Incluye nombre, email, imagen de perfil, y otros datos personales.
+ * Útil para mostrar información del usuario en UI o para pre-llenar formularios.
  *
- * **Endpoint Details**:
- * - Method: GET
- * - Route: /api/customer/profile
- * - Auth: Requiere usuario autenticado (JWT valido)
- * - Content-Type: application/json
+ * **Autenticación**: Requerida (usuario autenticado con JWT válido)
  *
- * **Respuestas**:
- * - 200: Perfil del usuario obtenido exitosamente
- * - 401: Usuario no autenticado
- * - 500: Error interno del servidor
+ * **Parámetros**: Ninguno (datos del usuario se extraen de sesión)
  *
- * **Flujo**:
- * 1. Valida que el usuario está autenticado via `auth()`
- * 2. Extrae el `userId` de la sesión
- * 3. Obtiene el perfil completo desde la base de datos
- * 4. Retorna los datos del perfil en formato JSON
+ * **Respuesta** (200):
+ * ```json
+ * {
+ *   "id": "uuid",
+ *   "firstName": "Juan",
+ *   "lastName": "Pérez",
+ *   "email": "juan.perez@example.com",
+ *   "image": "https://example.com/avatar.jpg",
+ *   "createdAt": "2024-01-01T00:00:00Z",
+ *   "updatedAt": "2024-12-05T12:00:00Z"
+ * }
+ * ```
  *
- * @async
- * @returns {Promise<NextResponse>} Objeto con los datos del perfil del usuario
- * @returns {Promise<NextResponse>} En caso de error, retorna { error: string } con status 401 o 500
+ * **Errores**:
+ * - 401: No autenticado (sin JWT o JWT inválido)
+ * - 500: Error del servidor
+ *
+ * **Efectos Secundarios**:
+ * - Sin efectos secundarios (lectura pura)
+ * - No modifica datos
+ * - No emite eventos de auditoría
+ *
+ * **Casos de Uso**:
+ * - Mostrar información del usuario en header/navbar
+ * - Pre-llenar formulario de edición de perfil
+ * - Verificar datos de usuario en cliente
+ * - Dashboard personal del usuario
+ *
+ * **Performance**:
+ * - Rápida (una query a BD por usuario)
+ * - Típicamente < 50ms
+ * - Sin paginación o filtros
+ *
+ * @method GET
+ * @route /api/customer/profile
+ * @auth Requerida (JWT válido)
+ *
+ * @returns {Promise<NextResponse>} Datos del perfil (200) o error
  *
  * @example
  * ```typescript
- * // Fetch user profile
- * const response = await fetch('/api/customer/profile');
- * const profile = await response.json();
- * console.log('User profile:', profile);
+ * // Obtener perfil del usuario actual
+ * const response = await fetch('/api/customer/profile', {
+ *   headers: {
+ *     'Authorization': `Bearer ${token}`
+ *   }
+ * })
+ *
+ * if (response.ok) {
+ *   const profile = await response.json()
+ *   console.log(`Hola ${profile.firstName}!`)
+ *   // Mostrar en UI, guardar en estado, etc.
+ * } else if (response.status === 401) {
+ *   console.log('Usuario no autenticado, redirigir a login')
+ * }
  * ```
  *
- * @see {@link updateUserProfile} para actualizar el perfil
- * @see {@link getUserProfile} para obtener los detalles del usuario desde la BD
+ * @see {@link ./route.ts#PATCH} para actualizar perfil
+ * @see {@link ../menu/route.ts} para obtener menú personalizado del usuario
+ * @see {@link ../change-password/route.ts} para cambiar contraseña
  */
 export async function GET() {
   try {
@@ -79,65 +113,96 @@ export async function GET() {
 }
 
 /**
- * Actualiza la información personal del usuario autenticado.
+ * PATCH /api/customer/profile - Actualizar perfil del usuario actual
  *
- * Permite que el usuario actualice su nombre, apellido, imagen de perfil y otros
- * datos personales. Valida los datos con `updateProfileSchema` antes de guardar.
+ * Actualiza información personal del usuario autenticado.
+ * Permite cambios parciales: solo envía los campos que necesitas actualizar.
+ * Solo permite actualizar datos personales, no email ni permisos.
  *
- * **Endpoint Details**:
- * - Method: PATCH
- * - Route: /api/customer/profile
- * - Auth: Requiere usuario autenticado (JWT valido)
- * - Content-Type: application/json
+ * **Autenticación**: Requerida (usuario autenticado con JWT válido)
  *
- * **Parámetros** (en el body):
- * - `firstName` (string, opcional): Nombre del usuario
- * - `lastName` (string, opcional): Apellido del usuario
- * - `image` (string, opcional): URL de la imagen de perfil
- * - Otros campos según `updateProfileSchema`
+ * **Body Esperado** (todos los campos opcionales):
+ * ```json
+ * {
+ *   "firstName": "string (opcional, nombre del usuario)",
+ *   "lastName": "string (opcional, apellido del usuario)",
+ *   "image": "string (opcional, URL de imagen de perfil)"
+ * }
+ * ```
  *
- * **Respuestas**:
- * - 200: Perfil actualizado exitosamente (retorna usuario actualizado)
+ * **Respuesta** (200):
+ * ```json
+ * {
+ *   "id": "uuid",
+ *   "firstName": "Juan",
+ *   "lastName": "García",
+ *   "email": "juan.perez@example.com",
+ *   "image": "https://example.com/avatar.jpg",
+ *   "updatedAt": "2024-12-05T12:00:00Z"
+ * }
+ * ```
+ *
+ * **Errores**:
  * - 400: Datos inválidos (validación Zod fallida)
- * - 401: Usuario no autenticado
- * - 500: Error interno del servidor
+ * - 401: No autenticado
+ * - 500: Error del servidor
  *
- * **Flujo**:
- * 1. Valida que el usuario está autenticado via `auth()`
- * 2. Extrae el `userId` de la sesión
- * 3. Obtiene el body JSON de la solicitud
- * 4. Valida los datos con `updateProfileSchema`
- * 5. Actualiza el perfil en la base de datos
- * 6. Retorna el usuario actualizado
+ * **Validaciones** (Zod schema):
+ * - firstName: opcional, string
+ * - lastName: opcional, string
+ * - image: opcional, string (URL válida)
+ * - No se pueden modificar: email, contraseña, permisos, roles
+ *
+ * **Efectos Secundarios**:
+ * - Actualiza registro en tabla `User`
+ * - Cambios visibles inmediatamente (no requiere logout)
+ * - sesión se actualiza automáticamente
  *
  * **Seguridad**:
- * - Solo el usuario autenticado puede actualizar su propio perfil (verificado por userId de sesión)
+ * - Solo usuario autenticado puede actualizar su propio perfil
  * - Validación estricta con Zod para evitar inyecciones
- * - No permite cambios de email ni permisos (solo datos personales)
+ * - No permite cambios de email ni permisos
+ * - No requiere confirmación de contraseña (cambios personales)
  *
- * @async
- * @param {Request} request - La solicitud HTTP con el body JSON
- * @returns {Promise<NextResponse>} Usuario actualizado con todos sus datos
- * @returns {Promise<NextResponse>} En caso de error, retorna { error: string, details: ZodIssue[] }
+ * **Casos de Uso**:
+ * - Actualizar nombre y apellido
+ * - Cambiar foto de perfil
+ * - Completar información personal
+ * - Editar datos en formulario de cuenta
+ *
+ * @method PATCH
+ * @route /api/customer/profile
+ * @auth Requerida (JWT válido)
+ *
+ * @param {Request} request - Request con body JSON (actualización parcial)
+ * @returns {Promise<NextResponse>} Usuario actualizado (200) o error
  *
  * @example
  * ```typescript
- * // Update user profile
+ * // Actualizar foto de perfil
  * const response = await fetch('/api/customer/profile', {
  *   method: 'PATCH',
- *   headers: { 'Content-Type': 'application/json' },
+ *   headers: {
+ *     'Content-Type': 'application/json',
+ *     'Authorization': `Bearer ${token}`
+ *   },
  *   body: JSON.stringify({
- *     firstName: 'Juan',
- *     lastName: 'García',
- *     image: 'https://example.com/avatar.jpg'
- *   }),
- * });
- * const updatedProfile = await response.json();
- * console.log('Profile updated:', updatedProfile);
+ *     image: 'https://example.com/new-avatar.jpg'
+ *   })
+ * })
+ *
+ * if (response.ok) {
+ *   const updated = await response.json()
+ *   console.log(`Perfil actualizado: ${updated.firstName}`)
+ * } else if (response.status === 400) {
+ *   const error = await response.json()
+ *   console.error('Datos inválidos:', error.details)
+ * }
  * ```
  *
- * @see {@link updateProfileSchema} para validación de datos
- * @see {@link updateUserProfile} para operación de actualización
+ * @see {@link ./route.ts#GET} para obtener perfil
+ * @see {@link ../change-password/route.ts} para cambiar contraseña
+ * @see {@link ../menu/route.ts} para obtener menú personalizado
  */
 export async function PATCH(request: Request) {
   try {

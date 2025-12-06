@@ -20,91 +20,119 @@ import { eventBus, SystemEvent } from "@/lib/events"
 import { EventArea } from "@/lib/events/event-area"
 
 /**
- * Cambia la contraseña del usuario autenticado.
+ * POST /api/customer/change-password - Cambiar contraseña del usuario
  *
- * Valida que la contraseña actual es correcta, verifica que la nueva contraseña
- * cumple con los requisitos de seguridad, y actualiza la contraseña en la base de datos.
- * Emite un evento de auditoría y puede revocar otras sesiones para mayor seguridad.
+ * Cambia la contraseña del usuario autenticado con validación de seguridad.
+ * Requiere contraseña actual válida. Nueva contraseña debe cumplir requisitos.
+ * Emite evento de auditoría. Puede revocar otras sesiones para mayor seguridad.
  *
- * **Endpoint Details**:
- * - Method: POST
- * - Route: /api/customer/change-password
- * - Auth: Requiere usuario autenticado (JWT válido)
- * - Content-Type: application/json
+ * **Autenticación**: Requerida (usuario autenticado con JWT válido)
  *
- * **Parámetros** (en el body):
- * - `currentPassword` (string, requerido): Contraseña actual del usuario para validación
- * - `newPassword` (string, requerido): Nueva contraseña (debe pasar validación Zod)
- * - `confirmPassword` (string, requerido): Confirmación de nueva contraseña (debe coincidir)
- *
- * **Respuestas**:
- * - 200: Contraseña actualizada exitosamente
- *   - `success: true`
- *   - `message: "Contraseña actualizada exitosamente"`
- *   - `sessionsRevoked: number` (número de sesiones revocadas si aplica)
- * - 400: Datos inválidos o contraseña actual incorrecta
- *   - `error: string` (mensaje de error específico)
- *   - `details: ZodIssue[]` (si es validación Zod)
- * - 401: Usuario no autenticado
- * - 500: Error interno del servidor
- *
- * **Flujo**:
- * 1. Valida que el usuario está autenticado via `auth()`
- * 2. Extrae el `userId` de la sesión
- * 3. Obtiene el body JSON de la solicitud
- * 4. Valida los datos con `changePasswordSchema`
- * 5. Llama a `changeUserPassword` que:
- *    - Verifica que la contraseña actual es correcta (comparación bcryptjs)
- *    - Hashea la nueva contraseña
- *    - Actualiza la contraseña en la base de datos
- *    - Opcionalmente revoca otras sesiones
- * 6. Emite evento `PASSWORD_CHANGED` para auditoría
- * 7. Retorna el resultado con número de sesiones revocadas
- *
- * **Seguridad**:
- * - La contraseña actual debe ser validada antes de permitir el cambio
- * - Nueva contraseña debe cumplir requisitos (length, complejidad, etc)
- * - Validación estricta con Zod
- * - Logging de cambios de contraseña para auditoría
- * - Evento emitido para sistemas de monitoreo
- * - Las sesiones pueden ser revocadas forzando re-login después de cambio
- *
- * **Eventos Emitidos**:
- * - `SystemEvent.PASSWORD_CHANGED`: Evento de auditoría para cambio de contraseña
- *   - Contiene: userId, email, changedBy ('self')
- *   - Area: CUSTOMER
- *
- * @async
- * @param {Request} request - La solicitud HTTP con el body JSON
- * @returns {Promise<NextResponse>} Objeto con { success: true, message: string, sessionsRevoked: number }
- * @returns {Promise<NextResponse>} En caso de error, retorna { error: string } o { error: string, details: ZodIssue[] }
- *
- * @example
- * ```typescript
- * // Change user password
- * const response = await fetch('/api/customer/change-password', {
- *   method: 'POST',
- *   headers: { 'Content-Type': 'application/json' },
- *   body: JSON.stringify({
- *     currentPassword: 'OldPass123!',
- *     newPassword: 'NewPass456!',
- *     confirmPassword: 'NewPass456!'
- *   }),
- * });
- *
- * if (response.ok) {
- *   const result = await response.json();
- *   console.log('Password changed:', result);
- *   // Si sessionsRevoked > 0, el usuario debe hacer login nuevamente
- * } else {
- *   const error = await response.json();
- *   console.error('Error:', error.error);
+ * **Body Esperado**:
+ * ```json
+ * {
+ *   "currentPassword": "string (requerido, contraseña actual)",
+ *   "newPassword": "string (requerido, nueva contraseña)",
+ *   "confirmPassword": "string (requerido, debe coincidir con newPassword)"
  * }
  * ```
  *
- * @see {@link changePasswordSchema} para validación de datos
- * @see {@link changeUserPassword} para operación de cambio de contraseña
- * @see {@link SystemEvent.PASSWORD_CHANGED} para eventos de auditoría
+ * **Respuesta** (200):
+ * ```json
+ * {
+ *   "success": true,
+ *   "message": "Contraseña actualizada exitosamente",
+ *   "sessionsRevoked": 2
+ * }
+ * ```
+ *
+ * **Errores**:
+ * - 400: Contraseña actual incorrecta o datos inválidos
+ *   - `error: "Contraseña actual incorrecta"` (si currentPassword es inválida)
+ *   - `error: "Datos inválidos", details: ZodIssue[]` (si falla validación Zod)
+ * - 401: No autenticado
+ * - 500: Error del servidor
+ *
+ * **Validaciones** (Zod schema):
+ * - currentPassword: requerido, string
+ * - newPassword: requerido, string (requisitos de complejidad según schema)
+ * - confirmPassword: requerido, debe coincidir exactamente con newPassword
+ * - La contraseña actual se valida contra hash bcryptjs en BD
+ *
+ * **Requisitos de Nueva Contraseña**:
+ * - Mínimo 8 caracteres (típicamente según schema)
+ * - Puede requerir mayúsculas, minúsculas, números, caracteres especiales
+ * - No puede ser igual a contraseña anterior
+ * - Validación estricta según `changePasswordSchema`
+ *
+ * **Efectos Secundarios**:
+ * - Actualiza hash de contraseña en tabla `User`
+ * - Emite evento `PASSWORD_CHANGED` para auditoría
+ * - Puede revocar sesiones activas (sessionsRevoked indica cantidad)
+ * - Si se revocan sesiones, usuario debe hacer login nuevamente
+ * - Cambio inmediato, sin confirmación por email
+ *
+ * **Seguridad**:
+ * - Requiere contraseña actual válida (previene cambios no autorizados)
+ * - Validación estricta con Zod
+ * - Nueva contraseña se hashea con bcryptjs
+ * - Evento registrado para auditoría y monitoreo
+ * - Logs estructurados de cambios
+ * - Sesiones pueden ser revocadas para forzar re-login
+ *
+ * **Casos de Uso**:
+ * - Usuario quiere cambiar contraseña desde configuración de cuenta
+ * - Cambio de contraseña periódico por política de seguridad
+ * - Usuario recupera cuenta y cambia contraseña
+ * - Cambio forzado después de incidente de seguridad
+ *
+ * **Flujo de Ejecución**:
+ * 1. Verifica autenticación del usuario
+ * 2. Valida datos con `changePasswordSchema`
+ * 3. Verifica que contraseña actual es correcta (comparación bcryptjs)
+ * 4. Hashea nueva contraseña
+ * 5. Actualiza en BD
+ * 6. Emite evento `PASSWORD_CHANGED` para auditoría
+ * 7. Retorna éxito con número de sesiones revocadas
+ *
+ * @method POST
+ * @route /api/customer/change-password
+ * @auth Requerida (JWT válido)
+ *
+ * @param {Request} request - Request con body JSON
+ * @returns {Promise<NextResponse>} Éxito (200) o error con detalles
+ *
+ * @example
+ * ```typescript
+ * // Cambiar contraseña del usuario
+ * const response = await fetch('/api/customer/change-password', {
+ *   method: 'POST',
+ *   headers: {
+ *     'Content-Type': 'application/json',
+ *     'Authorization': `Bearer ${token}`
+ *   },
+ *   body: JSON.stringify({
+ *     currentPassword: 'ContraseñaActual123!',
+ *     newPassword: 'NuevaContraseña456!',
+ *     confirmPassword: 'NuevaContraseña456!'
+ *   })
+ * })
+ *
+ * if (response.ok) {
+ *   const result = await response.json()
+ *   console.log('Contraseña cambiad:', result.message)
+ *   if (result.sessionsRevoked > 0) {
+ *     console.log('Sesiones revocadas, haz login nuevamente')
+ *   }
+ * } else if (response.status === 400) {
+ *   const error = await response.json()
+ *   console.error('Error:', error.error)
+ * }
+ * ```
+ *
+ * @see {@link ./route.ts#GET} para obtener perfil
+ * @see {@link ../profile/route.ts} para actualizar datos personales
+ * @see {@link /api/auth/reset-password/route.ts} para recuperación de contraseña
  */
 export async function POST(request: Request) {
   try {

@@ -14,72 +14,121 @@
 import { NextResponse } from 'next/server';
 
 /**
- * Verifica el estado de salud de la aplicación.
+ * GET /api/public/health - Verificar estado de salud de la aplicación
  *
- * Endpoint público sin autenticación que retorna el estado actual del servicio.
- * Puede ser extendido en el futuro para incluir chequeos de conectividad a BD,
- * servicios externos, memoria disponible, etc.
+ * Endpoint público que verifica si la aplicación está funcionando correctamente.
+ * Sin autenticación requerida. Usado por load balancers, monitoring sistemas, k8s probes.
+ * Responde rápidamente sin checks pesados (por performance en orchestration).
  *
- * **Endpoint Details**:
- * - Method: GET
- * - Route: /api/public/health
- * - Auth: No requiere autenticación (público)
- * - Content-Type: application/json
- * - CORS: Accesible desde cualquier origen (considerar restricciones en producción)
+ * **Autenticación**: No requerida (endpoint público)
  *
- * **Respuestas**:
- * - 200: Aplicación está funcionando correctamente
- *   - `status: "ok"`
- *   - `timestamp: string` (ISO 8601 format)
- * - 503: Service Unavailable - La aplicación no está funcionando correctamente
- *   - `status: "error"`
- *   - `error: string` (mensaje de error específico)
+ * **Parámetros**: Ninguno
  *
- * **Flujo**:
- * 1. Try: Intenta ejecutar el chequeo de salud
- * 2. Retorna el estado actual y timestamp del servidor
- * 3. Catch: Si ocurre un error, retorna status 503 con mensaje de error
+ * **Respuesta** (200 - Healthy):
+ * ```json
+ * {
+ *   "status": "ok",
+ *   "timestamp": "2024-12-05T12:00:00.123Z"
+ * }
+ * ```
  *
- * **Uso Típico**:
- * - Load balancers chequean este endpoint cada pocos segundos
- * - Herramientas de monitoreo (Uptime Robot, StatusPage, etc) lo utilizan
- * - Kubernetes liveness/readiness probes pueden dirigirse a este endpoint
- * - CI/CD pipelines lo usan para validar deployment exitoso
+ * **Errores**:
+ * - 503: Service Unavailable (error no especificado, típicamente nunca ocurre)
+ *   ```json
+ *   {
+ *     "status": "error",
+ *     "error": "Mensaje de error específico"
+ *   }
+ *   ```
  *
- * **Extensiones Futuras**:
- * - Chequear conectividad a base de datos (Prisma)
+ * **Características**:
+ * - Responde en < 10ms en operaciones normales
+ * - No conecta a BD (por performance)
+ * - No verifica servicios externos
+ * - Simplemente retorna estado y timestamp
+ * - Idempotente: múltiples llamadas dan mismo resultado
+ * - Sin efectos secundarios
+ *
+ * **Casos de Uso**:
+ * - Load balancers (verifican cada 5-30 segundos)
+ * - Kubernetes liveness probe (detecta procesos muertos)
+ * - Kubernetes readiness probe (detecta no listo para tráfico)
+ * - Monitoreo de uptime (Uptime Robot, StatusPage, etc)
+ * - CI/CD pipelines (validar deployment exitoso)
+ * - Health dashboards internas
+ * - Verificar conectividad desde clientes
+ *
+ * **Extensiones Futuras Posibles**:
+ * - Chequeo de conectividad a BD (Prisma ping)
  * - Verificar estado de servicios externos (Redis, APIs)
- * - Chequear uso de memoria y CPU
- * - Incluir versión de la aplicación
- * - Incluir información de build
+ * - Métricas de CPU/memoria disponible
+ * - Versión de aplicación y build info
+ * - Timestamp de último deployment
+ * - Información de base de datos (conexiones activas, etc)
  *
- * @async
- * @returns {Promise<NextResponse>} Objeto con estado de salud y timestamp
- *   - 200: { status: "ok", timestamp: ISO8601String }
- *   - 503: { status: "error", error: string }
+ * **Performance**:
+ * - Muy rápido (< 10ms típicamente)
+ * - Sin I/O pesado
+ * - Sin lógica de negocio
+ * - Crítico mantener así para orchestration
+ *
+ * **Seguridad**:
+ * - Endpoint público (sin JWT requerido)
+ * - No expone información sensible
+ * - No puede causar cambios en sistema
+ * - CORS permitido (accesible desde navegadores)
+ *
+ * @method GET
+ * @route /api/public/health
+ * @auth No requerida (público)
+ *
+ * @returns {Promise<NextResponse>} Status y timestamp (200) o error (503)
  *
  * @example
  * ```typescript
- * // Health check simple
- * const response = await fetch('/api/public/health');
- * const data = await response.json();
- * console.log('Health status:', data.status); // "ok"
- * console.log('Server time:', data.timestamp); // "2024-12-05T..."
+ * // Health check simple desde cliente
+ * const response = await fetch('/api/public/health')
+ * const data = await response.json()
+ * console.log(`Status: ${data.status}`) // "ok"
+ * console.log(`Timestamp: ${data.timestamp}`) // "2024-12-05T12:00:00.123Z"
  *
- * // Con curl
+ * // Monitoreo periódico
+ * setInterval(async () => {
+ *   const response = await fetch('/api/public/health')
+ *   if (!response.ok) {
+ *     console.error('Aplicación no disponible!')
+ *   }
+ * }, 30000) // Cada 30 segundos
+ *
+ * // Con curl (para scripts)
  * curl https://api.example.com/api/public/health
  * // Response: {"status":"ok","timestamp":"2024-12-05T10:30:45.123Z"}
  *
- * // En Docker/Kubernetes healthcheck
- * HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \\
+ * // Docker healthcheck
+ * HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
  *   CMD curl -f http://localhost:3000/api/public/health || exit 1
+ *
+ * // Kubernetes liveness probe
+ * livenessProbe:
+ *   httpGet:
+ *     path: /api/public/health
+ *     port: 3000
+ *   initialDelaySeconds: 10
+ *   periodSeconds: 10
  * ```
  *
+ * @important
+ * - **Crítico para operaciones**: Debe mantener minimal y rápido
+ * - **No agregar checks pesados**: Afecta a orchestration y escalabilidad
+ * - **Responder siempre < 1 segundo**: Estándar industrial para health checks
+ * - **Sin conectividad BD**: Solo si absolutamente necesario
+ *
  * @remarks
- * - Este endpoint es **crítico para operaciones**. No debe tener lógica pesada.
- * - Debe responder en menos de 1 segundo en operaciones normales.
- * - No debe conectarse a BD a menos que sea estrictamente necesario.
- * - Debe ser uno de los primeros endpoints en funcionar ante problemas.
+ * Este endpoint es **especial** en infraestructura. Si falla o es lento:
+ * - Load balancers pueden sacarte del pool de servidores
+ * - Kubernetes podría reiniciar tu instancia
+ * - Usuarios podrían pensar que sistema está caído
+ * - Cascadas de fallos pueden ocurrir (retry storms)
  */
 export async function GET() {
   try {
