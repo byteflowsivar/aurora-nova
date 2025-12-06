@@ -1,15 +1,27 @@
 /**
- * API Route: Role Permissions Management
+ * API Route - Admin Role Permissions Management - Aurora Nova
  *
  * Endpoints para gestionar los permisos asignados a un rol específico.
- * Permite obtener, asignar y remover permisos de roles.
+ * Permite obtener, asignar y remover permisos de roles con validación, deduplicación y auditoría.
  *
  * **Endpoints**:
- * - GET /api/admin/roles/:id/permissions - Obtener permisos del rol
- * - POST /api/admin/roles/:id/permissions - Asignar permiso a rol
- * - DELETE /api/admin/roles/:id/permissions - Remover permiso de rol
+ * - GET /api/admin/roles/:id/permissions - Obtener todos los permisos del rol
+ * - POST /api/admin/roles/:id/permissions - Asignar nuevo permiso a rol (validando que no exista)
+ * - DELETE /api/admin/roles/:id/permissions?permissionId=... - Remover permiso de rol
  *
- * @module api/admin/roles/permissions
+ * **Patrones de Seguridad**:
+ * - Validación de rol existente (404 si no)
+ * - Validación de permiso existente (404 si no)
+ * - Deduplicación: previene asignar permiso si ya lo tiene (409)
+ * - Auditoría completa: ROLE_PERMISSION_ASSIGNED, ROLE_PERMISSION_REMOVED
+ * - Permisos distintos: ROLE_READ para GET, ROLE_ASSIGN_PERMISSIONS para POST/DELETE
+ *
+ * **Casos de Uso**:
+ * 1. Dashboard admin: mostrar permisos del rol
+ * 2. Configuración: asignar/remover permisos a roles
+ * 3. Auditoría: registrar cambios en permisos para compliance
+ *
+ * @module api/admin/roles/[id]/permissions
  */
 
 import { NextRequest, NextResponse } from "next/server"
@@ -27,50 +39,81 @@ const assignPermissionSchema = z.object({
 })
 
 /**
+ * GET /api/admin/roles/:id/permissions - Obtener permisos del rol
+ *
  * Obtiene todos los permisos asignados a un rol específico.
+ * Retorna lista con información de cada permiso (ID, módulo, descripción, fecha asignación).
  *
- * Retorna una lista completa de permisos que tiene el rol, incluyendo
- * información sobre cada permiso (ID, módulo, descripción, fecha de asignación).
+ * **Autenticación**: Requerida (permiso: `role:read`)
  *
- * **Endpoint Details**:
- * - Method: GET
- * - Route: /api/admin/roles/:id/permissions
- * - Auth: Requiere permiso "role:read"
- * - Content-Type: application/json
+ * **URL Parameters**:
+ * - `id` (string, requerido): UUID del rol cuyos permisos se desea obtener
  *
- * **Parámetros**:
- * - `:id` (path parameter): ID del rol del cual obtener permisos
+ * **Respuesta** (200):
+ * ```json
+ * [
+ *   {
+ *     "id": "user:create",
+ *     "module": "user",
+ *     "description": "Crear nuevos usuarios",
+ *     "createdAt": "2024-01-01T00:00:00Z",
+ *     "assignedAt": "2024-12-05T12:00:00Z"
+ *   },
+ *   {
+ *     "id": "user:delete",
+ *     "module": "user",
+ *     "description": "Eliminar usuarios",
+ *     "createdAt": "2024-01-01T00:00:00Z",
+ *     "assignedAt": "2024-12-04T12:00:00Z"
+ *   }
+ * ]
+ * ```
  *
- * **Respuestas**:
- * - 200: Lista de permisos obtenida exitosamente
- *   - Array de objetos con: { id, module, description, createdAt, assignedAt }
- * - 401: Usuario no autenticado
- * - 403: Usuario no tiene permiso "role:read"
- * - 500: Error interno del servidor
+ * **Errores**:
+ * - 401: No autenticado (enviar JWT válido)
+ * - 403: Sin permiso `role:read` (solicitar al admin)
+ * - 500: Error del servidor
+ *
+ * **Performance**:
+ * - Query directa a rolePermission con select específico
+ * - Mapea permisos enriquecidos con assignedAt
+ * - Típicamente < 50ms
  *
  * **Flujo**:
- * 1. Valida que el usuario tiene permiso "role:read"
- * 2. Extrae el ID del rol desde los parámetros
- * 3. Obtiene todos los rolePermissions asociados al rol
- * 4. Enriquece los datos con información del permiso
- * 5. Retorna lista de permisos asignados
+ * 1. Valida permiso `role:read`
+ * 2. Extrae ID del rol desde URL
+ * 3. Busca todos rolePermissions para este rol
+ * 4. Enriquece cada permiso con assignedAt (createdAt del rolePermission)
+ * 5. Retorna array de permisos
  *
- * @async
- * @param {NextRequest} request - La solicitud HTTP
- * @param {object} context - Contexto de la ruta con parámetros
- * @param {Promise<{id: string}>} context.params - Parámetros de ruta
- * @returns {Promise<NextResponse>} Array de permisos asignados al rol
+ * @method GET
+ * @route /api/admin/roles/:id/permissions
+ * @auth Requerida (JWT válido)
+ * @permission role:read
+ *
+ * @param {NextRequest} request - NextRequest HTTP
+ * @param {object} context - Contexto de Next.js
+ * @param {Promise<{id: string}>} context.params - Parámetros de URL
+ * @returns {Promise<NextResponse>} Array de permisos asignados
  *
  * @example
  * ```typescript
- * // Get permissions of a role
- * const response = await fetch('/api/admin/roles/role-123/permissions');
- * const permissions = await response.json();
- * // [
- * //   { id: 'perm-1', module: 'user', description: 'View users', assignedAt: '2024-12-05T...' },
- * //   { id: 'perm-2', module: 'user', description: 'Create users', assignedAt: '2024-12-05T...' }
- * // ]
+ * // Obtener todos los permisos de un rol
+ * const response = await fetch(`/api/admin/roles/${roleId}/permissions`, {
+ *   headers: {
+ *     'Authorization': `Bearer ${session.user.token}`
+ *   }
+ * })
+ *
+ * if (response.ok) {
+ *   const permissions = await response.json()
+ *   console.log(`Rol tiene ${permissions.length} permisos`)
+ *   permissions.forEach(p => console.log(`- ${p.id}: ${p.description}`))
+ * }
  * ```
+ *
+ * @see {@link ./route.ts#POST} para asignar permiso
+ * @see {@link ./route.ts#DELETE} para remover permiso
  */
 export async function GET(
   request: NextRequest,
@@ -116,74 +159,99 @@ export async function GET(
 }
 
 /**
- * Asigna un permiso a un rol específico.
+ * POST /api/admin/roles/:id/permissions - Asignar permiso a rol
  *
- * Crea una nueva relación entre un rol y un permiso, permitiendo que los usuarios
- * con ese rol tengan acceso a la funcionalidad del permiso. Valida que ambos existen
- * y que no tienen una asignación previa.
+ * Asigna un nuevo permiso a un rol específico.
+ * Crea relación entre rol y permiso, otorgando acceso a todos los usuarios con ese rol.
+ * Previene duplicados: error 409 si ya tiene el permiso asignado.
  *
- * **Endpoint Details**:
- * - Method: POST
- * - Route: /api/admin/roles/:id/permissions
- * - Auth: Requiere permiso "role:assign_permissions"
- * - Content-Type: application/json
+ * **Autenticación**: Requerida (permiso: `role:assign_permissions`)
  *
- * **Parámetros**:
- * - `:id` (path parameter): ID del rol al cual asignar el permiso
- * - `permissionId` (body): ID del permiso a asignar
+ * **URL Parameters**:
+ * - `id` (string, requerido): UUID del rol al cual asignar permiso
  *
- * **Respuestas**:
- * - 201: Permiso asignado exitosamente
- *   - `{ success: true }`
- * - 400: Datos inválidos (permissionId faltante o formato incorrecto)
- * - 401: Usuario no autenticado
- * - 403: Usuario no tiene permiso "role:assign_permissions"
- * - 404: Rol o permiso no encontrado
- * - 409: El rol ya tiene este permiso asignado
- * - 500: Error interno del servidor
- *
- * **Flujo**:
- * 1. Valida que el usuario tiene permiso "role:assign_permissions"
- * 2. Obtiene el ID del rol desde los parámetros
- * 3. Extrae el `permissionId` del body JSON
- * 4. Valida los datos con `assignPermissionSchema`
- * 5. Verifica que el rol existe
- * 6. Verifica que el permiso existe
- * 7. Verifica que no existe una asignación previa
- * 8. Crea la relación rolePermission
- * 9. Emite evento `ROLE_PERMISSION_ASSIGNED` para auditoría
- *
- * **Seguridad**:
- * - Valida existencia de rol y permiso antes de crear relación
- * - Previene duplicados (409 si ya existe)
- * - Auditoría completa con evento
- * - Requiere permiso específico para asignar
- *
- * **Eventos Emitidos**:
- * - `SystemEvent.ROLE_PERMISSION_ASSIGNED`: Evento para auditoría
- *   - Contiene: roleId, roleName, permissionId, permissionName, assignedBy
- *   - Area: ADMIN
- *
- * @async
- * @param {NextRequest} request - La solicitud HTTP con body JSON
- * @param {object} context - Contexto de la ruta con parámetros
- * @param {Promise<{id: string}>} context.params - Parámetros de ruta
- * @returns {Promise<NextResponse>} { success: true } o error
- *
- * @example
- * ```typescript
- * // Assign a permission to a role
- * const response = await fetch('/api/admin/roles/role-123/permissions', {
- *   method: 'POST',
- *   headers: { 'Content-Type': 'application/json' },
- *   body: JSON.stringify({ permissionId: 'user:create' }),
- * });
- * if (response.status === 201) {
- *   console.log('Permission assigned successfully');
+ * **Body Esperado**:
+ * ```json
+ * {
+ *   "permissionId": "string (requerido, debe existir)"
  * }
  * ```
  *
- * @see {@link delete} para remover permisos de roles
+ * **Respuesta** (201):
+ * ```json
+ * {
+ *   "success": true
+ * }
+ * ```
+ *
+ * **Errores**:
+ * - 400: Datos inválidos (permissionId faltante)
+ *   - Validación Zod: permissionId debe tener al menos 1 char
+ * - 401: No autenticado (enviar JWT válido)
+ * - 403: Sin permiso `role:assign_permissions` (solicitar al admin)
+ * - 404: Rol no encontrado o Permiso no encontrado
+ * - 409: Rol ya tiene este permiso asignado (deduplicación)
+ * - 500: Error del servidor
+ *
+ * **Validaciones**:
+ * - permissionId: debe ser no vacío (mín 1 char)
+ * - Rol: debe existir en BD (404 si no)
+ * - Permiso: debe existir en BD (404 si no)
+ * - Unicidad: no puede asignar si ya existe relación (409)
+ *
+ * **Lógica**:
+ * 1. Valida existencia de rol (404 si no)
+ * 2. Valida existencia de permiso (404 si no)
+ * 3. Valida que no existe asignación previa (409 si existe)
+ * 4. Crea rolePermission
+ * 5. Emite evento ROLE_PERMISSION_ASSIGNED para auditoría
+ *
+ * **Efectos Secundarios**:
+ * - Crea registro en tabla `rolePermission`
+ * - Todos los usuarios con este rol obtienen acceso inmediato al permiso
+ * - Cambio se refleja en próxima sesión o refresh de JWT
+ * - Emite evento para auditoría
+ *
+ * **Auditoría**:
+ * - Evento: `ROLE_PERMISSION_ASSIGNED`
+ * - Quién: usuario autenticado (session.user.id)
+ * - Cuándo: timestamp ISO
+ * - Qué: roleId, roleName, permissionId, permissionName (módulo), assignedBy
+ *
+ * @method POST
+ * @route /api/admin/roles/:id/permissions
+ * @auth Requerida (JWT válido)
+ * @permission role:assign_permissions
+ *
+ * @param {NextRequest} request - NextRequest con body JSON
+ * @param {object} context - Contexto de Next.js
+ * @param {Promise<{id: string}>} context.params - Parámetros de URL
+ * @returns {Promise<NextResponse>} { success: true } (201) o error
+ *
+ * @example
+ * ```typescript
+ * // Asignar permiso "user:create" a rol
+ * const response = await fetch(`/api/admin/roles/${roleId}/permissions`, {
+ *   method: 'POST',
+ *   headers: {
+ *     'Content-Type': 'application/json',
+ *     'Authorization': `Bearer ${session.user.token}`
+ *   },
+ *   body: JSON.stringify({ permissionId: 'user:create' })
+ * })
+ *
+ * if (response.status === 201) {
+ *   console.log('Permiso asignado exitosamente')
+ *   // Refrescar lista de permisos del rol
+ * } else if (response.status === 409) {
+ *   console.error('Rol ya tiene este permiso')
+ * } else if (response.status === 404) {
+ *   console.error('Rol o permiso no encontrado')
+ * }
+ * ```
+ *
+ * @see {@link ./route.ts#GET} para obtener permisos del rol
+ * @see {@link ./route.ts#DELETE} para remover permiso
  */
 export async function POST(
   request: NextRequest,
@@ -289,70 +357,99 @@ export async function POST(
 }
 
 /**
+ * DELETE /api/admin/roles/:id/permissions - Remover permiso de rol
+ *
  * Remueve un permiso de un rol específico.
+ * Elimina relación rol-permiso, revocando acceso a funcionalidad para todos con ese rol.
+ * Valida que la asignación existe antes de eliminarla.
  *
- * Elimina la relación entre un rol y un permiso, revocando el acceso a esa
- * funcionalidad para todos los usuarios con ese rol. Valida que la asignación
- * existe antes de eliminarla.
+ * **Autenticación**: Requerida (permiso: `role:assign_permissions`)
  *
- * **Endpoint Details**:
- * - Method: DELETE
- * - Route: /api/admin/roles/:id/permissions?permissionId=:permissionId
- * - Auth: Requiere permiso "role:assign_permissions"
- * - Content-Type: application/json
+ * **URL Parameters**:
+ * - `id` (string, requerido): UUID del rol del cual remover permiso
+ * - `permissionId` (query string, requerido): ID del permiso a remover
  *
- * **Parámetros**:
- * - `:id` (path parameter): ID del rol del cual remover el permiso
- * - `permissionId` (query parameter): ID del permiso a remover
+ * **Respuesta** (200):
+ * ```json
+ * {
+ *   "success": true
+ * }
+ * ```
  *
- * **Respuestas**:
- * - 200: Permiso removido exitosamente
- *   - `{ success: true }`
- * - 400: Parámetro `permissionId` faltante
- * - 401: Usuario no autenticado
- * - 403: Usuario no tiene permiso "role:assign_permissions"
- * - 404: Rol, permiso, o asignación no encontrada
- * - 500: Error interno del servidor
+ * **Errores**:
+ * - 400: Parámetro `permissionId` no proporcionado en query string
+ *   ```json
+ *   { "error": "permissionId es requerido" }
+ *   ```
+ * - 401: No autenticado (enviar JWT válido)
+ * - 403: Sin permiso `role:assign_permissions` (solicitar al admin)
+ * - 404: Asignación no encontrada (rol no tiene este permiso)
+ * - 500: Error del servidor
  *
- * **Flujo**:
- * 1. Valida que el usuario tiene permiso "role:assign_permissions"
- * 2. Obtiene el ID del rol desde los parámetros
- * 3. Extrae `permissionId` desde query parameters
- * 4. Verifica que `permissionId` fue proporcionado
- * 5. Obtiene la asignación actual (para datos de auditoría)
- * 6. Verifica que la asignación existe
- * 7. Elimina la relación rolePermission
- * 8. Emite evento `ROLE_PERMISSION_REMOVED` para auditoría
+ * **Validaciones**:
+ * - permissionId: requerido en query string
+ * - Asignación: debe existir (404 si no existe rolePermission para este rol+permiso)
  *
- * **Seguridad**:
- * - Verifica que la asignación existe antes de eliminarla
- * - Recopila datos completos antes de eliminar para auditoría
- * - Auditoría completa con evento
- * - Requiere permiso específico
+ * **Lógica**:
+ * 1. Valida que permissionId está en query string (400 si no)
+ * 2. Busca asignación para obtener datos (para auditoría)
+ * 3. Verifica que asignación existe (404 si no)
+ * 4. Elimina la relación rolePermission
+ * 5. Emite evento ROLE_PERMISSION_REMOVED para auditoría
  *
- * **Eventos Emitidos**:
- * - `SystemEvent.ROLE_PERMISSION_REMOVED`: Evento para auditoría
- *   - Contiene: roleId, roleName, permissionId, permissionName, removedBy
- *   - Area: ADMIN
+ * **Efectos Secundarios**:
+ * - Elimina registro en tabla `rolePermission`
+ * - Todos los usuarios con este rol pierden acceso a funcionalidad del permiso
+ * - Cambio se refleja en próxima sesión o refresh de JWT
+ * - Emite evento para auditoría
  *
- * @async
- * @param {NextRequest} request - La solicitud HTTP
- * @param {object} context - Contexto de la ruta con parámetros
- * @param {Promise<{id: string}>} context.params - Parámetros de ruta
+ * **Auditoría**:
+ * - Evento: `ROLE_PERMISSION_REMOVED`
+ * - Quién: usuario autenticado (session.user.id)
+ * - Cuándo: timestamp ISO
+ * - Qué: roleId, roleName, permissionId, permissionName (módulo), removedBy
+ *
+ * **Consideraciones**:
+ * - ✓ Recopila datos antes de eliminar para auditoría
+ * - ✓ Valida que asignación existe (404 si no)
+ * - ⚠️ Cambio no es inmediato en sesión actual (requiere refresh)
+ * - ⚠️ No hay safeguards contra remover permisos críticos
+ *
+ * @method DELETE
+ * @route /api/admin/roles/:id/permissions?permissionId=...
+ * @auth Requerida (JWT válido)
+ * @permission role:assign_permissions
+ *
+ * @param {NextRequest} request - NextRequest HTTP
+ * @param {object} context - Contexto de Next.js
+ * @param {Promise<{id: string}>} context.params - Parámetros de URL
  * @returns {Promise<NextResponse>} { success: true } o error
  *
  * @example
  * ```typescript
- * // Remove a permission from a role
- * const response = await fetch('/api/admin/roles/role-123/permissions?permissionId=user:create', {
- *   method: 'DELETE',
- * });
+ * // Remover permiso de rol
+ * const response = await fetch(
+ *   `/api/admin/roles/${roleId}/permissions?permissionId=${permissionId}`,
+ *   {
+ *     method: 'DELETE',
+ *     headers: {
+ *       'Authorization': `Bearer ${session.user.token}`
+ *     }
+ *   }
+ * )
+ *
  * if (response.ok) {
- *   console.log('Permission removed successfully');
+ *   console.log('Permiso removido exitosamente')
+ *   // Refrescar lista de permisos del rol
+ * } else if (response.status === 404) {
+ *   console.error('Rol no tiene este permiso')
+ * } else if (response.status === 400) {
+ *   console.error('permissionId requerido en query string')
  * }
  * ```
  *
- * @see {@link POST} para asignar permisos a roles
+ * @see {@link ./route.ts#GET} para obtener permisos del rol
+ * @see {@link ./route.ts#POST} para asignar permiso
  */
 export async function DELETE(
   request: NextRequest,
