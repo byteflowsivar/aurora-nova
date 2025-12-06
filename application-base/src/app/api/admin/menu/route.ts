@@ -16,26 +16,70 @@ const createMenuItemSchema = z.object({
 });
 
 /**
- * @api {get} /api/admin/menu
- * @name Listar Items del Menú
- * @description Obtiene una lista de todos los items del menú de administración.
- * @version 1.0.0
+ * GET /api/admin/menu - Listar todos los items del menú admin
  *
- * @requires "menu:manage" - El usuario debe tener el permiso para gestionar el menú.
+ * Obtiene lista completa de items del menú de administración.
+ * Incluye estructura jerárquica (padres e hijos), permisos requeridos e íconos.
+ * Resultado cacheado para mejor performance.
  *
- * @response {200} Success - Retorna un array de objetos de item de menú.
- * @response {403} Forbidden - El usuario no está autenticado o no tiene los permisos necesarios.
- * @response {500} InternalServerError - Error inesperado en el servidor.
+ * **Autenticación**: Requerida (permiso: `menu:manage`)
  *
- * @returns {Promise<NextResponse>} Una promesa que resuelve a la respuesta HTTP.
+ * **Respuesta** (200):
+ * ```json
+ * [
+ *   {
+ *     "id": "uuid",
+ *     "title": "Usuarios",
+ *     "href": "/admin/users",
+ *     "icon": "Users",
+ *     "order": 1,
+ *     "isActive": true,
+ *     "permissionId": "user:read" | null,
+ *     "parentId": null,
+ *     "children": [
+ *       {
+ *         "id": "uuid",
+ *         "title": "Crear Usuario",
+ *         "href": "/admin/users/create",
+ *         "icon": "Plus",
+ *         "order": 1,
+ *         "isActive": true,
+ *         "permissionId": "user:create",
+ *         "parentId": "parent-uuid"
+ *       }
+ *     ]
+ *   }
+ * ]
+ * ```
+ *
+ * **Errores**:
+ * - 403: No autenticado o sin permiso `menu:manage`
+ * - 500: Error del servidor
+ *
+ * **Características**:
+ * - Estructura jerárquica (parentId permite anidación)
+ * - Filtrado por permiso (si user no tiene permiso, item no se muestra en UI)
+ * - Caching automático (invalidado al crear/actualizar/eliminar items)
+ * - Ordenado por campo `order`
+ *
+ * @method GET
+ * @route /api/admin/menu
+ * @auth Requerida (JWT válido)
+ * @permission menu:manage
+ *
+ * @returns {Promise<NextResponse>} Array de items de menú con estructura jerárquica
  *
  * @example
- * // Fetch menu items from a client component
- * async function fetchMenuItems() {
- *   const response = await fetch('/api/admin/menu');
- *   const menuItems = await response.json();
- *   console.log(menuItems);
- * }
+ * ```typescript
+ * const response = await fetch('/api/admin/menu', {
+ *   headers: { 'Authorization': `Bearer ${token}` }
+ * })
+ * const menuItems = await response.json()
+ * ```
+ *
+ * @see {@link ./route.ts#POST} para crear item
+ * @see {@link ./[id]/route.ts} para actualizar/eliminar item
+ * @see {@link ./reorder/route.ts} para reordenar items
  */
 export async function GET() {
   try {
@@ -52,45 +96,90 @@ export async function GET() {
 }
 
 /**
- * @api {post} /api/admin/menu
- * @name Crear Item de Menú
- * @description Crea un nuevo item en el menú de administración.
- * @version 1.0.0
+ * POST /api/admin/menu - Crear nuevo item de menú
  *
- * @requires "menu:manage" - El usuario debe tener el permiso para gestionar el menú.
+ * Crea un nuevo item en el menú de administración.
+ * Permite anidación mediante parentId. Cache se invalida automáticamente.
  *
- * @param {Request} request - La petición HTTP de entrada.
- * @param {object} request.body - El cuerpo de la petición.
- * @param {string} request.body.title - Título del item.
- * @param {string} [request.body.href] - URL a la que enlaza.
- * @param {string} [request.body.icon] - Icono para el item.
- * @param {number} request.body.order - Orden de aparición.
- * @param {boolean} [request.body.isActive] - Si el item está activo.
- * @param {string} [request.body.permissionId] - Permiso requerido para ver el item.
- * @param {string} [request.body.parentId] - ID del item padre para anidación.
+ * **Autenticación**: Requerida (permiso: `menu:manage`)
  *
- * @response {201} Created - Retorna el objeto del item de menú recién creado.
- * @response {400} BadRequest - Los datos proporcionados son inválidos.
- * @response {403} Forbidden - El usuario no está autenticado o no tiene los permisos necesarios.
- * @response {500} InternalServerError - Error inesperado en el servidor.
+ * **Body Esperado**:
+ * ```json
+ * {
+ *   "title": "string (requerido)",
+ *   "href": "string (opcional, ruta del item)",
+ *   "icon": "string (opcional, nombre del ícono)",
+ *   "order": "number (requerido, entero para ordenamiento)",
+ *   "isActive": "boolean (opcional, default true)",
+ *   "permissionId": "string (opcional, para filtrado en UI)",
+ *   "parentId": "string (opcional, para anidación)"
+ * }
+ * ```
  *
- * @returns {Promise<NextResponse>} Una promesa que resuelve a la respuesta HTTP.
+ * **Respuesta** (201):
+ * ```json
+ * {
+ *   "id": "uuid",
+ *   "title": "Nuevos Usuarios",
+ *   "href": "/admin/users/new",
+ *   "icon": "UserPlus",
+ *   "order": 2,
+ *   "isActive": true,
+ *   "permissionId": "user:create",
+ *   "parentId": "parent-uuid",
+ *   "createdAt": "2024-12-05T12:00:00Z"
+ * }
+ * ```
+ *
+ * **Errores**:
+ * - 400: Datos inválidos (title faltante, order no es número, etc)
+ * - 403: No autenticado o sin permiso `menu:manage`
+ * - 500: Error del servidor
+ *
+ * **Validaciones** (Zod schema):
+ * - title: requerido, min 1 char
+ * - href: opcional, puede ser null
+ * - icon: opcional, puede ser null
+ * - order: requerido, entero
+ * - isActive: opcional, default true
+ * - permissionId: opcional, puede ser null
+ * - parentId: opcional, puede ser null (si null = item raíz)
+ *
+ * **Efectos Secundarios**:
+ * - Crea registro en tabla `MenuItem`
+ * - Invalida caché de menú (llamada a invalidateMenuCache)
+ * - NO emite evento de auditoría (considerar para futuro)
+ *
+ * @method POST
+ * @route /api/admin/menu
+ * @auth Requerida (JWT válido)
+ * @permission menu:manage
+ *
+ * @param {Request} request - Request con body JSON
+ * @returns {Promise<NextResponse>} Item creado (201) o error
  *
  * @example
- * // Create a new menu item
- * async function createMenuItem(itemData) {
- *   const response = await fetch('/api/admin/menu', {
- *     method: 'POST',
- *     headers: { 'Content-Type': 'application/json' },
- *     body: JSON.stringify(itemData),
- *   });
- *   const newMenuItem = await response.json();
- *   if (response.ok) {
- *     console.log('Item creado:', newMenuItem);
- *   } else {
- *     console.error('Error:', newMenuItem.error);
- *   }
- * }
+ * ```typescript
+ * const response = await fetch('/api/admin/menu', {
+ *   method: 'POST',
+ *   headers: {
+ *     'Content-Type': 'application/json',
+ *     'Authorization': `Bearer ${token}`
+ *   },
+ *   body: JSON.stringify({
+ *     title: 'Crear Usuario',
+ *     href: '/admin/users/create',
+ *     icon: 'UserPlus',
+ *     order: 2,
+ *     permissionId: 'user:create',
+ *     parentId: 'users-menu-id'
+ *   })
+ * })
+ * ```
+ *
+ * @see {@link ./route.ts#GET} para listar items
+ * @see {@link ./[id]/route.ts} para actualizar/eliminar item
+ * @see {@link ./reorder/route.ts} para reordenar items
  */
 export async function POST(request: Request) {
   try {
