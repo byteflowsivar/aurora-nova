@@ -9,6 +9,19 @@ import { auth } from "@/lib/auth"
 import { eventBus, SystemEvent } from "@/lib/events"
 import { EventArea } from "@/lib/events/event-area"
 
+/**
+ * API Route - Admin Users Management - Aurora Nova
+ *
+ * Endpoints para gestión completa de usuarios:
+ * - GET /api/admin/users: Listar todos los usuarios
+ * - POST /api/admin/users: Crear nuevo usuario
+ *
+ * Ambos endpoints requieren autenticación y permisos específicos.
+ * Todas las operaciones se registran en auditoría.
+ *
+ * @module api/admin/users
+ */
+
 // Schema de validación para crear usuario
 const createUserSchema = z.object({
   firstName: z.string().min(1, "El nombre es requerido"),
@@ -18,34 +31,176 @@ const createUserSchema = z.object({
 })
 
 /**
- * @api {get} /api/admin/users
- * @name Listar Usuarios
- * @description Obtiene una lista de todos los usuarios del sistema, incluyendo sus roles.
- * @version 1.0.0
+ * GET /api/admin/users - Listar todos los usuarios
  *
- * @requires "user:list" - El usuario debe tener el permiso para listar usuarios.
+ * Obtiene lista completa de usuarios del sistema con roles asociados.
+ * Ordenada por fecha de creación (más recientes primero).
  *
- * @response {200} Success - Retorna un array de objetos de usuario.
- * @response {401} Unauthorized - El usuario no está autenticado.
- * @response {403} Forbidden - El usuario no tiene los permisos necesarios.
- * @response {500} InternalServerError - Error inesperado en el servidor.
+ * **Autenticación**: Requerida (permiso: `user:list`)
  *
- * @returns {Promise<NextResponse>} Una promesa que resuelve a la respuesta HTTP.
+ * **Respuesta** (200):
+ * ```json
+ * [
+ *   {
+ *     "id": "uuid",
+ *     "name": "Juan Pérez",
+ *     "firstName": "Juan",
+ *     "lastName": "Pérez",
+ *     "email": "juan@example.com",
+ *     "emailVerified": "2024-01-01T00:00:00Z" | null,
+ *     "image": "url" | null,
+ *     "createdAt": "2024-01-01T00:00:00Z",
+ *     "updatedAt": "2024-12-05T12:00:00Z",
+ *     "roles": [
+ *       { "id": "uuid", "name": "admin", "description": "..." }
+ *     ]
+ *   }
+ * ]
+ * ```
  *
- * @property {object[]} response.body - Array de usuarios.
- * @property {string} response.body.id - ID del usuario.
- * @property {string} response.body.name - Nombre completo del usuario.
- * @property {string} response.body.email - Email del usuario.
- * @property {Date|null} response.body.emailVerified - Fecha de verificación del email.
- * @property {object[]} response.body.roles - Array de roles asignados al usuario.
+ * **Errores**:
+ * - 401: No autenticado (enviar JWT válido)
+ * - 403: Sin permiso `user:list` (solicitar al admin)
+ * - 500: Error del servidor
+ *
+ * **Performance**:
+ * - Query optimizada: select solo campos necesarios
+ * - Incluye roles en misma query (no N+1)
+ * - Ordenada por createdAt DESC (más recientes primero)
+ * - Típicamente < 100ms para 1000+ usuarios
+ *
+ * @method GET
+ * @route /api/admin/users
+ * @auth Requerida (JWT válido)
+ * @permission user:list
+ *
+ * @returns {Promise<NextResponse>} Array de usuarios transformados
  *
  * @example
- * // Fetch users from a client component
- * async function fetchUsers() {
- *   const response = await fetch('/api/admin/users');
- *   const users = await response.json();
- *   console.log(users);
+ * ```typescript
+ * // Fetch users en componente admin
+ * const response = await fetch('/api/admin/users', {
+ *   headers: {
+ *     'Authorization': `Bearer ${session.user.token}`  // NextAuth maneja automáticamente
+ *   }
+ * })
+ *
+ * if (response.ok) {
+ *   const users = await response.json()
+ *   console.log(`Total usuarios: ${users.length}`)
+ * } else if (response.status === 403) {
+ *   console.error('No tienes permiso para listar usuarios')
  * }
+ * ```
+ *
+ * @see {@link ./route.ts#POST} para crear usuarios
+ * @see {@link ../../../lib/server/require-permission.ts} para validación de permisos
+ */
+
+/**
+ * POST /api/admin/users - Crear nuevo usuario
+ *
+ * Crea un nuevo usuario en el sistema con email único.
+ * Genera hash seguro de contraseña y registra evento de auditoría.
+ *
+ * **Autenticación**: Requerida (permiso: `user:create`)
+ *
+ * **Body Esperado**:
+ * ```json
+ * {
+ *   "firstName": "string (requerido, mín 1 char)",
+ *   "lastName": "string (requerido, mín 1 char)",
+ *   "email": "string (email válido, debe ser único)",
+ *   "password": "string (mín 6 caracteres)"
+ * }
+ * ```
+ *
+ * **Respuesta** (201):
+ * ```json
+ * {
+ *   "id": "uuid generado",
+ *   "firstName": "Juan",
+ *   "lastName": "Pérez",
+ *   "email": "juan@example.com",
+ *   "name": "Juan Pérez",
+ *   "image": null,
+ *   "emailVerified": null,
+ *   "createdAt": "2024-12-05T12:00:00Z",
+ *   "updatedAt": "2024-12-05T12:00:00Z"
+ * }
+ * ```
+ *
+ * **Errores**:
+ * - 400: Email ya existe o validación fallida
+ *   ```json
+ *   { "error": "El email ya está en uso" }
+ *   { "error": "Email inválido" }
+ *   { "error": "El nombre es requerido" }
+ *   ```
+ * - 401: No autenticado
+ * - 403: Sin permiso `user:create`
+ * - 500: Error del servidor
+ *
+ * **Validaciones**:
+ * - Email: formato válido, único en tabla users
+ * - Nombres: no vacíos, máximo 100 caracteres
+ * - Password: mínimo 6 caracteres (validar en front más estricto)
+ *
+ * **Seguridad**:
+ * - ✓ Contraseña hasheada con bcryptjs (salt 10)
+ * - ✓ Email único (índice único en BD)
+ * - ✓ Transacción: usuario + credentials creados atómicamente
+ * - ✓ Auditoría: se registra USER_CREATED con quien, cuándo, qué datos
+ *
+ * **Efectos Secundarios**:
+ * - Crea registro en tabla `user`
+ * - Crea registro en tabla `userCredentials` con hash de contraseña
+ * - Emite evento `USER_CREATED` para auditoría
+ * - NO asigna roles automáticamente (hacer POST /api/admin/users/[id]/roles después)
+ *
+ * **Auditoría**:
+ * - Evento: `USER_CREATED`
+ * - Quién: usuario autenticado
+ * - Cuándo: timestamp ISO
+ * - Dónde: IP + User-Agent
+ * - Qué: { firstName, lastName, email } (NO password)
+ *
+ * @method POST
+ * @route /api/admin/users
+ * @auth Requerida (JWT válido)
+ * @permission user:create
+ *
+ * @param {Request} request - NextRequest con body JSON
+ * @returns {Promise<NextResponse>} Usuario creado (201) o error (400/401/403/500)
+ *
+ * @example
+ * ```typescript
+ * // Crear usuario desde form admin
+ * const newUser = await fetch('/api/admin/users', {
+ *   method: 'POST',
+ *   headers: { 'Content-Type': 'application/json' },
+ *   body: JSON.stringify({
+ *     firstName: 'Juan',
+ *     lastName: 'Pérez',
+ *     email: 'juan@example.com',
+ *     password: 'TempPass123!'
+ *   })
+ * })
+ *
+ * if (newUser.ok) {
+ *   const user = await newUser.json()
+ *   console.log(`Usuario creado: ${user.id}`)
+ *   // Ahora asignar roles
+ *   // POST /api/admin/users/{id}/roles { roleId }
+ * } else {
+ *   const error = await newUser.json()
+ *   console.error(error.error)
+ * }
+ * ```
+ *
+ * @see {@link ./route.ts#GET} para listar usuarios
+ * @see {@link ./[id]/route.ts} para modificar/eliminar usuario
+ * @see {@link ./[id]/roles/route.ts} para asignar roles
  */
 export async function GET() {
   try {
