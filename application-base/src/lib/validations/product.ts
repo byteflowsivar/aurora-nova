@@ -31,7 +31,7 @@ export const UpdateProductVariantSchema = z.object({
 
 export const UpdateProductSchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.').optional(),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   isActive: z.boolean().optional(),
   variants: z.array(UpdateProductVariantSchema).optional(),
 });
@@ -40,7 +40,7 @@ export type UpdateProductPayload = z.infer<typeof UpdateProductSchema>;
 
 export const CreateBaseProductSchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.'),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   isActive: z.boolean().default(true),
 });
 
