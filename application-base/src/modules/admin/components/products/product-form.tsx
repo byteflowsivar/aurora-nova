@@ -39,6 +39,13 @@ interface Product {
 
 type ProductFormValues = z.infer<typeof CreateBaseProductSchema> | z.infer<typeof UpdateProductSchema>;
 
+const defaultValues: Partial<ProductFormValues> = {
+  name: '',
+  description: undefined,
+  isActive: undefined,
+  variants: [{ price: 0, stock: 0, attributes: {}, images: [] }],
+};
+
 interface ProductFormProps {
   onSuccess?: (productId: string) => void;
   initialData?: Product | null;
@@ -49,16 +56,8 @@ export function ProductForm({ onSuccess, initialData, mode }: ProductFormProps) 
   const isEditMode = mode === 'edit';
 
   const form = useForm<ProductFormValues>({
-    resolver: zodResolver(z.object({ name: z.string() })), // Temporarily use a simple schema
-    defaultValues: initialData || {
-const defaultValues: Partial<ProductFormValues> = {
-  name: '',
-  description: undefined,
-  isActive: undefined,
-  variants: [{ price: 0, stock: 0, attributes: {}, images: [] }],
-};
-    },
-  });
+    resolver: zodResolver(isEditMode ? UpdateProductSchema : CreateBaseProductSchema),
+    defaultValues: initialData || defaultValues,
   
   useEffect(() => {
     if (initialData) {
