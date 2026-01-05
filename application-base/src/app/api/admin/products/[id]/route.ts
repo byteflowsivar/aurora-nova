@@ -1,18 +1,21 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { hasPermission } from '@/modules/admin/utils/permission-utils';
+import { SYSTEM_PERMISSIONS } from '@/modules/admin/types';
+import { prisma } from '@/lib/prisma/connection';
+import { UpdateProductSchema } from '@/lib/validations/product';
+import { z } from 'zod';
 
 
 type RouteContext = {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 };
 
 // GET /api/admin/products/[id]
 export async function GET(request: NextRequest, { params }: RouteContext) {
   try {
     const session = await auth();
-
-    const recordId = params.id;
-
+    const { id } = await params;
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
     }
@@ -23,7 +26,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     }
 
     const product = await prisma.product.findUnique({
-      where: { id: recordId },
+      where: { id: id },
       include: {
         variants: {
           include: {
@@ -39,7 +42,8 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
 
     return NextResponse.json(product);
   } catch (error) {
-    console.error(`Error fetching product ${params.id}:`, error);
+    const { id } = await params;
+    console.error(`Error fetching product ${id}:`, error);
     return NextResponse.json({ error: 'Could not fetch product' }, { status: 500 });
   }
 }
@@ -48,7 +52,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
 export async function PUT(request: NextRequest, { params }: RouteContext) {
   try {
     const session = await auth();
-    const recordId = params.id; // Correctly get the ID
+    const { id: recordId } = await params;
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
     }
@@ -82,10 +86,11 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json(updatedProduct);
 
   } catch (error) {
+    const { id: recordId } = await params;
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid input', details: error.flatten() }, { status: 400 });
     }
-    console.error(`Error updating product ${params.id}:`, error);
+    console.error(`Error updating product ${recordId}:`, error);
     return NextResponse.json({ error: 'Could not update product' }, { status: 500 });
   }
 }
@@ -94,7 +99,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
 export async function DELETE(request: NextRequest, { params }: RouteContext) {
   try {
     const session = await auth();
-    const recordId = params.id; // Correctly get the ID
+    const { id: recordId } = await params;
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
     }
@@ -111,10 +116,11 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
     return new NextResponse(null, { status: 204 });
 
   } catch (error) {
+    const { id: recordId } = await params;
     if (error instanceof Error && 'code' in error && error.code === 'P2025') {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
-    console.error(`Error deleting product ${params.id}:`, error);
+    console.error(`Error deleting product ${recordId}:`, error);
     return NextResponse.json({ error: 'Could not delete product' }, { status: 500 });
   }
 }
