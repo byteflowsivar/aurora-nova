@@ -8,11 +8,12 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   const router = useRouter();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const productId = params.id; // Destructure here
 
   useEffect(() => {
     async function fetchProduct() {
       try {
-        const res = await fetch(`/api/admin/products/${params.id}`);
+        const res = await fetch(`/api/admin/products/${productId}`);
         if (res.ok) {
           const data = await res.json();
           setProduct(data);
@@ -22,7 +23,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       }
     }
     fetchProduct();
-  }, [params.id]);
+  }, [productId]); // Use productId here
 
   const handleSuccess = () => {
     // Optional: could navigate back to the list or just show a toast
