@@ -562,6 +562,10 @@ export const SYSTEM_PERMISSIONS = {
   PRODUCT_UPDATE: 'product:update',
   PRODUCT_DELETE: 'product:delete',
   PRODUCT_LIST: 'product:list',
+
+  // Order permissions
+  ORDER_READ: 'order:read',
+  ORDER_LIST: 'order:list',
 } as const
 
 /**

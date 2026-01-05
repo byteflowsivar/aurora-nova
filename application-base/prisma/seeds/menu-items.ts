@@ -135,20 +135,71 @@ export async function seedMenuItems() {
   console.log('  ✓ Created: Auditoria (level 2, child of Administración)')
 
   // ============================================================================
+  // NIVEL 1: Grupo de Tienda (sin href, agrupa items del nivel 2)
+  // ============================================================================
+
+  const storeGroup = await prisma.menuItem.create({
+    data: {
+      title: 'Tienda',
+      href: null,
+      icon: 'Store',
+      order: 3,
+      isActive: true,
+      permissionId: null,
+      parentId: null
+    }
+  });
+
+  console.log('  ✓ Created: Tienda Group (level 1)');
+
+  // ============================================================================
+  // NIVEL 2: Hijos del grupo Tienda
+  // ============================================================================
+
+  await prisma.menuItem.create({
+    data: {
+      title: 'Productos',
+      href: '/admin/store/products',
+      icon: 'Package',
+      order: 1,
+      isActive: true,
+      permissionId: 'product:list',
+      parentId: storeGroup.id
+    }
+  });
+
+  console.log('  ✓ Created: Productos (level 2, child of Tienda)');
+
+  await prisma.menuItem.create({
+    data: {
+      title: 'Pedidos',
+      href: '/admin/store/orders',
+      icon: 'ShoppingCart',
+      order: 2,
+      isActive: true,
+      permissionId: 'order:list',
+      parentId: storeGroup.id
+    }
+  });
+
+  console.log('  ✓ Created: Pedidos (level 2, child of Tienda)');
+
+  // ============================================================================
   // Resumen
   // ============================================================================
 
   const totalItems = await prisma.menuItem.count()
   console.log(`\n✅ Menu items seeded successfully! Total items: ${totalItems}`)
-  console.log('   - Level 1 (root): 2 items (Dashboard + Administración group)')
-  console.log('   - Level 2 (children): 4 items (Usuarios, Roles, Permisos, Auditoria)')
+  console.log('   - Level 1 (root): 3 items (Dashboard, Administración, Tienda)')
+  console.log('   - Level 2 (children): 6 items (Usuarios, Roles, Permisos, Auditoria, Productos, Pedidos)')
 
   return {
     dashboard,
     adminGroup,
+    storeGroup,
     users,
     roles,
     permissions: permissions_menu,
-    audit: audit_menu
+    audit: audit_menu,
   }
 }
