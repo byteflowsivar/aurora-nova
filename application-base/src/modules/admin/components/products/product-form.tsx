@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CreateProductSchema } from '@/lib/validations/product';
+import { CreateProductSchema, UpdateProductSchema } from '@/lib/validations/product';
 import { Trash2, X } from 'lucide-react';
 import { ImageUploader } from './ImageUploader';
 import Image from 'next/image';
