@@ -2,6 +2,8 @@
 
 Este documento detalla el plan de trabajo para la implementación del MVP de la tienda en línea para el proyecto Aurora Nova.
 
+**Nota sobre el MVP:** La primera versión de este proyecto (MVP) se lanzará **sin una pasarela de pagos integrada**. El objetivo es validar el flujo de creación de pedidos, gestión de inventario y la experiencia del usuario. La gestión del pago se realizará por fuera del sistema.
+
 ---
 
 ## Fase 1: Cimientos del Backend y Datos
@@ -86,6 +88,10 @@ Este documento detalla el plan de trabajo para la implementación del MVP de la 
   - **Descripción:** Desarrollar el endpoint que recibe la solicitud de checkout, crea la orden en la base de datos y descuenta el stock.
   - **Agente Recomendado:** Agente Backend (Prisma/API).
 
-- [ ] **Tarea 4.4: UI de Comprobante y Historial.**
+- [ ] **Tarea 4.4: Envío de Email de Confirmación.**
+  - **Descripción:** Integrar un servicio de email (ej. Resend) y enviar un correo de confirmación al cliente después de que el pedido se cree exitosamente en la Tarea 4.3.
+  - **Agente Recomendado:** Agente Backend (Prisma/API).
+
+- [ ] **Tarea 4.5: UI de Comprobante y Historial.**
   - **Descripción:** Crear el componente React para el **comprobante HTML imprimible** y la página de historial de pedidos del cliente.
   - **Agente Recomendado:** Agente Frontend (Next.js/UI).
