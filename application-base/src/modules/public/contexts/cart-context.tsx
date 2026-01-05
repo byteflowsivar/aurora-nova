@@ -4,7 +4,63 @@ import React, { createContext, useContext, useReducer, useEffect, ReactNode, use
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 
-// ... (Types and Reducer remain the same) ...
+// Types
+interface CartItem {
+  variantId: string;
+  productId: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string;
+}
+
+interface CartState {
+  items: CartItem[];
+}
+
+type CartAction =
+  | { type: 'ADD_ITEM'; payload: CartItem }
+  | { type: 'REMOVE_ITEM'; payload: { variantId: string } }
+  | { type: 'UPDATE_QUANTITY'; payload: { variantId: string; quantity: number } }
+  | { type: 'SET_STATE'; payload: CartState };
+
+// Reducer
+const cartReducer = (state: CartState, action: CartAction): CartState => {
+  switch (action.type) {
+    case 'ADD_ITEM': {
+      const existingItem = state.items.find(item => item.variantId === action.payload.variantId);
+      if (existingItem) {
+        return {
+          ...state,
+          items: state.items.map(item =>
+            item.variantId === action.payload.variantId
+              ? { ...item, quantity: item.quantity + action.payload.quantity }
+              : item
+          ),
+        };
+      }
+      return { ...state, items: [...state.items, action.payload] };
+    }
+    case 'REMOVE_ITEM':
+      return {
+        ...state,
+        items: state.items.filter(item => item.variantId !== action.payload.variantId),
+      };
+    case 'UPDATE_QUANTITY':
+      return {
+        ...state,
+        items: state.items.map(item =>
+          item.variantId === action.payload.variantId
+            ? { ...item, quantity: action.payload.quantity }
+            : item
+        ).filter(item => item.quantity > 0), // Remove if quantity is 0
+      };
+    case 'SET_STATE':
+        return action.payload;
+    default:
+      return state;
+  }
+};
 
 const CartContext = createContext<{
   state: CartState;
