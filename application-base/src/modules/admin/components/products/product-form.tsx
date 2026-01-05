@@ -58,7 +58,8 @@ export function ProductForm({ onSuccess, initialData, mode }: ProductFormProps) 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(isEditMode ? UpdateProductSchema : CreateBaseProductSchema),
     defaultValues: initialData || defaultValues,
-  
+  });
+
   useEffect(() => {
     if (initialData) {
       form.reset(initialData);
@@ -190,7 +191,7 @@ export function ProductForm({ onSuccess, initialData, mode }: ProductFormProps) 
                       <FormItem className="mt-4">
                         <FormLabel>Atributos</FormLabel>
                         <FormControl>
-                          <Input 
+                          <Input
                             placeholder="Ej: Color:Azul,Talla:M"
                             onChange={(e) => {
                               const attrs = e.target.value.split(',').reduce((acc, pair) => {
@@ -230,7 +231,7 @@ export function ProductForm({ onSuccess, initialData, mode }: ProductFormProps) 
                       ))}
                     </div>
                     <div className="mt-2">
-                      <ImageUploader 
+                      <ImageUploader
                         onUpload={(url) => {
                           const newImages = [...((field as any).images || []), { finalUrl: url, altText: '' }];
                           update(index, { ...field, images: newImages });
