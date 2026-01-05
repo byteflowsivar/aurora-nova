@@ -196,7 +196,7 @@ export function ProductForm({ onSuccess, initialData }: ProductFormProps) {
                 <div className="mt-4">
                   <FormLabel>Imágenes</FormLabel>
                   <div className="flex gap-2 mt-2 flex-wrap">
-                    {field.images?.map((image, imgIndex) => (
+                    {field.images?.filter(img => img && img.finalUrl).map((image, imgIndex) => (
                       <div key={imgIndex} className="relative">
                         <Image src={image.finalUrl} alt="preview" width={80} height={80} className="rounded-md object-cover" />
                         <Button
