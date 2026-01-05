@@ -12,15 +12,15 @@ alwaysApply: true
 - **Cambios Incrementales**: Preferir cambios enfocados sobre modificaciones grandes y complejas.
 - **Cuestionar Suposiciones**: No asumir la existencia de librerías o configuraciones; siempre verificar.
 - **Detección de Patrones**: Identificar y abstraer patrones de código repetidos.
+- **Diseño Mobile-First Obligatorio**: Todas las interfaces de usuario (UI) deben diseñarse y desarrollarse siguiendo un enfoque *mobile-first*. La experiencia en dispositivos móviles es prioritaria y la interfaz debe ser completamente funcional y estéticamente agradable en pantallas pequeñas antes de adaptar el diseño a pantallas más grandes.
 
 ## 2. Estándares de Lenguaje
 
 - **Idioma Principal: Español**: Por decisión del usuario, el idioma principal para la documentación, comentarios y discusiones es el Español.
-- **Idioma en el Código**: Para mantener la compatibilidad con el ecosistema de JavaScript/TypeScript y las librerías externas, los artefactos de código deben usar **Inglés**. Esto incluye:
-    - Nombres de variables, funciones, clases y componentes.
-    - Nombres de archivos y carpetas (`kebab-case` o `PascalCase` según corresponda).
-    - Mensajes de commit de Git.
-- **Excepción**: Los textos visibles para el usuario final en la UI deben estar en Español.
+- **Idioma en el Código**: Para mantener la compatibilidad con el ecosistema de JavaScript/TypeScript y las librerías externas, los artefactos de código (variables, funciones, nombres de archivo) deben usar **Inglés**.
+- **Excepciones al Inglés**:
+    - Los textos visibles para el usuario final en la UI deben estar en **Español**.
+    - Los mensajes de commit de Git deben estar en **Español**.
 
 ## 3. Estándares Core (Obligatorios)
 
