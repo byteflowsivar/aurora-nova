@@ -37,6 +37,7 @@ export type UpdateProductPayload = z.infer<typeof UpdateProductSchema>;
 
 export const CreateBaseProductSchema = z.object({
   name: z.string(),
+  description: z.string().optional(),
 });
 
 export type CreateBaseProductPayload = z.infer<typeof CreateBaseProductSchema>;
