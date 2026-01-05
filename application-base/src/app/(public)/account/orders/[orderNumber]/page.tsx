@@ -2,7 +2,33 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { PrintButton } from '@/modules/public/components/print-button';
 
-async function getOrder(orderNumber: string) {
+// Define the types based on the API response from /api/account/orders/[orderNumber]
+interface OrderItem {
+  id: string;
+  quantity: number;
+  price: number;
+  variant: {
+    product: {
+      name: string;
+    };
+    attributes: Record<string, string>;
+  };
+}
+
+interface Order {
+  id: string;
+  orderNumber: string;
+  createdAt: string;
+  total: number;
+  status: string;
+  items: OrderItem[];
+  user: {
+      email: string;
+      name?: string;
+  }
+}
+
+async function getOrder(orderNumber: string): Promise<Order> {
     // This fetch needs to be authenticated, which is a problem for server components
     // that don't have the user's session by default.
     // In a real app, we would pass the cookie or use a server-side fetch with auth.
@@ -31,7 +57,7 @@ export default async function OrderReceiptPage({ params }: { params: { orderNumb
         </div>
         
         <div className="space-y-4 mb-8">
-            {order.items.map((item: any) => (
+            {order.items.map((item: OrderItem) => (
                 <div key={item.id} className="flex justify-between">
                     <div>
                         <p className="font-medium">{item.variant.product.name}</p>

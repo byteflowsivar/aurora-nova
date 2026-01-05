@@ -22,6 +22,29 @@ import { ImageUploader } from './ImageUploader';
 import Image from 'next/image';
 import { toast } from 'sonner';
 
+// Define the types based on the API response (copied from product-list.tsx, should be shared)
+interface ProductImage {
+  id: string;
+  url: string;
+  altText?: string;
+}
+
+interface ProductVariant {
+  id: string;
+  sku: string;
+  price: number;
+  stock: number;
+  attributes: Record<string, string>;
+  images: ProductImage[];
+}
+
+interface Product {
+  id: string;
+  name: string;
+  isActive: boolean;
+  variants: ProductVariant[];
+}
+
 type ProductFormValues = z.infer<typeof CreateProductSchema>;
 
 const defaultValues: Partial<ProductFormValues> = {
@@ -33,7 +56,7 @@ const defaultValues: Partial<ProductFormValues> = {
 
 interface ProductFormProps {
   onSuccess?: () => void;
-  initialData?: any | null;
+  initialData?: Product | null;
 }
 
 export function ProductForm({ onSuccess, initialData }: ProductFormProps) {

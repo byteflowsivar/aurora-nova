@@ -13,6 +13,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 // Define the types based on the API response
+interface CustomerInfo {
+  name?: string;
+  email?: string;
+}
+
 interface Order {
   id: string;
   orderNumber: string;
@@ -23,7 +28,7 @@ interface Order {
     name?: string | null;
     email: string;
   };
-  customerInfo?: any; // For guest orders
+  customerInfo?: CustomerInfo; // For guest orders
 }
 
 export function OrderList() {

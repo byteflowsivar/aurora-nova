@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useReducer, useEffect, ReactNode, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { toast } from 'sonner';
 
 // Types
 interface CartItem {
@@ -23,6 +22,21 @@ type CartAction =
   | { type: 'REMOVE_ITEM'; payload: { variantId: string } }
   | { type: 'UPDATE_QUANTITY'; payload: { variantId: string; quantity: number } }
   | { type: 'SET_STATE'; payload: CartState };
+
+// Define type for server cart item
+interface ServerCartItem {
+  id: string;
+  quantity: number;
+  variant: {
+    id: string;
+    price: number;
+    images: { url: string; }[];
+    product: {
+      id: string;
+      name: string;
+    };
+  };
+}
 
 // Reducer
 const cartReducer = (state: CartState, action: CartAction): CartState => {
@@ -78,7 +92,7 @@ const CartContext = createContext<{
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(cartReducer, { items: [] });
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const mergeAttempted = React.useRef(false);
 
   const fetchAndSetCart = useCallback(async () => {
@@ -86,7 +100,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       try {
         const res = await fetch('/api/cart');
         const serverCart = await res.json();
-        const adaptedItems = serverCart.items.map((item: any) => ({
+        const adaptedItems = serverCart.items.map((item: ServerCartItem) => ({
             variantId: item.variant.id,
             productId: item.variant.product.id,
             name: item.variant.product.name,

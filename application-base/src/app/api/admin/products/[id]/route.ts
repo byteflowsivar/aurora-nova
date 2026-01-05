@@ -67,7 +67,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: 'Invalid input', details: validationResult.error.flatten() }, { status: 400 });
     }
 
-    const { name, description, isActive, variants } = validationResult.data;
+    const { name, description, isActive } = validationResult.data;
 
     // For simplicity in this MVP, we only handle updates to the product's top-level fields.
     // A full implementation would handle creating, updating, and deleting variants and images.

@@ -2,7 +2,7 @@ import { sendOrderConfirmationEmail } from '@/lib/email';
 
 // ... (imports and schemas) ...
 
-export async function POST(request: NextRequest) {
+export async function POST() {
     const session = await auth();
     
     if (!session?.user?.id || !session.user.email) {

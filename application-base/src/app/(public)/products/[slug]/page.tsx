@@ -1,6 +1,5 @@
 import React from 'react';
 import Image from 'next/image';
-import { Badge } from '@/components/ui/badge';
 
 // Define the types based on the API response
 interface ProductImage {
@@ -37,7 +36,6 @@ async function getProduct(slug: string) {
 }
 
 import { AddToCart } from '@/modules/public/components/add-to-cart';
-import { Button } from '@/components/ui/button';
 
 export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
   const product = await getProduct(params.slug);

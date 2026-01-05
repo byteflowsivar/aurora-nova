@@ -4,7 +4,7 @@ import { hasPermission } from '@/modules/admin/utils/permission-utils';
 import { SYSTEM_PERMISSIONS } from '@/modules/admin/types';
 import { prisma } from '@/lib/prisma/connection';
 import { generateSKU } from '@/lib/sku';
-import { CreateProductSchema, CreateProductPayload } from '@/lib/validations/product';
+import { CreateProductSchema } from '@/lib/validations/product';
 import { z } from 'zod';
 
 const slugify = (str: string) =>

@@ -61,8 +61,8 @@ export function AddToCart({ product }: AddToCartProps) {
         image: selectedVariant.images[0]?.url,
       });
       toast.success(`${product.name} añadido al carrito!`);
-    } catch (error) {
-      toast.error('No se pudo añadir el producto al carrito.');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'No se pudo añadir el producto al carrito.');
     } finally {
       setIsAdding(false);
     }
@@ -76,9 +76,26 @@ export function AddToCart({ product }: AddToCartProps) {
         <div key={key} className="space-y-2">
           <h3 className="text-sm font-semibold">{key}</h3>
           <div className="flex gap-2">
-            {Array.from(values).map(value => (
-              <Button key={value} variant="outline" size="sm">{value}</Button>
-            ))}
+            {Array.from(values).map(value => {
+              const currentAttributes = selectedVariant?.attributes || {};
+              const isSelected = currentAttributes[key] === value; // Check if this attribute value is currently selected
+              return (
+                <Button 
+                  key={value} 
+                  variant={isSelected ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => {
+                    // Find a variant that matches the new selection
+                    const newVariant = product.variants.find(v => v.attributes[key] === value);
+                    if (newVariant) {
+                      setSelectedVariantId(newVariant.id);
+                    }
+                  }}
+                >
+                  {value}
+                </Button>
+              );
+            })}
           </div>
         </div>
       ))}
