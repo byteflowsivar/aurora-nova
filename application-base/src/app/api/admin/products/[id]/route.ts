@@ -4,6 +4,7 @@ import { hasPermission } from '@/modules/admin/utils/permission-utils';
 import { SYSTEM_PERMISSIONS } from '@/modules/admin/types';
 import { prisma } from '@/lib/prisma/connection';
 import { UpdateProductSchema } from '@/lib/validations/product';
+import { generateSKU } from '@/lib/sku'; // Import generateSKU
 import { z } from 'zod';
 
 
