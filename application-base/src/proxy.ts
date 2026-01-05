@@ -38,6 +38,9 @@ const publicRoutes = [
 // Rutas de la API de autenticación que deben ser accesibles
 const authApiRoutes = ["/api/auth"]
 
+// Rutas públicas de la API que no requieren autenticación
+const publicApiRoutes = ["/api/products"];
+
 // Prefijos de rutas que deben ser ignorados por el proxy
 const ignoredPrefixes = ["/_next/static", "/_next/image", "/favicon.ico", "/public"]
 
@@ -54,10 +57,11 @@ export default async function proxy(request: NextRequest) {
   // Add request ID to request headers for propagation
   const requestHeaders = addRequestIdToHeaders(request, requestId)
 
-  // Ignorar archivos estáticos, de imágenes y rutas de la API de auth
+  // Ignorar archivos estáticos, de imágenes y rutas de la API de auth y públicas
   if (
     ignoredPrefixes.some((prefix) => pathname.startsWith(prefix)) ||
-    authApiRoutes.some((route) => pathname.startsWith(route))
+    authApiRoutes.some((route) => pathname.startsWith(route)) ||
+    publicApiRoutes.some((route) => pathname.startsWith(route))
   ) {
     const response = NextResponse.next({
       request: {
