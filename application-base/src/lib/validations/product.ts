@@ -8,7 +8,7 @@ export const ProductImageSchema = z.object({
 export const ProductVariantSchema = z.object({
   price: z.number().positive('El precio debe ser un número positivo.'),
   stock: z.number().int().min(0, 'El stock no puede ser negativo.'),
-  attributes: z.record(z.string(), { description: 'Atributos como color o talla' }),
+  attributes: z.record(z.string()),
   images: z.array(ProductImageSchema).optional(),
 });
 
@@ -25,7 +25,7 @@ export const UpdateProductVariantSchema = z.object({
   id: z.string().uuid().optional(), // To identify existing variants
   price: z.number().positive('El precio debe ser un número positivo.').optional(),
   stock: z.number().int().min(0, 'El stock no puede ser negativo.').optional(),
-  attributes: z.record(z.string(), { description: 'Atributos como color o talla' }).optional(),
+  attributes: z.record(z.string()).optional(),
   images: z.array(ProductImageSchema).optional(),
 });
 
