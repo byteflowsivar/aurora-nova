@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Confirmación de Pedido</title>
+</head>
+<body>
+    <h1>¡Gracias por tu pedido, {{customerName}}!</h1>
+    <p>Hemos recibido tu pedido #{{orderNumber}}.</p>
+    <h2>Resumen del Pedido</h2>
+    <ul>
+        {{#items}}
+        <li>{{quantity}}x {{name}} - ${{price}}</li>
+        {{/items}}
+    </ul>
+    <h3>Total: ${{total}}</h3>
+    <p>Te notificaremos de nuevo cuando tu pedido haya sido enviado.</p>
+</body>
+</html>

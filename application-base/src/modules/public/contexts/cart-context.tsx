@@ -23,13 +23,13 @@ const CartContext = createContext<{
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(cartReducer, { items: [] });
   const { data: session, status } = useSession();
+  const mergeAttempted = React.useRef(false);
 
   const fetchAndSetCart = useCallback(async () => {
     if (status === 'authenticated') {
       try {
         const res = await fetch('/api/cart');
         const serverCart = await res.json();
-        // The server cart has a different shape, we need to adapt it
         const adaptedItems = serverCart.items.map((item: any) => ({
             variantId: item.variant.id,
             productId: item.variant.product.id,
@@ -45,9 +45,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     } else if (status === 'unauthenticated') {
       try {
         const storedCart = localStorage.getItem('aurora-cart');
-        if (storedCart) {
-          dispatch({ type: 'SET_STATE', payload: JSON.parse(storedCart) });
-        }
+        dispatch({ type: 'SET_STATE', payload: storedCart ? JSON.parse(storedCart) : { items: [] } });
       } catch (error) {
         console.error("Failed to load cart from localStorage", error);
       }
@@ -55,8 +53,29 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [status]);
 
   useEffect(() => {
-    fetchAndSetCart();
-  }, [fetchAndSetCart]);
+    const mergeCarts = async () => {
+      const localCartRaw = localStorage.getItem('aurora-cart');
+      if (localCartRaw) {
+        const localCart = JSON.parse(localCartRaw);
+        if (localCart.items && localCart.items.length > 0) {
+          await fetch('/api/cart/merge', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items: localCart.items }),
+          });
+          localStorage.removeItem('aurora-cart');
+        }
+      }
+      await fetchAndSetCart();
+    };
+
+    if (status === 'authenticated' && !mergeAttempted.current) {
+      mergeAttempted.current = true;
+      mergeCarts();
+    } else if (status !== 'loading') {
+        fetchAndSetCart();
+    }
+  }, [status, fetchAndSetCart]);
 
   // For unauthenticated users, save to localStorage
   useEffect(() => {
