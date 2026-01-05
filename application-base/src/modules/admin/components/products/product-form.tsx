@@ -123,7 +123,7 @@ export function ProductForm({ onSuccess, initialData, mode }: ProductFormProps) 
             <FormItem>
               <FormLabel>Descripción</FormLabel>
               <FormControl>
-                <Textarea placeholder="Describe el producto..." {...field} />
+                <Textarea placeholder="Describe el producto..." {...field} value={field.value ?? ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
