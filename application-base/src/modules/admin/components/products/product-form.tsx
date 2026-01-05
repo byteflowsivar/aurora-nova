@@ -74,8 +74,6 @@ export function ProductForm({ onSuccess, initialData, mode }: ProductFormProps) 
   const { isSubmitting } = form.formState;
 
   async function onSubmit(data: ProductFormValues) {
-    console.log("Form Data submitted:", data);
-    /*
     try {
       const url = isEditMode ? `/api/admin/products/${initialData?.id}` : '/api/admin/products';
       const method = isEditMode ? 'PUT' : 'POST';
@@ -100,7 +98,6 @@ export function ProductForm({ onSuccess, initialData, mode }: ProductFormProps) 
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'An unknown error occurred.');
     }
-    */
   }
 
   return (
