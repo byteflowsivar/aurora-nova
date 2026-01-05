@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -12,12 +13,6 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -27,26 +22,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { ProductForm } from './product-form';
 import { toast } from 'sonner';
 
 // ... (interface definitions remain the same) ...
 
 export function ProductList() {
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [productToEdit, setProductToEdit] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/admin/products');
-      if (!response.ok) {
-        throw new Error('Failed to fetch products');
-      }
+      if (!response.ok) throw new Error('Failed to fetch products');
       const data = await response.json();
       setProducts(data.data);
     } catch (err) {
@@ -59,22 +50,6 @@ export function ProductList() {
   useEffect(() => {
     fetchProducts();
   }, []);
-
-  const handleFormSuccess = () => {
-    setIsFormOpen(false);
-    setProductToEdit(null);
-    fetchProducts();
-  };
-
-  const openCreateForm = () => {
-    setProductToEdit(null);
-    setIsFormOpen(true);
-  };
-
-  const openEditForm = (product: Product) => {
-    setProductToEdit(product);
-    setIsFormOpen(true);
-  };
 
   const handleDelete = async () => {
     if (!productToDelete) return;
@@ -99,7 +74,7 @@ export function ProductList() {
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold">Productos</h2>
-          <Button onClick={openCreateForm}>Añadir Producto</Button>
+          <Button onClick={() => router.push('/admin/store/products/new')}>Añadir Producto</Button>
         </div>
         <div className="border rounded-lg">
           <Table>
@@ -122,7 +97,7 @@ export function ProductList() {
                   </TableCell>
                   <TableCell>{product.variants.length}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => openEditForm(product)}>Editar</Button>
+                    <Button variant="ghost" size="sm" onClick={() => router.push(`/admin/store/products/${product.id}/edit`)}>Editar</Button>
                     <Button variant="ghost" size="sm" className="text-red-500" onClick={() => setProductToDelete(product)}>Eliminar</Button>
                   </TableCell>
                 </TableRow>
@@ -131,15 +106,6 @@ export function ProductList() {
           </Table>
         </div>
       </div>
-
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="sm:max-w-[625px]">
-          <DialogHeader>
-            <DialogTitle>{productToEdit ? 'Editar Producto' : 'Añadir Nuevo Producto'}</DialogTitle>
-          </DialogHeader>
-          <ProductForm onSuccess={handleFormSuccess} initialData={productToEdit} />
-        </DialogContent>
-      </Dialog>
 
       <AlertDialog open={!!productToDelete} onOpenChange={() => setProductToDelete(null)}>
         <AlertDialogContent>

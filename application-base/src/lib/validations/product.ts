@@ -37,3 +37,11 @@ export const UpdateProductSchema = z.object({
 });
 
 export type UpdateProductPayload = z.infer<typeof UpdateProductSchema>;
+
+export const CreateBaseProductSchema = z.object({
+  name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.'),
+  description: z.string().optional(),
+  isActive: z.boolean().default(true),
+});
+
+export type CreateBaseProductPayload = z.infer<typeof CreateBaseProductSchema>;

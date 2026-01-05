@@ -4,46 +4,26 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
-// Define the types based on the API response
-interface ProductImage {
-  id: string;
-  url: string;
-  altText?: string | null;
-}
-
-interface ProductVariant {
-  id: string;
-  price: number;
-  images: ProductImage[];
-}
-
-interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  variants: ProductVariant[];
-}
-
 interface ProductCardProps {
-  product: Product;
+  product: {
+    id: string;
+    name: string;
+    slug: string;
+    price?: number;
+    imageUrl?: string;
+  };
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  // Find the first image available from any variant
-  const firstImage = product.variants.flatMap(v => v.images).find(img => img.url);
-  
-  // Find the lowest price among variants
-  const lowestPrice = Math.min(...product.variants.map(v => v.price));
-
   return (
     <Link href={`/products/${product.slug}`}>
       <Card className="overflow-hidden transition-all hover:shadow-lg">
         <CardHeader className="p-0">
           <div className="aspect-square relative">
-            {firstImage ? (
+            {product.imageUrl ? (
               <Image
-                src={firstImage.url}
-                alt={firstImage.altText || product.name}
+                src={product.imageUrl}
+                alt={product.name}
                 fill
                 className="object-cover"
               />
@@ -60,9 +40,11 @@ export function ProductCard({ product }: ProductCardProps) {
           </CardTitle>
         </CardContent>
         <CardFooter className="p-4 pt-0">
-          <Badge variant="outline" className="text-base font-bold">
-            ${lowestPrice.toFixed(2)}
-          </Badge>
+          {product.price && (
+            <Badge variant="outline" className="text-base font-bold">
+              ${product.price.toFixed(2)}
+            </Badge>
+          )}
         </CardFooter>
       </Card>
     </Link>

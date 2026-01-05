@@ -2,23 +2,12 @@ import React from 'react';
 import { ProductCard } from '@/modules/public/components/product-card';
 
 // Define the types based on the API response
-interface ProductImage {
-  id: string;
-  url: string;
-  altText?: string | null;
-}
-
-interface ProductVariant {
-  id: string;
-  price: number;
-  images: ProductImage[];
-}
-
 interface Product {
   id: string;
   name: string;
   slug: string;
-  variants: ProductVariant[];
+  price?: number;
+  imageUrl?: string;
 }
 
 async function getProducts() {

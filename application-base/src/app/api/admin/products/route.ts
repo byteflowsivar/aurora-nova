@@ -3,8 +3,7 @@ import { auth } from '@/lib/auth';
 import { hasPermission } from '@/modules/admin/utils/permission-utils';
 import { SYSTEM_PERMISSIONS } from '@/modules/admin/types';
 import { prisma } from '@/lib/prisma/connection';
-import { generateSKU } from '@/lib/sku';
-import { CreateProductSchema } from '@/lib/validations/product';
+import { CreateBaseProductSchema } from '@/lib/validations/product';
 import { z } from 'zod';
 
 const slugify = (str: string) =>
@@ -28,72 +27,22 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const validationResult = CreateProductSchema.safeParse(body);
+    const validationResult = CreateBaseProductSchema.safeParse(body);
 
     if (!validationResult.success) {
       return NextResponse.json({ error: 'Invalid input', details: validationResult.error.flatten() }, { status: 400 });
     }
 
-    const { name, description, isActive, variants } = validationResult.data;
+    const { name, description, isActive } = validationResult.data;
     const productSlug = slugify(name);
 
-    const newProduct = await prisma.$transaction(async (tx) => {
-      const product = await tx.product.create({
-        data: {
-          name,
-          description,
-          slug: productSlug,
-          isActive,
-        },
-      });
-
-      for (const variantData of variants) {
-        const sku = await generateSKU(name, variantData.attributes);
-        
-        const variant = await tx.productVariant.create({
-          data: {
-            productId: product.id,
-            sku,
-            price: variantData.price,
-            stock: variantData.stock,
-            attributes: variantData.attributes,
-          },
-        });
-
-        if (variantData.stock > 0) {
-          await tx.inventoryMovement.create({
-            data: {
-              variantId: variant.id,
-              type: 'INITIAL_STOCK',
-              quantityChange: variantData.stock,
-              reason: 'Creación de producto',
-            },
-          });
-        }
-
-        if (variantData.images) {
-          await tx.productImage.createMany({
-            data: variantData.images.map(img => ({
-              url: img.finalUrl,
-              altText: img.altText,
-              productId: product.id,
-              variantId: variant.id,
-            })),
-          });
-        }
-      }
-      
-      // We need to return the created product with its relations
-      return tx.product.findUnique({
-        where: { id: product.id },
-        include: {
-            variants: {
-                include: {
-                    images: true
-                }
-            }
-        }
-      });
+    const newProduct = await prisma.product.create({
+      data: {
+        name,
+        description,
+        slug: productSlug,
+        isActive,
+      },
     });
 
     return NextResponse.json(newProduct, { status: 201 });
@@ -102,7 +51,6 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid input', details: error.flatten() }, { status: 400 });
     }
-    // Prisma unique constraint error
     if (error instanceof Error && 'code' in error && error.code === 'P2002') {
         return NextResponse.json({ error: 'A product with this name already exists.' }, { status: 409 });
     }

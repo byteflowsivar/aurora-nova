@@ -8,27 +8,36 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '12', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
-    const [products, total] = await prisma.$transaction([
-      prisma.product.findMany({
-        where: { isActive: true },
-        take: limit,
-        skip: offset,
-        orderBy: {
-          createdAt: 'desc',
-        },
-        include: {
-          variants: {
-            include: {
-              images: true,
-            },
-          },
-        },
-      }),
-      prisma.product.count({ where: { isActive: true } }),
-    ]);
+    const total = await prisma.product.count({ where: { isActive: true } });
+    
+    const productsWithDetails = await prisma.product.findMany({
+      where: { isActive: true },
+      take: limit,
+      skip: offset,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        variants: {
+          orderBy: { price: 'asc' },
+          include: { images: { orderBy: { order: 'asc' } } }
+        }
+      }
+    });
+
+    const simplifiedProducts = productsWithDetails.map(p => {
+      const lowestPrice = p.variants[0]?.price;
+      const mainImage = p.variants.flatMap(v => v.images)[0]?.url;
+      
+      return {
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        price: lowestPrice,
+        imageUrl: mainImage,
+      }
+    });
 
     return NextResponse.json({
-      data: products,
+      data: simplifiedProducts,
       total,
       limit,
       offset,
