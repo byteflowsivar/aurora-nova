@@ -28,6 +28,7 @@ model User {
   userRoles           UserRole[]
   auditLogs           AuditLog[]
   orders              Order[]
+  cart                Cart?
 
   @@index([email], map: "idx_user_email")
   @@map("user")
@@ -218,7 +219,7 @@ model AuditLog {
 }
 
 // ============================================================================
-// E-COMMERCE MODULE - Products, Orders, Inventory
+// E-COMMERCE MODULE - Products, Orders, Inventory, Carts
 // ============================================================================
 
 enum OrderStatus {
@@ -269,6 +270,7 @@ model ProductVariant {
   images             ProductImage[]
   orderItems         OrderItem[]
   inventoryMovements InventoryMovement[]
+  cartItems          CartItem[]
 
   @@index([sku], map: "idx_product_variant_sku")
   @@index([productId], map: "idx_product_variant_product_id")
@@ -337,4 +339,28 @@ model InventoryMovement {
 
   @@index([variantId], map: "idx_inventory_movement_variant_id")
   @@map("inventory_movement")
+}
+
+model Cart {
+  id        String     @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId    String     @unique @map("user_id") @db.Uuid
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @default(now()) @updatedAt @map("updated_at")
+  items     CartItem[]
+
+  @@map("cart")
+}
+
+model CartItem {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  cartId    String   @map("cart_id") @db.Uuid
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variantId String   @map("variant_id") @db.Uuid
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  quantity  Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([cartId, variantId])
+  @@map("cart_item")
 }

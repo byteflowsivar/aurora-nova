@@ -293,6 +293,21 @@ exports.Prisma.InventoryMovementScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.CartScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CartItemScalarFieldEnum = {
+  id: 'id',
+  cartId: 'cartId',
+  variantId: 'variantId',
+  quantity: 'quantity',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -356,7 +371,9 @@ exports.Prisma.ModelName = {
   ProductImage: 'ProductImage',
   Order: 'Order',
   OrderItem: 'OrderItem',
-  InventoryMovement: 'InventoryMovement'
+  InventoryMovement: 'InventoryMovement',
+  Cart: 'Cart',
+  CartItem: 'CartItem'
 };
 
 /**
