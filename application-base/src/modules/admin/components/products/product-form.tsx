@@ -49,7 +49,7 @@ export function ProductForm({ onSuccess, initialData, mode }: ProductFormProps) 
   const isEditMode = mode === 'edit';
 
   const form = useForm<ProductFormValues>({
-    resolver: zodResolver(isEditMode ? UpdateProductSchema : CreateBaseProductSchema),
+    resolver: zodResolver(z.object({ name: z.string() })), // Temporarily use a simple schema
     defaultValues: initialData || {
       name: '',
       description: '',
