@@ -2,17 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma/connection';
 
 type RouteContext = {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 };
 
 // GET /api/products/[slug] - Public endpoint for a single product
 export async function GET(request: NextRequest, { params }: RouteContext) {
   try {
+    const { slug } = await params;
+
     const product = await prisma.product.findUnique({
       where: { 
-        slug: params.slug,
+        slug: slug,
         isActive: true,
       },
       include: {
@@ -33,7 +35,8 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
 
     return NextResponse.json(product);
   } catch (error) {
-    console.error(`Error fetching product ${params.slug}:`, error);
+    const { slug } = await params; // Re-unwrap for logging in catch block
+    console.error(`Error fetching product ${slug}:`, error);
     return NextResponse.json({ error: 'Could not fetch product' }, { status: 500 });
   }
 }

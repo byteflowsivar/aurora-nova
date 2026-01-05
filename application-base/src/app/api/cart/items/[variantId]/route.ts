@@ -3,15 +3,16 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma/connection';
 
 type RouteContext = {
-  params: {
+  params: Promise<{
     variantId: string;
-  };
+  }>;
 };
 
 // PUT /api/cart/items/[variantId] - Update item quantity
 export async function PUT(request: NextRequest, { params }: RouteContext) {
     try {
         const session = await auth();
+        const { variantId } = await params;
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
         }
@@ -28,11 +29,11 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
         
         if (quantity === 0) {
             await prisma.cartItem.deleteMany({
-                where: { cartId: cart.id, variantId: params.variantId },
+                where: { cartId: cart.id, variantId: variantId },
             });
         } else {
             await prisma.cartItem.updateMany({
-                where: { cartId: cart.id, variantId: params.variantId },
+                where: { cartId: cart.id, variantId: variantId },
                 data: { quantity },
             });
         }
@@ -40,7 +41,8 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
         return NextResponse.json({ success: true });
 
     } catch (error) {
-        console.error('Error updating cart item:', error);
+        const { variantId } = await params;
+        console.error(`Error updating cart item ${variantId}:`, error);
         return NextResponse.json({ error: 'Could not update item' }, { status: 500 });
     }
 }
@@ -49,6 +51,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
 export async function DELETE(request: NextRequest, { params }: RouteContext) {
     try {
         const session = await auth();
+        const { variantId } = await params;
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
         }
@@ -61,14 +64,15 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
         await prisma.cartItem.deleteMany({
             where: {
                 cartId: cart.id,
-                variantId: params.variantId,
+                variantId: variantId,
             },
         });
 
         return new NextResponse(null, { status: 204 });
 
     } catch (error) {
-        console.error('Error deleting cart item:', error);
+        const { variantId } = await params;
+        console.error(`Error deleting cart item ${variantId}:`, error);
         return NextResponse.json({ error: 'Could not delete item' }, { status: 500 });
     }
 }
