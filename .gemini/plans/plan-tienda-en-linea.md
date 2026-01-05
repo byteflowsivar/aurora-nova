@@ -95,3 +95,41 @@ Este documento detalla el plan de trabajo para la implementación del MVP de la 
 - [x] **Tarea 4.5: UI de Comprobante y Historial.**
   - **Descripción:** Crear el componente React para el **comprobante HTML imprimible** y la página de historial de pedidos del cliente.
   - **Agente Recomendado:** Agente Frontend (Next.js/UI).
+
+---
+
+## Fase 5: Iteración 2 - Mejoras de UX y Performance
+
+*Objetivo: Mejorar la experiencia de usuario en la administración de productos y optimizar la carga del catálogo público.*
+
+### Sub-Fase 5.1: Refactor del Flujo de Creación de Productos
+
+- [ ] **Tarea 5.1.1:** Crear ruta y página `/admin/store/products/new`.
+  - **Descripción:** Crear la página que albergará el nuevo formulario de creación de productos.
+  - **Agente Recomendado:** Agente Frontend (Next.js/UI).
+
+- [ ] **Tarea 5.1.2:** Crear ruta y página `/admin/store/products/[id]/edit`.
+  - **Descripción:** Crear la página de edición que permitirá gestionar el producto y sus variantes.
+  - **Agente Recomendado:** Agente Frontend (Next.js/UI).
+
+- [ ] **Tarea 5.1.3:** Adaptar el `ProductForm`.
+  - **Descripción:** Modificar el formulario para que en la ruta `new` solo muestre los campos base (nombre, descripción). En la ruta `edit`, mostrará la gestión completa de variantes.
+  - **Agente Recomendado:** Agente Frontend (Next.js/UI).
+
+- [ ] **Tarea 5.1.4:** Actualizar la lógica de la API y el Frontend.
+  - **Descripción:** Al crear un producto base, la API devolverá el ID del nuevo producto y el frontend redirigirá a la página de edición.
+  - **Agente Recomendado:** Agente Full-Stack.
+
+- [ ] **Tarea 5.1.5:** Actualizar la UI de `ProductList`.
+  - **Descripción:** Cambiar el botón "Añadir Producto" para que navegue a `/admin/store/products/new` y eliminar el modal. El botón "Editar" deberá navegar a la página de edición.
+  - **Agente Recomendado:** Agente Frontend (Next.js/UI).
+
+### Sub-Fase 5.2: Optimización de Endpoints Públicos
+
+- [ ] **Tarea 5.2.1:** Modificar endpoint `GET /api/products`.
+  - **Descripción:** Ajustar la consulta de Prisma para que devuelva una lista de productos simplificada, incluyendo solo el nombre, slug, imagen principal y el precio más bajo.
+  - **Agente Recomendado:** Agente Backend (Prisma/API).
+
+- [ ] **Tarea 5.2.2:** Actualizar componentes del área pública.
+  - **Descripción:** Refactorizar `ProductCard` y la página de catálogo para que funcionen con la nueva estructura de datos simplificada.
+  - **Agente Recomendado:** Agente Frontend (Next.js/UI).
