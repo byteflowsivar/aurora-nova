@@ -2,18 +2,19 @@
 
 import React, { useEffect, useState } from 'react';
 import { ProductForm } from '@/modules/admin/components/products/product-form';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
-export default function EditProductPage({ params }: { params: { id: string } }) {
+export default function EditProductPage() {
   const router = useRouter();
+  const { id } = useParams(); // Use useParams to get the ID
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const productId = params.id; // Destructure here
 
   useEffect(() => {
     async function fetchProduct() {
+      if (!id) return; // Ensure id is available
       try {
-        const res = await fetch(`/api/admin/products/${productId}`);
+        const res = await fetch(`/api/admin/products/${id}`);
         if (res.ok) {
           const data = await res.json();
           setProduct(data);
@@ -23,7 +24,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       }
     }
     fetchProduct();
-  }, [productId]); // Use productId here
+  }, [id]); // Use id in the dependency array
 
   const handleSuccess = () => {
     // Optional: could navigate back to the list or just show a toast
