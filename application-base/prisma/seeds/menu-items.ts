@@ -184,6 +184,20 @@ export async function seedMenuItems() {
 
   console.log('  ✓ Created: Pedidos (level 2, child of Tienda)');
 
+  await prisma.menuItem.create({
+    data: {
+      title: 'Inventario',
+      href: '/admin/store/inventory',
+      icon: 'Boxes',
+      order: 3,
+      isActive: true,
+      permissionId: 'inventory:list',
+      parentId: storeGroup.id
+    }
+  });
+
+  console.log('  ✓ Created: Inventario (level 2, child of Tienda)');
+
   // ============================================================================
   // Resumen
   // ============================================================================
@@ -191,7 +205,7 @@ export async function seedMenuItems() {
   const totalItems = await prisma.menuItem.count()
   console.log(`\n✅ Menu items seeded successfully! Total items: ${totalItems}`)
   console.log('   - Level 1 (root): 3 items (Dashboard, Administración, Tienda)')
-  console.log('   - Level 2 (children): 6 items (Usuarios, Roles, Permisos, Auditoria, Productos, Pedidos)')
+  console.log('   - Level 2 (children): 7 items (Usuarios, Roles, Permisos, Auditoria, Productos, Pedidos, Inventario)')
 
   return {
     dashboard,

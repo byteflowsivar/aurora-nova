@@ -54,6 +54,10 @@ const permissions = [
   // Permisos de ordenes (e-commerce)
   { id: 'order:read', module: 'Orders', description: 'Ver información de ordenes' },
   { id: 'order:list', module: 'Orders', description: 'Listar todas las ordenes' },
+
+  // Permisos de inventario (e-commerce)
+  { id: 'inventory:list', module: 'Inventory', description: 'Listar inventario' },
+  { id: 'inventory:update', module: 'Inventory', description: 'Actualizar inventario' },
 ];
 
 // Datos de roles base
@@ -80,6 +84,7 @@ const adminPermissions = [
   'menu:manage',
   'product:create', 'product:read', 'product:update', 'product:delete', 'product:list',
   'order:list',
+  'inventory:list', 'inventory:update',
 ];
 
 const userPermissions = [

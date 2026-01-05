@@ -566,6 +566,10 @@ export const SYSTEM_PERMISSIONS = {
   // Order permissions
   ORDER_READ: 'order:read',
   ORDER_LIST: 'order:list',
+
+  // Inventory permissions
+  INVENTORY_LIST: 'inventory:list',
+  INVENTORY_UPDATE: 'inventory:update',
 } as const
 
 /**
