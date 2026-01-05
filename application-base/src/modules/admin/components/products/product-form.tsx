@@ -188,8 +188,9 @@ export function ProductForm({ onSuccess, initialData, mode }: ProductFormProps) 
                       <FormItem className="mt-4">
                         <FormLabel>Atributos</FormLabel>
                         <FormControl>
-                          <Input
+                          <Input 
                             placeholder="Ej: Color:Azul,Talla:M"
+                            value={Object.entries(field.value || {}).map(([key, val]) => `${key}:${val}`).join(', ')} // Convert object to string for display
                             onChange={(e) => {
                               const attrs = e.target.value.split(',').reduce((acc, pair) => {
                                 const [key, value] = pair.split(':');
