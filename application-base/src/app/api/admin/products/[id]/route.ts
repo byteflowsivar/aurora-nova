@@ -1,18 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { hasPermission } from '@/modules/admin/utils/permission-utils';
-import { SYSTEM_PERMISSIONS } from '@/modules/admin/types';
-import { prisma } from '@/lib/prisma/connection';
-import { UpdateProductSchema } from '@/lib/validations/product';
-import { z } from 'zod';
 
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { hasPermission } from '@/modules/admin/utils/permission-utils';
-import { SYSTEM_PERMISSIONS } from '@/modules/admin/types';
-import { prisma } from '@/lib/prisma/connection';
-import { UpdateProductSchema } from '@/lib/validations/product';
-import { z } from 'zod';
 
 type RouteContext = {
   params: {
