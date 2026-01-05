@@ -33,13 +33,24 @@ const defaultValues: Partial<ProductFormValues> = {
 
 interface ProductFormProps {
   onSuccess?: () => void;
+  initialData?: any | null;
 }
 
-export function ProductForm({ onSuccess }: ProductFormProps) {
+export function ProductForm({ onSuccess, initialData }: ProductFormProps) {
+  const isEditMode = !!initialData;
+
   const form = useForm<ProductFormValues>({
-    resolver: zodResolver(CreateProductSchema),
-    defaultValues,
+    resolver: zodResolver(isEditMode ? UpdateProductSchema : CreateProductSchema),
+    defaultValues: defaultValues,
   });
+
+  useEffect(() => {
+    if (initialData) {
+      form.reset(initialData);
+    } else {
+      form.reset(defaultValues);
+    }
+  }, [initialData, form]);
 
   const { fields, append, remove, update } = useFieldArray({
     control: form.control,
@@ -50,18 +61,21 @@ export function ProductForm({ onSuccess }: ProductFormProps) {
 
   async function onSubmit(data: ProductFormValues) {
     try {
-      const response = await fetch('/api/admin/products', {
-        method: 'POST',
+      const url = isEditMode ? `/api/admin/products/${initialData.id}` : '/api/admin/products';
+      const method = isEditMode ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create product');
+        throw new Error(errorData.error || `Failed to ${isEditMode ? 'update' : 'create'} product`);
       }
 
-      toast.success('Producto creado exitosamente!');
+      toast.success(`Producto ${isEditMode ? 'actualizado' : 'creado'} exitosamente!`);
       if (onSuccess) {
         onSuccess();
       }
@@ -69,6 +83,7 @@ export function ProductForm({ onSuccess }: ProductFormProps) {
       toast.error(error instanceof Error ? error.message : 'An unknown error occurred.');
     }
   }
+
 
   return (
     <Form {...form}>
