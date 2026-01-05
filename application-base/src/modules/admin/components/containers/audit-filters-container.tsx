@@ -175,20 +175,10 @@ export function AuditFilters() {
     };
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-      <div className="space-y-2">
-        <Label htmlFor="user-filter">Usuario</Label>
-        <Input id="user-filter" placeholder="Filtrar por ID o email..." value={user} onChange={(e) => setUser(e.target.value)} />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="action-filter">Acción</Label>
-        <Input id="action-filter" placeholder="ej: LOGIN, CREATE..." value={action} onChange={(e) => setAction(e.target.value)} />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="module-filter">Módulo</Label>
-        <Input id="module-filter" placeholder="ej: Auth, Roles..." value={module} onChange={(e) => setModule(e.target.value)} />
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7">
+      <div className="space-y-2 lg:col-span-2">
+        <Label>Rango de Fechas</Label>
+        <DatePickerWithRange date={date} setDate={setDate} />
       </div>
 
       <div className="space-y-2">
@@ -208,8 +198,18 @@ export function AuditFilters() {
       </div>
 
       <div className="space-y-2">
-        <Label>Rango de Fechas</Label>
-        <DatePickerWithRange date={date} setDate={setDate} />
+        <Label htmlFor="module-filter">Módulo</Label>
+        <Input id="module-filter" placeholder="ej: Auth, Roles..." value={module} onChange={(e) => setModule(e.target.value)} />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="action-filter">Acción</Label>
+        <Input id="action-filter" placeholder="ej: LOGIN, CREATE..." value={action} onChange={(e) => setAction(e.target.value)} />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="user-filter">Usuario</Label>
+        <Input id="user-filter" placeholder="Filtrar por ID o email..." value={user} onChange={(e) => setUser(e.target.value)} />
       </div>
 
       <div className="flex items-end space-x-2">
