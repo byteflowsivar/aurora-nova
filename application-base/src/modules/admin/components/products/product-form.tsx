@@ -51,9 +51,12 @@ export function ProductForm({ onSuccess, initialData, mode }: ProductFormProps) 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(z.object({ name: z.string() })), // Temporarily use a simple schema
     defaultValues: initialData || {
-      name: '',
-      description: '',
-      isActive: true,
+const defaultValues: Partial<ProductFormValues> = {
+  name: '',
+  description: undefined,
+  isActive: undefined,
+  variants: [{ price: 0, stock: 0, attributes: {}, images: [] }],
+};
     },
   });
   
