@@ -234,6 +234,65 @@ exports.Prisma.AuditLogScalarFieldEnum = {
   timestamp: 'timestamp'
 };
 
+exports.Prisma.ProductScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  slug: 'slug',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProductVariantScalarFieldEnum = {
+  id: 'id',
+  sku: 'sku',
+  price: 'price',
+  stock: 'stock',
+  attributes: 'attributes',
+  productId: 'productId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProductImageScalarFieldEnum = {
+  id: 'id',
+  url: 'url',
+  altText: 'altText',
+  order: 'order',
+  productId: 'productId',
+  variantId: 'variantId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.OrderScalarFieldEnum = {
+  id: 'id',
+  orderNumber: 'orderNumber',
+  status: 'status',
+  total: 'total',
+  userId: 'userId',
+  customerInfo: 'customerInfo',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.OrderItemScalarFieldEnum = {
+  id: 'id',
+  quantity: 'quantity',
+  price: 'price',
+  orderId: 'orderId',
+  variantId: 'variantId'
+};
+
+exports.Prisma.InventoryMovementScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  quantityChange: 'quantityChange',
+  reason: 'reason',
+  variantId: 'variantId',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -241,6 +300,10 @@ exports.Prisma.SortOrder = {
 
 exports.Prisma.NullableJsonNullValueInput = {
   DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
+exports.Prisma.JsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
@@ -259,7 +322,21 @@ exports.Prisma.JsonNullValueFilter = {
   JsonNull: Prisma.JsonNull,
   AnyNull: Prisma.AnyNull
 };
+exports.OrderStatus = exports.$Enums.OrderStatus = {
+  PENDING: 'PENDING',
+  PROCESSING: 'PROCESSING',
+  SHIPPED: 'SHIPPED',
+  DELIVERED: 'DELIVERED',
+  CANCELLED: 'CANCELLED',
+  REFUNDED: 'REFUNDED'
+};
 
+exports.InventoryMovementType = exports.$Enums.InventoryMovementType = {
+  SALE: 'SALE',
+  RETURN: 'RETURN',
+  MANUAL_ADJUSTMENT: 'MANUAL_ADJUSTMENT',
+  INITIAL_STOCK: 'INITIAL_STOCK'
+};
 
 exports.Prisma.ModelName = {
   User: 'User',
@@ -273,7 +350,13 @@ exports.Prisma.ModelName = {
   UserRole: 'UserRole',
   RolePermission: 'RolePermission',
   MenuItem: 'MenuItem',
-  AuditLog: 'AuditLog'
+  AuditLog: 'AuditLog',
+  Product: 'Product',
+  ProductVariant: 'ProductVariant',
+  ProductImage: 'ProductImage',
+  Order: 'Order',
+  OrderItem: 'OrderItem',
+  InventoryMovement: 'InventoryMovement'
 };
 
 /**

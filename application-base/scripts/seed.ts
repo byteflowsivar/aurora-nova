@@ -43,6 +43,13 @@ const permissions = [
   // Permisos de auditoría
   { id: 'audit:view', module: 'Audit', description: 'Ver registros de auditoría' },
   { id: 'audit:manage', module: 'Audit', description: 'Gestionar auditoría y registros' },
+
+  // Permisos de productos (e-commerce)
+  { id: 'product:create', module: 'Products', description: 'Crear nuevos productos' },
+  { id: 'product:read', module: 'Products', description: 'Ver información de productos' },
+  { id: 'product:update', module: 'Products', description: 'Actualizar información de productos' },
+  { id: 'product:delete', module: 'Products', description: 'Eliminar productos' },
+  { id: 'product:list', module: 'Products', description: 'Listar todos los productos' },
 ];
 
 // Datos de roles base
@@ -67,6 +74,7 @@ const adminPermissions = [
   'role:read', 'role:list',
   'permission:read', 'permission:list',
   'menu:manage',
+  'product:create', 'product:read', 'product:update', 'product:delete', 'product:list',
 ];
 
 const userPermissions = [
@@ -167,10 +175,15 @@ async function seedDatabase() {
     console.log('\n🍔 Seeding menu items...');
     await seedMenuItems();
 
-    // 7. Verificar datos insertados
+    // 7. Seed E-commerce data
+    await seedECommerce();
+
+    // 8. Verificar datos insertados
     const permCount = await prisma.permission.count();
     const roleCount = await prisma.role.count();
     const menuItemCount = await prisma.menuItem.count();
+    const productCount = await prisma.product.count();
+    const variantCount = await prisma.productVariant.count();
     const superAdminPermCount = await prisma.rolePermission.count({
       where: {
         role: {
@@ -183,6 +196,8 @@ async function seedDatabase() {
     console.log(`   - Permisos: ${permCount}`);
     console.log(`   - Roles: ${roleCount}`);
     console.log(`   - Items del menú: ${menuItemCount}`);
+    console.log(`   - Productos: ${productCount}`);
+    console.log(`   - Variantes de Producto: ${variantCount}`);
     console.log(`   - Permisos de Super Administrador: ${superAdminPermCount}`);
 
     if (superAdminPermCount === permissions.length) {
@@ -209,6 +224,125 @@ if (require.main === module) {
       console.error('❌ Error fatal:', error);
       process.exit(1);
     });
+}
+
+async function seedECommerce() {
+  console.log('\n🛍️ Seeding e-commerce data...');
+
+  // Sample Products
+  const products = [
+    {
+      name: 'Laptop Pro Avanzada',
+      description: 'Una laptop potente para profesionales creativos.',
+      slug: 'laptop-pro-avanzada',
+      isActive: true,
+      variants: [
+        {
+          sku: 'LP-PRO-14-512',
+          price: 1299.99,
+          stock: 50,
+          attributes: { size: '14"', storage: '512GB', color: 'Silver' },
+          images: [
+            { url: 'https://placehold.co/600x400/silver/white?text=Laptop+14"', altText: 'Laptop Pro 14 inch' },
+            { url: 'https://placehold.co/600x400/EAEAEA/333?text=Side+View', altText: 'Side view' },
+          ]
+        },
+        {
+          sku: 'LP-PRO-16-1TB',
+          price: 1999.99,
+          stock: 30,
+          attributes: { size: '16"', storage: '1TB', color: 'Space Gray' },
+          images: [
+            { url: 'https://placehold.co/600x400/555/white?text=Laptop+16"', altText: 'Laptop Pro 16 inch' }
+          ]
+        },
+      ]
+    },
+    {
+      name: 'Camiseta con Logo',
+      description: 'Camiseta de algodón suave con el logo de Aurora Nova.',
+      slug: 'camiseta-logo-aurora-nova',
+      isActive: true,
+      variants: [
+        {
+          sku: 'TS-LOGO-BLK-M',
+          price: 25.50,
+          stock: 120,
+          attributes: { color: 'Black', size: 'M' },
+          images: [ { url: 'https://placehold.co/600x400/000/white?text=T-Shirt+Black', altText: 'Black T-Shirt' }]
+        },
+        {
+          sku: 'TS-LOGO-WHT-M',
+          price: 25.50,
+          stock: 150,
+          attributes: { color: 'White', size: 'M' },
+          images: [ { url: 'https://placehold.co/600x400/FFF/000?text=T-Shirt+White', altText: 'White T-Shirt' }]
+        }
+      ]
+    }
+  ];
+
+  for (const productData of products) {
+    const product = await prisma.product.upsert({
+      where: { slug: productData.slug },
+      update: { name: productData.name, description: productData.description },
+      create: {
+        name: productData.name,
+        description: productData.description,
+        slug: productData.slug,
+        isActive: productData.isActive,
+      },
+    });
+
+    for (const variantData of productData.variants) {
+      const variant = await prisma.productVariant.upsert({
+        where: { sku: variantData.sku },
+        update: {},
+        create: {
+          productId: product.id,
+          sku: variantData.sku,
+          price: variantData.price,
+          attributes: variantData.attributes,
+          stock: variantData.stock,
+        },
+      });
+
+      // Set initial stock via inventory movement
+      const existingMovement = await prisma.inventoryMovement.findFirst({
+        where: { variantId: variant.id, type: 'INITIAL_STOCK' },
+      });
+
+      if (!existingMovement) {
+          await prisma.inventoryMovement.create({
+              data: {
+                  variantId: variant.id,
+                  type: 'INITIAL_STOCK',
+                  quantityChange: variantData.stock,
+                  reason: 'Initial seed data',
+              }
+          });
+      }
+
+      // We check for image existence before creating to prevent duplicates on re-seeding
+      for (const imageData of variantData.images) {
+          const existingImage = await prisma.productImage.findFirst({
+              where: { url: imageData.url, variantId: variant.id }
+          });
+
+          if (!existingImage) {
+              await prisma.productImage.create({
+                  data: {
+                      url: imageData.url,
+                      altText: imageData.altText,
+                      productId: product.id,
+                      variantId: variant.id
+                  }
+              });
+          }
+      }
+    }
+  }
+   console.log('✅ E-commerce data seeded.');
 }
 
 export { seedDatabase };

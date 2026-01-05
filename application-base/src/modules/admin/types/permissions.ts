@@ -555,6 +555,13 @@ export const SYSTEM_PERMISSIONS = {
   // Audit permissions
   AUDIT_VIEW: 'audit:view',
   AUDIT_MANAGE: 'audit:manage',
+
+  // Product permissions
+  PRODUCT_CREATE: 'product:create',
+  PRODUCT_READ: 'product:read',
+  PRODUCT_UPDATE: 'product:update',
+  PRODUCT_DELETE: 'product:delete',
+  PRODUCT_LIST: 'product:list',
 } as const
 
 /**
